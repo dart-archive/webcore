@@ -79,9 +79,6 @@ def main(args):
             r'return V8%sElement::createWrapper\(element, creationContext, isolate\);' % tag),
             r'return DartDOMWrapper::toDart<Dart%sElement>(element);' % tag),
         (re.compile(
-            r'return V8HTMLCustomElement::wrap\(element, creationContext, isolate\);'),
-            r'return DartHTMLCustomElement::toDart(element);'),
-        (re.compile(
             r'return createV8HTMLFallbackWrapper\(toHTMLUnknownElement\(element\), creationContext, isolate\);'),
             r'return DartHTMLUnknownElement::toDart(toHTMLUnknownElement(element));'),
         (re.compile(
@@ -91,6 +88,17 @@ def main(args):
         (re.compile(r', v8::Isolate\*( isolate)?'), ''),
         (re.compile(r', v8::Handle<v8::Object> creationContext'), ''),
         (re.compile(r'v8::Handle<v8::Object>'), 'Dart_Handle'),
+        (re.compile(r'findSVGTagNameOfV8Type'), 'findSVGTagNameOfDartType'),
+        (re.compile(r'findHTMLTagNameOfV8Type'), 'findHTMLTagNameOfDartType'),
+        (re.compile(r'V8CustomElement'), 'DartCustomElement'),
+        (re.compile(r'WrapperTypeInfo'), 'DartWrapperTypeInfo'),
+        (re.compile(r'WrapperTypeTraits'), 'DartWrapperTypeTraits'),
+        (re.compile(
+            r'return DartCustomElement::wrap\(element, creationContext, constructor, isolate\);'),
+            r'return DartCustomElement::toDart(element, constructor);'),
+        (re.compile(
+            r'return wrap\(toHTMLUnknownElement\(element\), creationContext, isolate\);'),
+            r'return DartHTMLUnknownElement::toDart(toHTMLUnknownElement(element));'),
     ])
 
     return 0

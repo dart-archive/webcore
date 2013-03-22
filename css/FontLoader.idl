@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Google Inc. All rights reserved.
+ * Copyright (C) 2013 Google Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -29,8 +29,30 @@
  */
 
 [
-    Conditional=QUOTA,
-    Callback
-] interface StorageInfoQuotaCallback {
-    boolean handleEvent(in unsigned long long grantedQuotaInBytes);
+    Conditional=FONT_LOAD_EVENTS,
+    V8EnabledAtRuntime=fontLoadEvents,
+    ActiveDOMObject,
+    EventTarget,
+    GenerateIsReachable=ImplDocument,
+] interface FontLoader {
+
+    attribute EventListener onloading;
+    attribute EventListener onloadingdone;
+    attribute EventListener onloadstart;
+    attribute EventListener onload;
+    attribute EventListener onerror;
+
+    boolean checkFont(in DOMString font, in [Optional=DefaultIsNullString] DOMString text);
+    void loadFont(in Dictionary params);
+    void notifyWhenFontsReady(in [Callback] VoidCallback callback);
+    readonly attribute boolean loading;
+
+    void addEventListener(in DOMString type,
+                          in EventListener listener,
+                          in [Optional] boolean useCapture);
+    void removeEventListener(in DOMString type,
+                             in EventListener listener,
+                             in [Optional] boolean useCapture);
+    boolean dispatchEvent(in Event evt)
+        raises(EventException);
 };
