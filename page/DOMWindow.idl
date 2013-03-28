@@ -147,8 +147,8 @@
     readonly attribute StyleMedia styleMedia;
 
     // DOM Level 2 Style Interface
-    CSSStyleDeclaration getComputedStyle(in [Optional=DefaultIsUndefined] Element element,
-                                         in [TreatNullAs=NullString, TreatUndefinedAs=NullString,Optional=DefaultIsUndefined] DOMString pseudoElement);
+    [V8PerWorldBindings] CSSStyleDeclaration getComputedStyle(in [Optional=DefaultIsUndefined] Element element,
+                                                              in [TreatNullAs=NullString, TreatUndefinedAs=NullString,Optional=DefaultIsUndefined] DOMString pseudoElement);
 
     // WebKit extensions
 #if defined(LANGUAGE_JAVASCRIPT) && LANGUAGE_JAVASCRIPT
@@ -570,6 +570,7 @@
     [Conditional=WEBGL] attribute WebGLContextEventConstructor WebGLContextEvent;
     [Conditional=PROXIMITY_EVENTS] attribute DeviceProximityEventConstructor DeviceProximityEvent;
     [Conditional=REQUEST_AUTOCOMPLETE] attribute AutocompleteErrorEventConstructor AutocompleteErrorEvent;
+    [Conditional=CSP_NEXT, V8EnabledAtRuntime=experimentalContentSecurityPolicyFeatures] attribute SecurityPolicyViolationEventConstructor SecurityPolicyViolationEvent;
 
     attribute EventExceptionConstructor EventException;
 
