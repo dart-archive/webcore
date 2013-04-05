@@ -61,6 +61,7 @@ def main(args):
         ('indexed_db', path(outputFilePath, 'indexed_db_dartium.dart')),
         ('svg', path(outputFilePath, 'svg_dartium.dart')),
         ('web_audio', path(outputFilePath, 'web_audio_dartium.dart')),
+        ('web_gl', path(outputFilePath, 'web_gl_dartium.dart')),
         ('web_sql', path(outputFilePath, 'web_sql_dartium.dart'))]
     snapshottedLibs.extend([(dartName(p), path(p)) for p in snapshottedLibPaths])
 

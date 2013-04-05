@@ -85,7 +85,10 @@ def main(args):
             r'return createV8HTMLDirectWrapper\(element, creationContext, isolate\);'),
             r'return DartDOMWrapper::toDart<DartHTMLElement>(element);'),
         (re.compile(
-            r'return V8CustomElement::wrap\(element, creationContext, constructor, isolate\);'),
+            r'#include "CustomElementHelpers.h"'),
+            r'#include "CustomElementHelpers.h"\n#include "DartCustomElement.h"'),
+        (re.compile(
+            r'return CustomElementHelpers::wrap\(element, creationContext, constructor, isolate\);'),
             r'return DartCustomElement::toDart(element, constructor);'),
         (re.compile(
             r'return wrap\(toHTMLUnknownElement\(element\), creationContext, isolate\);'),

@@ -1715,6 +1715,12 @@
                 "description": "Unique DOM node identifier."
             },
             {
+                "id": "BackendNodeId",
+                "type": "integer",
+                "description": "Unique DOM node identifier used to reference a node that may not have been pushed to the front-end.",
+                "hidden": true
+            },
+            {
                 "id": "Node",
                 "type": "object",
                 "properties": [
@@ -1767,6 +1773,14 @@
                     { "name": "a", "type": "number", "optional": true, "description": "The alpha component, in the [0-1] range (default: 1)." }
                 ],
                 "description": "A structure holding an RGBA color."
+            },
+            {
+                "id": "Quad",
+                "type": "array",
+                "items": { "type": "number" },
+                "minItems": 8,
+                "maxItems": 8,
+                "description": "An array of quad vertices, x immediately followed by y for each point, points clock-wise."
             },
             {
                 "id": "HighlightConfig",
@@ -1966,6 +1980,15 @@
                 "description": "Highlights given rectangle. Coordinates are absolute with respect to the main frame viewport."
             },
             {
+                "name": "highlightQuad",
+                "parameters": [
+                    { "name": "quad", "$ref": "Quad", "description": "Quad to highlight" },
+                    { "name": "color", "$ref": "RGBA", "optional": true, "description": "The highlight fill color (default: transparent)." },
+                    { "name": "outlineColor", "$ref": "RGBA", "optional": true, "description": "The highlight outline color (default: transparent)." }
+                ],
+                "description": "Highlights given quad. Coordinates are absolute with respect to the main frame viewport."
+            },
+            {
                 "name": "highlightNode",
                 "parameters": [
                     { "name": "highlightConfig", "$ref": "HighlightConfig",  "description": "A descriptor for the highlight appearance." },
@@ -1997,6 +2020,25 @@
                     { "name": "nodeId", "$ref": "NodeId", "description": "Id of the node for given path." }
                 ],
                 "description": "Requests that the node is sent to the caller given its path. // FIXME, use XPath",
+                "hidden": true
+            },
+            {
+                "name": "pushNodeByBackendIdToFrontend",
+                "parameters": [
+                    { "name": "backendNodeId", "$ref": "BackendNodeId", "description": "The backend node id of the node." }
+                ],
+                "returns": [
+                    { "name": "nodeId", "$ref": "NodeId", "description": "The pushed node's id." }
+                ],
+                "description": "Requests that the node is sent to the caller given its backend node id.",
+                "hidden": true
+            },
+            {
+                "name": "releaseBackendNodeIds",
+                "parameters": [
+                    { "name": "nodeGroup", "type": "string", "description": "The backend node ids group name." }
+                ],
+                "description": "Requests that group of <code>BackendNodeIds</code> is released.",
                 "hidden": true
             },
             {
@@ -2598,13 +2640,27 @@
         "description": "Timeline provides its clients with instrumentation records that are generated during the page runtime. Timeline instrumentation can be started and stopped using corresponding commands. While timeline is started, it is generating timeline event records.",
         "types": [
             {
+                "id": "DOMCounters",
+                "type": "object",
+                "properties": [
+                    { "name": "documents", "type": "integer" },
+                    { "name": "nodes", "type": "integer" },
+                    { "name": "jsEventListeners", "type": "integer" }
+                ],
+                "description": "Current values of DOM counters.",
+                "hidden": true
+            },
+            {
                 "id": "TimelineEvent",
                 "type": "object",
                 "properties": [
                     { "name": "type", "type": "string", "description": "Event type." },
                     { "name": "thread", "type": "string", "optional": true, "description": "If present, identifies the thread that produced the event.", "hidden": true },
                     { "name": "data", "type": "object", "description": "Event data." },
-                    { "name": "children", "type": "array", "optional": true, "items": { "$ref": "TimelineEvent" }, "description": "Nested records." }
+                    { "name": "children", "type": "array", "optional": true, "items": { "$ref": "TimelineEvent" }, "description": "Nested records." },
+                    { "name": "counters", "$ref": "DOMCounters", "optional": true, "hidden": true, "description": "Current values of DOM counters." },
+                    { "name": "usedHeapSize", "type": "integer", "optional": true, "hidden": true, "description": "Current size of JS heap." },
+                    { "name": "nativeHeapStatistics", "type": "object", "optional": true, "hidden": true, "description": "Native heap statistics." }
                 ],
                 "description": "Timeline record contains information about the recorded activity."
             }
