@@ -24,8 +24,6 @@
  */
 
 [
-    Conditional=INDEXED_DATABASE,
-    JSNoStaticTables,
     ImplementationLacksVTable
 ] interface IDBIndex {
     readonly attribute DOMString name;
@@ -57,4 +55,3 @@
     [CallWith=ScriptExecutionContext] IDBRequest count(in any key)
         raises (DOMException);
 };
-

@@ -24,8 +24,6 @@
  */
 
 [
-    Conditional=INDEXED_DATABASE,
-    JSNoStaticTables,
     ImplementationLacksVTable
 ] interface IDBFactory {
     [CallWith=ScriptExecutionContext, ImplementedAs=getDatabaseNames] IDBRequest webkitGetDatabaseNames()
@@ -39,4 +37,3 @@
     [CallWith=ScriptExecutionContext] short cmp(in any first, in any second)
         raises (DOMException);
 };
-

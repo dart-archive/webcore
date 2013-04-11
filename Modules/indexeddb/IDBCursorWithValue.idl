@@ -23,9 +23,6 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-[
-    Conditional=INDEXED_DATABASE,
-    JSNoStaticTables
-] interface IDBCursorWithValue : IDBCursor {
+interface IDBCursorWithValue : IDBCursor {
     readonly attribute any value;
 };

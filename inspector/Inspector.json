@@ -307,14 +307,6 @@
                 "hidden": true
             },
             {
-                "name": "canOverrideDeviceMetrics",
-                "description": "Checks whether <code>setDeviceMetricsOverride</code> can be invoked.",
-                "returns": [
-                    { "name": "result", "type": "boolean", "description": "If true, <code>setDeviceMetricsOverride</code> can safely be invoked on the agent." }
-                ],
-                "hidden": true
-            },
-            {
                 "name": "setDeviceMetricsOverride",
                 "description": "Overrides the values of device screen dimensions (window.screen.width, window.screen.height, window.innerWidth, window.innerHeight, and \"device-width\"/\"device-height\"-related CSS media query results) and the font scale factor.",
                 "parameters": [
@@ -330,14 +322,6 @@
                 "description": "Requests that backend shows paint rectangles",
                 "parameters": [
                     { "name": "result", "type": "boolean", "description": "True for showing paint rectangles" }
-                ],
-                "hidden": true
-            },
-            {
-                "name": "canShowDebugBorders",
-                "description": "Tells if backend supports debug borders on layers",
-                "returns": [
-                    { "name": "show", "type": "boolean", "description": "True if the debug borders can be shown" }
                 ],
                 "hidden": true
             },
@@ -2679,22 +2663,6 @@
             {
                 "name": "stop",
                 "description": "Stops capturing instrumentation events."
-            },
-            {
-                "name": "supportsFrameInstrumentation",
-                "returns": [
-                    { "name": "result", "type": "boolean", "description": "True if timeline supports frame instrumentation." }
-                ],
-                "hidden": true,
-                "description": "Tells whether timeline agent supports frame instrumentation."
-            },
-            {
-                "name": "canMonitorMainThread",
-                "returns": [
-                    { "name": "result", "type": "boolean", "description": "True if timeline supports main thread CPU utilization instrumentation." }
-                ],
-                "hidden": true,
-                "description": "Tells whether timeline agent supports main thread CPU utilization instrumentation."
             }
         ],
         "events": [
@@ -2772,22 +2740,6 @@
             }
         ],
         "commands": [
-            {
-                "name": "causesRecompilation",
-                "returns": [
-                    { "name": "result", "type": "boolean", "description": "True if enabling debugger causes scripts recompilation." }
-                ],
-                "hidden": true,
-                "description": "Tells whether enabling debugger causes scripts recompilation."
-            },
-            {
-                "name": "supportsSeparateScriptCompilationAndExecution",
-                "returns": [
-                    { "name": "result", "type": "boolean", "description": "True if debugger supports separate script compilation and execution." }
-                ],
-                "hidden": true,
-                "description": "Tells whether debugger supports separate script compilation and execution."
-            },
             {
                 "name": "enable",
                 "description": "Enables debugger for the given page. Clients should not assume that the debugging has been enabled until the result for this command is received."
@@ -2882,7 +2834,7 @@
                 "returns": [
                     { "name": "result", "type": "boolean", "description": "True if <code>setScriptSource</code> is supported." }
                 ],
-                "description": "Tells whether <code>setScriptSource</code> is supported."
+                "description": "Always returns true."
             },
             {
                 "name": "setScriptSource",
@@ -3181,24 +3133,6 @@
         ],
         "commands": [
             {
-                "name": "causesRecompilation",
-                "returns": [
-                    { "name": "result", "type": "boolean" }
-                ]
-            },
-            {
-                "name": "isSampling",
-                "returns": [
-                    { "name": "result", "type": "boolean" }
-                ]
-            },
-            {
-                "name": "hasHeapProfiler",
-                "returns": [
-                    { "name": "result", "type": "boolean" }
-                ]
-            },
-            {
                 "name": "enable"
             },
             {
@@ -3329,12 +3263,6 @@
             }
         ],
         "commands": [
-            {
-                "name": "hasHeapProfiler",
-                "returns": [
-                    { "name": "result", "type": "boolean" }
-                ]
-            },
             {
                 "name": "getProfileHeaders",
                 "returns": [
