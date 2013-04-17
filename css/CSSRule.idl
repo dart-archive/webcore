@@ -21,9 +21,9 @@
 // Introduced in DOM Level 2:
 [
     CustomToJSObject,
-    ObjCPolymorphic,
-    V8DependentLifetime,
-    V8SkipVTableValidation
+
+    DependentLifetime,
+    SkipVTableValidation
 ] interface CSSRule {
 
     // RuleType
@@ -45,20 +45,14 @@
 #if defined(ENABLE_CSS_REGIONS) && ENABLE_CSS_REGIONS
     const unsigned short WEBKIT_REGION_RULE = 16;
 #endif
-#if defined(ENABLE_CSS_SHADERS) && ENABLE_CSS_SHADERS
     const unsigned short WEBKIT_FILTER_RULE = 17;
-#endif
-#if defined(ENABLE_SHADOW_DOM) && ENABLE_SHADOW_DOM
     const unsigned short HOST_RULE = 1001;
-#endif
 
     readonly attribute unsigned short   type;
 
-             [TreatReturnedNullStringAs=Null, TreatNullAs=NullString] attribute DOMString        cssText
-                 setter raises (DOMException);
+             [TreatReturnedNullStringAs=Null, TreatNullAs=NullString, SetterRaisesException] attribute DOMString        cssText;
 
     readonly attribute CSSStyleSheet    parentStyleSheet;
     readonly attribute CSSRule          parentRule;
 
 };
-

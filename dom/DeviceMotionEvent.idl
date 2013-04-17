@@ -23,19 +23,16 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-[
-    Conditional=DEVICE_ORIENTATION,
-] interface DeviceMotionEvent : Event {
-    [Custom] readonly attribute Acceleration acceleration;
-    [Custom] readonly attribute Acceleration accelerationIncludingGravity;
-    [Custom] readonly attribute RotationRate rotationRate;
-    [Custom] readonly attribute double interval;
-    [Custom] void initDeviceMotionEvent(in [Optional=DefaultIsUndefined] DOMString type, 
-                                        in [Optional=DefaultIsUndefined] boolean bubbles, 
-                                        in [Optional=DefaultIsUndefined] boolean cancelable, 
-                                        in [Optional=DefaultIsUndefined] Acceleration acceleration, 
-                                        in [Optional=DefaultIsUndefined] Acceleration accelerationIncludingGravity, 
-                                        in [Optional=DefaultIsUndefined] RotationRate rotationRate, 
-                                        in [Optional=DefaultIsUndefined] double interval);
+interface DeviceMotionEvent : Event {
+    readonly attribute DeviceAcceleration acceleration;
+    readonly attribute DeviceAcceleration accelerationIncludingGravity;
+    readonly attribute DeviceRotationRate rotationRate;
+    readonly attribute double? interval;
+    [Custom] void initDeviceMotionEvent([Optional=DefaultIsUndefined] DOMString type, 
+                                        [Optional=DefaultIsUndefined] boolean bubbles, 
+                                        [Optional=DefaultIsUndefined] boolean cancelable, 
+                                        [Optional=DefaultIsUndefined] Acceleration acceleration, 
+                                        [Optional=DefaultIsUndefined] Acceleration accelerationIncludingGravity, 
+                                        [Optional=DefaultIsUndefined] RotationRate rotationRate, 
+                                        [Optional=DefaultIsUndefined] double interval);
 };
-

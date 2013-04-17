@@ -22,8 +22,8 @@
 [
     CustomToJSObject,
     ConstructorTemplate=Event,
-    ObjCPolymorphic,
-    V8SkipVTableValidation
+    
+    SkipVTableValidation
 ] interface Event {
 
     // DOM PhaseType
@@ -32,7 +32,6 @@
     const unsigned short AT_TARGET           = 2;
     const unsigned short BUBBLING_PHASE      = 3;
 
-#if !defined(LANGUAGE_OBJECTIVE_C) || !LANGUAGE_OBJECTIVE_C
     // Reverse-engineered from Netscape
     const unsigned short MOUSEDOWN           = 1;
     const unsigned short MOUSEUP             = 2;
@@ -50,7 +49,6 @@
     const unsigned short BLUR                = 8192;
     const unsigned short SELECT              = 16384;
     const unsigned short CHANGE              = 32768;
-#endif
 
     readonly attribute DOMString        type;
     readonly attribute EventTarget      target;
@@ -62,9 +60,9 @@
 
     void               stopPropagation();
     void               preventDefault();
-    [ObjCLegacyUnnamedParameters] void initEvent(in [Optional=DefaultIsUndefined] DOMString eventTypeArg, 
-                                  in [Optional=DefaultIsUndefined] boolean canBubbleArg, 
-                                  in [Optional=DefaultIsUndefined] boolean cancelableArg);
+     void initEvent([Optional=DefaultIsUndefined] DOMString eventTypeArg, 
+                                  [Optional=DefaultIsUndefined] boolean canBubbleArg, 
+                                  [Optional=DefaultIsUndefined] boolean cancelableArg);
 
     // DOM Level 3 Additions.
     readonly attribute boolean defaultPrevented;
@@ -75,15 +73,6 @@
              attribute boolean          returnValue;
              attribute boolean          cancelBubble;
 
-#if defined(LANGUAGE_JAVASCRIPT) && LANGUAGE_JAVASCRIPT
     [Custom] readonly attribute Clipboard        clipboardData;
-#endif
-
-#if defined(LANGUAGE_CPP) && LANGUAGE_CPP
-    // Extra WebCore methods exposed to allow compile-time casting in C++
-    boolean isMouseEvent();
-    boolean isUIEvent();
-#endif
-
 };
 

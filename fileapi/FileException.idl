@@ -29,7 +29,6 @@
  */
 
 [
-    Conditional=BLOB|FILE_SYSTEM,
     DoNotCheckConstants,
     ImplementationLacksVTable
 ] exception FileException {
@@ -38,10 +37,8 @@
     readonly attribute DOMString        name;
     readonly attribute DOMString        message;
 
-#if defined(LANGUAGE_JAVASCRIPT) && LANGUAGE_JAVASCRIPT
     // Override in a Mozilla compatible format
     [NotEnumerable] DOMString toString();
-#endif
 
     // FileExceptionCode
     const unsigned short NOT_FOUND_ERR = 1;

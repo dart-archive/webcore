@@ -30,9 +30,7 @@
 
 [
     Conditional=SHARED_WORKERS,
-    ExtendsDOMGlobalObject,
     IsWorkerContext,
-    OmitConstructor
 ] interface SharedWorkerContext : WorkerContext {
 
     readonly attribute DOMString name;

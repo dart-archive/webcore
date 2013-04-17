@@ -25,19 +25,14 @@
  */
 
 [
-    Conditional=WORKERS,
     EventTarget,
-    ExtendsDOMGlobalObject,
     IsWorkerContext,
-    OmitConstructor,
-    V8CustomToJSObject,
-    V8NoWrapperCache
+    CustomToJSObject,
+    NoWrapperCache
 ] interface WorkerContext {
 
     // WorkerGlobalScope
-#if defined(LANGUAGE_JAVASCRIPT) && LANGUAGE_JAVASCRIPT
              [Replaceable] readonly attribute  WorkerContext self;
-#endif
              [Replaceable] readonly attribute WorkerLocation location;
     void close();
              attribute EventListener onerror;
@@ -47,23 +42,21 @@
              [Replaceable] readonly attribute WorkerNavigator navigator;
 
     // Timers
-    [Custom] long setTimeout(in any handler, in [Optional=DefaultIsUndefined] long timeout);
-    void clearTimeout(in [Optional=DefaultIsUndefined] long handle);
-    [Custom] long setInterval(in any handler, in [Optional=DefaultIsUndefined] long timeout);
-    void clearInterval(in [Optional=DefaultIsUndefined] long handle);
+    [Custom] long setTimeout(any handler, [Optional=DefaultIsUndefined] long timeout);
+    void clearTimeout([Optional=DefaultIsUndefined] long handle);
+    [Custom] long setInterval(any handler, [Optional=DefaultIsUndefined] long timeout);
+    void clearInterval([Optional=DefaultIsUndefined] long handle);
 
 
     // EventTarget interface
-    void addEventListener(in DOMString type, 
-                          in EventListener listener, 
-                          in [Optional] boolean useCapture);
-    void removeEventListener(in DOMString type, 
-                             in EventListener listener, 
-                             in [Optional] boolean useCapture);
-    boolean dispatchEvent(in Event evt)
-        raises(EventException);
+    void addEventListener(DOMString type, 
+                          EventListener listener, 
+                          [Optional] boolean useCapture);
+    void removeEventListener(DOMString type, 
+                             EventListener listener, 
+                             [Optional] boolean useCapture);
+    [RaisesException] boolean dispatchEvent(Event evt);
 
-#if !defined(LANGUAGE_CPP) || !LANGUAGE_CPP
     // Constructors
     attribute MessageEventConstructor MessageEvent;
     attribute WorkerLocationConstructor WorkerLocation;
@@ -73,16 +66,13 @@
 #endif
     attribute EventSourceConstructor EventSource;
     attribute XMLHttpRequestConstructor XMLHttpRequest;
-#endif
 
-#if defined(ENABLE_BLOB) && ENABLE_BLOB
     attribute BlobConstructor Blob;
     attribute FileReaderConstructor FileReader;
     attribute FileReaderSyncConstructor FileReaderSync;
-#endif
 
-    [Conditional=BLOB] attribute DOMURLConstructor URL;
-    [Conditional=BLOB] attribute DOMURLConstructor webkitURL; // FIXME: deprecate this.
+    attribute DOMURLConstructor URL;
+    attribute DOMURLConstructor webkitURL; // FIXME: deprecate this.
 
     attribute ArrayBufferConstructor ArrayBuffer; // Usable with new operator
     attribute Int8ArrayConstructor Int8Array; // Usable with new operator

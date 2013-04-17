@@ -24,26 +24,21 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-[
-    Conditional=SHADOW_DOM
-] interface ShadowRoot : DocumentFragment {
+interface ShadowRoot : DocumentFragment {
     readonly attribute Element activeElement;
     attribute boolean applyAuthorStyles;
     attribute boolean resetStyleInheritance;
 
-    [TreatNullAs=NullString, V8DeliverCustomElementCallbacks]
-    attribute DOMString innerHTML setter raises(DOMException);
+    [TreatNullAs=NullString, DeliverCustomElementCallbacks, SetterRaisesException] attribute DOMString innerHTML;
 
-#if defined(LANGUAGE_JAVASCRIPT) && LANGUAGE_JAVASCRIPT
-    Node cloneNode(in [Optional=DefaultIsUndefined] boolean deep) raises(DOMException);
-#endif
+    [RaisesException] Node cloneNode([Optional=DefaultIsUndefined] boolean deep);
     DOMSelection getSelection();
-    Element getElementById(in [Optional=DefaultIsUndefined] DOMString elementId);
-    NodeList getElementsByClassName(in [Optional=DefaultIsUndefined] DOMString className);
-    NodeList getElementsByTagName(in [Optional=DefaultIsUndefined] DOMString tagName);
-    NodeList getElementsByTagNameNS(in [TreatNullAs=NullString,Optional=DefaultIsUndefined] DOMString namespaceURI,
-                                    in [Optional=DefaultIsUndefined] DOMString localName);
+    Element getElementById([Optional=DefaultIsUndefined] DOMString elementId);
+    NodeList getElementsByClassName([Optional=DefaultIsUndefined] DOMString className);
+    NodeList getElementsByTagName([Optional=DefaultIsUndefined] DOMString tagName);
+    NodeList getElementsByTagNameNS([TreatNullAs=NullString,Optional=DefaultIsUndefined] DOMString namespaceURI,
+                                    [Optional=DefaultIsUndefined] DOMString localName);
 
-    Element elementFromPoint(in [Optional=DefaultIsUndefined] long x, 
-                             in [Optional=DefaultIsUndefined] long y);
+    Element elementFromPoint([Optional=DefaultIsUndefined] long x, 
+                             [Optional=DefaultIsUndefined] long y);
 };

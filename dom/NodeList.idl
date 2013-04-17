@@ -21,12 +21,12 @@
 [
     CustomIsReachable,
     IndexedGetter,
-    NamedGetter,
-    V8DependentLifetime,
-    V8SkipVTableValidation
+    CustomNamedGetter,
+    DependentLifetime,
+    SkipVTableValidation
 ] interface NodeList {
 
-    Node item(in [IsIndex,Optional=DefaultIsUndefined] unsigned long index);
+    Node item([IsIndex,Optional=DefaultIsUndefined] unsigned long index);
 
     readonly attribute unsigned long length;
 

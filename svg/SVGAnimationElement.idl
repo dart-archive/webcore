@@ -25,7 +25,6 @@
 
 [
     Conditional=SVG,
-    OmitConstructor
 ] interface SVGAnimationElement : SVGElement,
                                                   SVGTests,
                                                   SVGExternalResourcesRequired,
@@ -34,7 +33,6 @@
 
     float getStartTime();
     float getCurrentTime();
-    float getSimpleDuration()
-        raises(DOMException);
+    [RaisesException] float getSimpleDuration();
 };
 

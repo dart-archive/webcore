@@ -18,10 +18,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
-// Introduced in DOM Level 2:
 [
-    ObjCProtocol,
-    CPPPureInterface,
     ImplementationLacksVTable
 ] interface NodeFilter {
     // Constants returned by acceptNode
@@ -44,7 +41,7 @@
     const unsigned long       SHOW_DOCUMENT_FRAGMENT         = 0x00000400;
     const unsigned long       SHOW_NOTATION                  = 0x00000800;
 
-    [CallWith=ScriptState] short acceptNode(in [Optional=DefaultIsUndefined] Node n);
+    [CallWith=ScriptState] short acceptNode([Optional=DefaultIsUndefined] Node n);
 
 };
 

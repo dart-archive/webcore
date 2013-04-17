@@ -20,24 +20,18 @@
 
 [
     CustomIndexedSetter,
-    NamedGetter,
+    CustomNamedGetter,
     GenerateIsReachable=ImplOwnerNodeRoot,
-    V8CustomIndexedGetter,
-    V8DependentLifetime,
+    CustomIndexedGetter,
+    DependentLifetime,
 ] interface HTMLOptionsCollection : HTMLCollection {
     attribute long selectedIndex;
-    [CustomSetter] attribute unsigned long length
-        setter raises (DOMException);
+    [CustomSetter, SetterRaisesException] attribute unsigned long length;
 
-    [Custom] Node namedItem(in [Optional=DefaultIsUndefined] DOMString name);
+    [Custom] Node namedItem([Optional=DefaultIsUndefined] DOMString name);
 
-    [Custom] void add(in [Optional=DefaultIsUndefined] HTMLOptionElement option, 
-                      in [Optional] unsigned long index)
-         raises (DOMException);
-    [Custom] void remove(in [Optional=DefaultIsUndefined] unsigned long index);
-
-#if defined(LANGUAGE_OBJECTIVE_C) && LANGUAGE_OBJECTIVE_C
-    Node item(in unsigned long index);
-#endif
+    [Custom, RaisesException] void add([Optional=DefaultIsUndefined] HTMLOptionElement option, 
+                      [Optional] unsigned long index);
+    [Custom] void remove([Optional=DefaultIsUndefined] unsigned long index);
 };
 

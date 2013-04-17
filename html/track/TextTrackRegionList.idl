@@ -25,12 +25,12 @@
 
 [
     Conditional=VIDEO_TRACK & WEBVTT_REGIONS,
-    V8EnabledAtRuntime=webkitVideoTrack,
+    EnabledAtRuntime=webkitVideoTrack,
     IndexedGetter,
     ImplementationLacksVTable
 ] interface TextTrackRegionList {
     readonly attribute unsigned long length;
-    TextTrackRegion item(in unsigned long index);
-    TextTrackRegion getRegionById(in DOMString id);
+    TextTrackRegion item(unsigned long index);
+    TextTrackRegion getRegionById(DOMString id);
 };
 

@@ -25,25 +25,18 @@
 
 [
     Conditional=VIDEO_TRACK & WEBVTT_REGIONS,
-    V8EnabledAtRuntime=webkitVideoTrack,
+    EnabledAtRuntime=webkitVideoTrack,
     Constructor()
 ] interface TextTrackRegion {
     readonly attribute TextTrack track;
 
     attribute DOMString id;
-    attribute double width
-        setter raises (DOMException);
-    attribute long height
-        setter raises (DOMException);
-    attribute double regionAnchorX
-        setter raises (DOMException);
-    attribute double regionAnchorY
-        setter raises (DOMException);
-    attribute double viewportAnchorX
-        setter raises (DOMException);
-    attribute double viewportAnchorY
-        setter raises (DOMException);
-    attribute DOMString scroll
-        setter raises (DOMException);
+    [SetterRaisesException] attribute double width;
+    [SetterRaisesException] attribute long height;
+    [SetterRaisesException] attribute double regionAnchorX;
+    [SetterRaisesException] attribute double regionAnchorY;
+    [SetterRaisesException] attribute double viewportAnchorX;
+    [SetterRaisesException] attribute double viewportAnchorY;
+    [SetterRaisesException] attribute DOMString scroll;
 };
 

@@ -27,7 +27,7 @@ interface HTMLIFrameElement : HTMLElement {
     [Reflect] attribute DOMString marginWidth;
     [Reflect] attribute DOMString name;
     [Reflect] attribute DOMString sandbox;
-    [Reflect, V8EnabledAtRuntime=seamlessIFrames] attribute boolean seamless;
+    [Reflect, EnabledAtRuntime=seamlessIFrames] attribute boolean seamless;
     [Reflect] attribute DOMString scrolling;
     [Reflect, URL] attribute DOMString src;
     [Reflect] attribute DOMString srcdoc;
@@ -40,10 +40,7 @@ interface HTMLIFrameElement : HTMLElement {
     readonly attribute DOMWindow contentWindow;
 
 #if defined(ENABLE_SVG) && ENABLE_SVG
-#if !defined(LANGUAGE_OBJECTIVE_C) || !LANGUAGE_OBJECTIVE_C || defined(ENABLE_SVG_DOM_OBJC_BINDINGS) && ENABLE_SVG_DOM_OBJC_BINDINGS
-    [CheckSecurityForNode] SVGDocument getSVGDocument()
-        raises(DOMException);
-#endif
+    [CheckSecurityForNode, RaisesException] SVGDocument getSVGDocument();
 #endif
 };
 

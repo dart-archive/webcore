@@ -35,18 +35,18 @@
     readonly attribute boolean webkitSupportsFullscreen;
     readonly attribute boolean webkitDisplayingFullscreen;
 
-    void webkitEnterFullscreen() raises (DOMException);
+    [RaisesException] void webkitEnterFullscreen();
     void webkitExitFullscreen();
 
     // Note the different capitalization of the "S" in FullScreen.
-    void webkitEnterFullScreen() raises (DOMException);
+    [RaisesException] void webkitEnterFullScreen();
     void webkitExitFullScreen();
 
     // The number of frames that have been decoded and made available for
     // playback.
-    [Conditional=MEDIA_STATISTICS] readonly attribute unsigned long webkitDecodedFrameCount;
+    readonly attribute unsigned long webkitDecodedFrameCount;
 
     // The number of decoded frames that have been dropped by the player
     // for performance reasons during playback.
-    [Conditional=MEDIA_STATISTICS] readonly attribute unsigned long webkitDroppedFrameCount;
+    readonly attribute unsigned long webkitDroppedFrameCount;
 };

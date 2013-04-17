@@ -18,7 +18,7 @@
  */
 
 [
-    Conditional=SVG&FILTERS
+    Conditional=SVG
 ] interface SVGFEDropShadowElement : SVGStyledElement,
                            SVGFilterPrimitiveStandardAttributes {
     readonly attribute SVGAnimatedString in1;
@@ -27,7 +27,7 @@
     readonly attribute SVGAnimatedNumber stdDeviationX;
     readonly attribute SVGAnimatedNumber stdDeviationY;
 
-    void setStdDeviation(in [Optional=DefaultIsUndefined] float stdDeviationX, 
-                         in [Optional=DefaultIsUndefined] float stdDeviationY);
+    void setStdDeviation([Optional=DefaultIsUndefined] float stdDeviationX, 
+                         [Optional=DefaultIsUndefined] float stdDeviationY);
 };
 

@@ -20,13 +20,13 @@
 
 [
     CustomNamedGetter,
-    V8CustomToJSObject,
-    V8SkipVTableValidation
+    CustomToJSObject,
+    SkipVTableValidation
 ] interface HTMLDocument : Document {
-    [V8Custom] void open();
+    [Custom] void open();
     void close();
-    [Custom] void write(in [Optional=DefaultIsUndefined] DOMString text);
-    [Custom] void writeln(in [Optional=DefaultIsUndefined] DOMString text);
+    [Custom] void write([Optional=DefaultIsUndefined] DOMString text);
+    [Custom] void writeln([Optional=DefaultIsUndefined] DOMString text);
 
     readonly attribute HTMLCollection embeds;
     readonly attribute HTMLCollection plugins;
@@ -34,10 +34,7 @@
 
     // Extensions
 
-#if defined(LANGUAGE_JAVASCRIPT) && LANGUAGE_JAVASCRIPT
-    // FIXME: This should eventually be available (if they are wanted) for all languages.
-    [Replaceable, Deletable] attribute HTMLAllCollection all;
-#endif
+    [Replaceable] attribute HTMLAllCollection all;
 
     void clear();
 

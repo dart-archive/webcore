@@ -19,8 +19,8 @@
  */
 
 [
-    NamedConstructor=Option(in [Optional=DefaultIsNullString] DOMString data, in [Optional=DefaultIsNullString] DOMString value, in [Optional=DefaultIsUndefined] boolean defaultSelected, in [Optional=DefaultIsUndefined] boolean selected),
-    ConstructorRaisesException
+    NamedConstructor=Option([Optional=DefaultIsNullString] DOMString data, [Optional=DefaultIsNullString] DOMString value, [Optional=DefaultIsUndefined] boolean defaultSelected, [Optional=DefaultIsUndefined] boolean selected),
+    RaisesException
 ] interface HTMLOptionElement : HTMLElement {
     [Reflect] attribute boolean disabled;
     readonly attribute HTMLFormElement form;
@@ -29,10 +29,6 @@
     attribute boolean selected;
     attribute DOMString value;
 
-#if defined(LANGUAGE_JAVASCRIPT) && LANGUAGE_JAVASCRIPT
-    attribute DOMString text setter raises(DOMException);
-#else
-    readonly attribute DOMString text;
-#endif
+    [SetterRaisesException] attribute DOMString text;
     readonly attribute long index;
 };

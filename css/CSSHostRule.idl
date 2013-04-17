@@ -20,15 +20,12 @@
 
 // Introduced in Shadow DOM spec:
 [
-    Conditional=SHADOW_DOM,
-    V8EnabledAtRuntime=shadowDOM
+    EnabledAtRuntime=shadowDOM
 ] interface CSSHostRule : CSSRule {
     readonly attribute CSSRuleList cssRules;
     
-    unsigned long      insertRule(in [Optional=DefaultIsUndefined] DOMString rule, 
-                                  in [Optional=DefaultIsUndefined] unsigned long index)
-        raises(DOMException);
-    void               deleteRule(in [Optional=DefaultIsUndefined] unsigned long index)
-        raises(DOMException);
+    [RaisesException] unsigned long      insertRule([Optional=DefaultIsUndefined] DOMString rule, 
+                                  [Optional=DefaultIsUndefined] unsigned long index);
+    [RaisesException] void               deleteRule([Optional=DefaultIsUndefined] unsigned long index);
 };
 

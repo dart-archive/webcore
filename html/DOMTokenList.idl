@@ -25,17 +25,14 @@
 [
     GenerateIsReachable=ImplElementRoot,
     IndexedGetter,
-    V8SkipVTableValidation
+    SkipVTableValidation
 ] interface DOMTokenList {
     readonly attribute unsigned long length;
-    [TreatReturnedNullStringAs=Null] DOMString item(in unsigned long index);
-    boolean contains(in DOMString token) raises(DOMException);
-    void add(in DOMString... tokens) raises(DOMException);
-    void remove(in DOMString... tokens) raises(DOMException);
-    boolean toggle(in DOMString token, in [Optional] boolean force) raises(DOMException);
-
-#if defined(LANGUAGE_JAVASCRIPT) && LANGUAGE_JAVASCRIPT
+    [TreatReturnedNullStringAs=Null] DOMString item(unsigned long index);
+    [RaisesException] boolean contains(DOMString token);
+    [RaisesException] void add(DOMString... tokens);
+    [RaisesException] void remove(DOMString... tokens);
+    [RaisesException] boolean toggle(DOMString token, [Optional] boolean force);
     [NotEnumerable] DOMString toString();
-#endif
 };
 

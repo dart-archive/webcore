@@ -19,8 +19,8 @@
  */
 
 [
-    V8CustomToJSObject,
-    V8SkipVTableValidation
+    CustomToJSObject,
+    SkipVTableValidation
 ] interface HTMLElement : Element {
              // iht.com relies on id returning the empty string when no id is present. 
              // Other browsers do this as well. So we don't convert null to JS null.
@@ -37,35 +37,25 @@
              [Reflect] attribute DOMString accessKey;
 
     // Extensions
-             [TreatNullAs=NullString, V8DeliverCustomElementCallbacks] attribute DOMString innerHTML
-                 setter raises(DOMException);
-             [TreatNullAs=NullString] attribute DOMString innerText
-                 setter raises(DOMException);
-             [TreatNullAs=NullString, V8DeliverCustomElementCallbacks] attribute DOMString outerHTML
-                 setter raises(DOMException);
-             [TreatNullAs=NullString] attribute DOMString outerText
-                 setter raises(DOMException);
+             [TreatNullAs=NullString, DeliverCustomElementCallbacks, SetterRaisesException] attribute DOMString innerHTML;
+             [TreatNullAs=NullString, SetterRaisesException] attribute DOMString innerText;
+             [TreatNullAs=NullString, DeliverCustomElementCallbacks, SetterRaisesException] attribute DOMString outerHTML;
+             [TreatNullAs=NullString, SetterRaisesException] attribute DOMString outerText;
 
-    Element insertAdjacentElement(in [Optional=DefaultIsUndefined] DOMString where,
-                                  in [Optional=DefaultIsUndefined] Element element)
-        raises(DOMException);
-    [V8DeliverCustomElementCallbacks]
-    void insertAdjacentHTML(in [Optional=DefaultIsUndefined] DOMString where,
-                            in [Optional=DefaultIsUndefined] DOMString html)
-        raises(DOMException);
-    void insertAdjacentText(in [Optional=DefaultIsUndefined] DOMString where,
-                            in [Optional=DefaultIsUndefined] DOMString text)
-        raises(DOMException);
+    [RaisesException] Element insertAdjacentElement([Optional=DefaultIsUndefined] DOMString where,
+                                  [Optional=DefaultIsUndefined] Element element);
+    [DeliverCustomElementCallbacks, RaisesException] void insertAdjacentHTML([Optional=DefaultIsUndefined] DOMString where,
+                            [Optional=DefaultIsUndefined] DOMString html);
+    [RaisesException] void insertAdjacentText([Optional=DefaultIsUndefined] DOMString where,
+                            [Optional=DefaultIsUndefined] DOMString text);
 
     readonly attribute HTMLCollection children;
 
-             [TreatNullAs=NullString] attribute DOMString contentEditable
-                 setter raises(DOMException);
+             [TreatNullAs=NullString, SetterRaisesException] attribute DOMString contentEditable;
     readonly attribute boolean isContentEditable;
 
              attribute boolean spellcheck;
 
-#if !defined(LANGUAGE_OBJECTIVE_C) || !LANGUAGE_OBJECTIVE_C // No Objective-C bindings yet.
              [Conditional=MICRODATA, Reflect] attribute boolean itemScope;
     [Conditional=MICRODATA] readonly attribute DOMSettableTokenList itemType;
              [Conditional=MICRODATA, Reflect, URL] attribute DOMString itemId;
@@ -76,18 +66,8 @@
 #if defined(ENABLE_MICRODATA) && ENABLE_MICRODATA
     [Conditional=MICRODATA] readonly attribute HTMLPropertiesCollection properties;
 #endif
-#endif
 
-#if !defined(LANGUAGE_CPP) || !LANGUAGE_CPP
-#if !defined(LANGUAGE_OBJECTIVE_C) || !LANGUAGE_OBJECTIVE_C
-             [Conditional=MICRODATA, Custom] attribute any itemValue
-                 setter raises(DOMException);
-#endif
-#endif
-
-#if defined(LANGUAGE_OBJECTIVE_C) && LANGUAGE_OBJECTIVE_C
-    readonly attribute DOMString titleDisplayString;
-#endif
+    [Conditional=MICRODATA, Custom, SetterRaisesException] attribute any itemValue;
 
     void click();
 };

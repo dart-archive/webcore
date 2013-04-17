@@ -21,28 +21,18 @@
 [
     CustomNamedSetter,
     CustomCall,
-    V8CustomIndexedGetter,
-    V8SkipVTableValidation
+    CustomIndexedGetter,
+    SkipVTableValidation
 ] interface HTMLEmbedElement : HTMLElement {
-attribute [Reflect] DOMString align;
-#if defined(LANGUAGE_JAVASCRIPT) && LANGUAGE_JAVASCRIPT
-attribute [Reflect] DOMString height;
-#else
-attribute [Reflect] long height;
-#endif
-attribute [Reflect] DOMString name;
-attribute [Reflect, URL] DOMString src;
-attribute [Reflect] DOMString type;
-#if defined(LANGUAGE_JAVASCRIPT) && LANGUAGE_JAVASCRIPT
-attribute [Reflect] DOMString width;
-#else
-attribute [Reflect] long width;
-#endif
+[Reflect] attribute DOMString align;
+[Reflect] attribute DOMString height;
+[Reflect] attribute DOMString name;
+[Reflect, URL] attribute DOMString src;
+[Reflect] attribute DOMString type;
+[Reflect] attribute DOMString width;
 
 #if defined(ENABLE_SVG) && ENABLE_SVG
-#if !defined(LANGUAGE_OBJECTIVE_C) || !LANGUAGE_OBJECTIVE_C || defined(ENABLE_SVG_DOM_OBJC_BINDINGS) && ENABLE_SVG_DOM_OBJC_BINDINGS
-[CheckSecurityForNode] SVGDocument getSVGDocument() raises(DOMException);
-#endif
+[CheckSecurityForNode, RaisesException] SVGDocument getSVGDocument();
 #endif
 };
 

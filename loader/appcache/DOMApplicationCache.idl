@@ -25,7 +25,6 @@
 
 [
     EventTarget,
-    OmitConstructor,
     DoNotCheckConstants
 ] interface DOMApplicationCache {
     // update status
@@ -37,10 +36,8 @@
     const unsigned short OBSOLETE = 5;
     readonly attribute unsigned short status;
 
-    void update()
-        raises(DOMException);
-    void swapCache()
-        raises(DOMException);
+    [RaisesException] void update();
+    [RaisesException] void swapCache();
     void abort();
 
     // events
@@ -54,13 +51,12 @@
     attribute EventListener onobsolete;
 
     // EventTarget interface
-    void addEventListener(in DOMString type, 
-                          in EventListener listener, 
-                          in [Optional] boolean useCapture);
-    void removeEventListener(in DOMString type, 
-                             in EventListener listener, 
-                             in [Optional] boolean useCapture);
-    boolean dispatchEvent(in Event evt)
-        raises(EventException);
+    void addEventListener(DOMString type, 
+                          EventListener listener, 
+                          [Optional] boolean useCapture);
+    void removeEventListener(DOMString type, 
+                             EventListener listener, 
+                             [Optional] boolean useCapture);
+    [RaisesException] boolean dispatchEvent(Event evt);
 };
 

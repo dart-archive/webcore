@@ -26,9 +26,8 @@
 
 [
     Conditional=SVG,
-    ObjCProtocol,
+    
     SuppressToJSObject,
-    OmitConstructor
 ] interface SVGLocatable {
     readonly attribute SVGElement nearestViewportElement;
     readonly attribute SVGElement farthestViewportElement;
@@ -36,7 +35,6 @@
     SVGRect   getBBox();
     SVGMatrix getCTM();
     SVGMatrix getScreenCTM();
-    SVGMatrix getTransformToElement(in [Optional=DefaultIsUndefined] SVGElement element)
-        raises(SVGException);
+    [RaisesException] SVGMatrix getTransformToElement([Optional=DefaultIsUndefined] SVGElement element);
 };
 

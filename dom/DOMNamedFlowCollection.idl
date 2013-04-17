@@ -29,13 +29,13 @@
 
 [
     Conditional=CSS_REGIONS,
-    V8EnabledAtRuntime=cssRegions,
+    EnabledAtRuntime=cssRegions,
     InterfaceName=WebKitNamedFlowCollection,
     IndexedGetter,
     NamedGetter,
     ImplementationLacksVTable
 ] interface DOMNamedFlowCollection {
     readonly attribute unsigned long length;
-    WebKitNamedFlow item(in unsigned long index);
-    WebKitNamedFlow namedItem(in DOMString name);
+    NamedFlow item(unsigned long index);
+    NamedFlow namedItem(DOMString name);
 };
