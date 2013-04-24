@@ -23,11 +23,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
      */
 
-interface [
+[
     Conditional=ENCRYPTED_MEDIA_V2,
     EnabledAtRuntime=encryptedMedia,
     EventTarget,
-] MediaKeySession {
+] interface MediaKeySession {
     // error state
     readonly attribute MediaKeyError error;
 
@@ -47,9 +47,9 @@ interface [
     // EventTarget interface
     void addEventListener(DOMString type, 
                           EventListener listener, 
-                          [Optional] boolean useCapture);
+                          optional boolean useCapture);
     void removeEventListener(DOMString type, 
                              EventListener listener, 
-                             [Optional] boolean useCapture);
+                             optional boolean useCapture);
     [RaisesException] boolean dispatchEvent(Event evt);
 };
