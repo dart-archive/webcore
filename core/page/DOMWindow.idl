@@ -26,9 +26,7 @@
 
 [
     CheckSecurity,
-    CustomDeleteProperty,
     CustomGetOwnPropertySlot,
-    CustomEnumerateProperty,
     EventTarget,
     CustomToJSObject,
     NoWrapperCache,
@@ -48,7 +46,7 @@
     [Replaceable] readonly attribute Navigator clientInformation;
     readonly attribute Crypto crypto;
     [DoNotCheckSecurity, CustomSetter, Unforgeable] attribute Location location;
-    [Replaceable, CustomGetter, CustomSetter] readonly attribute Event event;
+    [MeasureAs=WindowEvent, NotEnumerable, Replaceable, CustomGetter, CustomSetter] readonly attribute Event event;
 
     DOMSelection getSelection();
 
@@ -143,7 +141,7 @@
                                    [TreatNullAs=NullString, TreatUndefinedAs=NullString,Default=Undefined] optional DOMString pseudoElement);
 
     [Replaceable] readonly attribute double devicePixelRatio;
-    
+
     DOMPoint webkitConvertPointFromPageToNode([Default=Undefined] optional Node node,
                                               [Default=Undefined] optional DOMPoint p);
     DOMPoint webkitConvertPointFromNodeToPage([Default=Undefined] optional Node node,
@@ -174,9 +172,9 @@
     [Custom] long setInterval(any handler, [Default=Undefined] optional long timeout);
     void clearInterval([Default=Undefined] optional long handle);
 
-    [MeasureAs=UnprefixedRequestAnimationFrame] long requestAnimationFrame([Callback] RequestAnimationFrameCallback callback);
+    [MeasureAs=UnprefixedRequestAnimationFrame] long requestAnimationFrame(RequestAnimationFrameCallback callback);
     void cancelAnimationFrame(long id);
-    [MeasureAs=PrefixedRequestAnimationFrame] long webkitRequestAnimationFrame([Callback] RequestAnimationFrameCallback callback);
+    [MeasureAs=PrefixedRequestAnimationFrame] long webkitRequestAnimationFrame(RequestAnimationFrameCallback callback);
     [ImplementedAs=cancelAnimationFrame] void webkitCancelAnimationFrame(long id);
     [ImplementedAs=cancelAnimationFrame] void webkitCancelRequestAnimationFrame(long id); // This is a deprecated alias for webkitCancelAnimationFrame(). Remove this when removing vendor prefix.
 
@@ -184,7 +182,7 @@
     [RaisesException] DOMString atob([TreatNullAs=NullString,Default=Undefined] optional DOMString string);
     [RaisesException] DOMString btoa([TreatNullAs=NullString,Default=Undefined] optional DOMString string);
 
-    [Replaceable,Conditional=CSS3_CONDITIONAL_RULES] attribute DOMWindowCSS CSS;
+    [Replaceable] attribute DOMWindowCSS CSS;
 
     // Events
     attribute EventListener onabort;
@@ -273,8 +271,8 @@
     [EnabledAtRuntime=touch] attribute EventListener ontouchend;
     [EnabledAtRuntime=touch] attribute EventListener ontouchcancel;
 
-    [EnabledAtRuntime] attribute EventListener ondevicemotion;
-    [EnabledAtRuntime] attribute EventListener ondeviceorientation;
+    [EnabledAtRuntime=deviceMotion] attribute EventListener ondevicemotion;
+    [EnabledAtRuntime=deviceOrientation] attribute EventListener ondeviceorientation;
 
     // EventTarget interface
     [Custom] void addEventListener(DOMString type,
@@ -314,7 +312,7 @@
     attribute CSSMediaRuleConstructor CSSMediaRule;
     attribute CSSPageRuleConstructor CSSPageRule;
     attribute CSSStyleRuleConstructor CSSStyleRule;
-    
+
     attribute CSSStyleDeclarationConstructor CSSStyleDeclaration;
     attribute MediaListConstructor MediaList;
     attribute CounterConstructor Counter;
@@ -355,9 +353,9 @@
     attribute EntityReferenceConstructor EntityReference;
     [EnabledAtRuntime=canvasPath] attribute DOMPathConstructor Path;
     attribute ProcessingInstructionConstructor ProcessingInstruction;
-    [EnabledAtRuntime=shadowDOM] attribute ShadowRootConstructor WebKitShadowRoot;
-    [EnabledAtRuntime=shadowDOM] attribute HTMLContentElementConstructor HTMLContentElement;
-    [EnabledAtRuntime=shadowDOM] attribute HTMLShadowElementConstructor HTMLShadowElement;
+    attribute ShadowRootConstructor WebKitShadowRoot;
+    attribute HTMLContentElementConstructor HTMLContentElement;
+    attribute HTMLShadowElementConstructor HTMLShadowElement;
 
     attribute DOMSelectionConstructor Selection;
     attribute DOMWindowConstructor Window;
@@ -374,7 +372,7 @@
     attribute HTMLCanvasElementConstructor HTMLCanvasElement;
     attribute HTMLDListElementConstructor HTMLDListElement;
     [Conditional=DATALIST_ELEMENT] attribute HTMLDataListElementConstructor HTMLDataListElement;
-    [Conditional=DIALOG_ELEMENT, EnabledPerContext=dialogElement] attribute HTMLDialogElementConstructor HTMLDialogElement;
+    [EnabledPerContext=dialogElement] attribute HTMLDialogElementConstructor HTMLDialogElement;
     attribute HTMLDirectoryElementConstructor HTMLDirectoryElement;
     attribute HTMLDivElementConstructor HTMLDivElement;
     attribute HTMLEmbedElementConstructor HTMLEmbedElement;
@@ -449,14 +447,14 @@
     [Conditional=WEBVTT_REGIONS, EnabledAtRuntime=webkitVideoTrack] attribute TextTrackRegionConstructor TextTrackRegion; // Usable with the new operator
     [EnabledAtRuntime=webkitVideoTrack] attribute TrackEventConstructor TrackEvent;
 
-    [Conditional=VIDEO, EnabledAtRuntime] attribute HTMLAudioElementConstructorConstructor Audio; // Usable with the new operator
-    [Conditional=VIDEO, EnabledAtRuntime] attribute HTMLAudioElementConstructor HTMLAudioElement;
-    [Conditional=VIDEO, EnabledAtRuntime] attribute HTMLMediaElementConstructor HTMLMediaElement;
-    [Conditional=VIDEO, EnabledAtRuntime] attribute HTMLVideoElementConstructor HTMLVideoElement;
-    [Conditional=VIDEO, EnabledAtRuntime] attribute MediaErrorConstructor MediaError;
-    [Conditional=VIDEO, EnabledAtRuntime] attribute TimeRangesConstructor TimeRanges;
-    [Conditional=VIDEO, EnabledAtRuntime] attribute HTMLSourceElementConstructor HTMLSourceElement;
-    [Conditional=VIDEO, EnabledAtRuntime] attribute MediaControllerConstructor MediaController;
+    [EnabledAtRuntime=media] attribute HTMLAudioElementConstructorConstructor Audio; // Usable with the new operator
+    [EnabledAtRuntime=media] attribute HTMLAudioElementConstructor HTMLAudioElement;
+    [EnabledAtRuntime=media] attribute HTMLMediaElementConstructor HTMLMediaElement;
+    [EnabledAtRuntime=media] attribute HTMLVideoElementConstructor HTMLVideoElement;
+    [EnabledAtRuntime=media] attribute MediaErrorConstructor MediaError;
+    [EnabledAtRuntime=media] attribute TimeRangesConstructor TimeRanges;
+    [EnabledAtRuntime=media] attribute HTMLSourceElementConstructor HTMLSourceElement;
+    [EnabledAtRuntime=media] attribute MediaControllerConstructor MediaController;
 
     attribute CanvasPatternConstructor CanvasPattern;
     attribute CanvasGradientConstructor CanvasGradient;
@@ -514,8 +512,8 @@
     attribute TransitionEventConstructor WebKitTransitionEvent;
     attribute WheelEventConstructor WheelEvent;
     attribute XMLHttpRequestProgressEventConstructor XMLHttpRequestProgressEvent;
-    [EnabledAtRuntime] attribute DeviceMotionEventConstructor DeviceMotionEvent;
-    [EnabledAtRuntime] attribute DeviceOrientationEventConstructor DeviceOrientationEvent;
+    [EnabledAtRuntime=deviceMotion] attribute DeviceMotionEventConstructor DeviceMotionEvent;
+    [EnabledAtRuntime=deviceOrientation] attribute DeviceOrientationEventConstructor DeviceOrientationEvent;
     [EnabledAtRuntime=touch] attribute TouchConstructor Touch;
     [EnabledAtRuntime=touch] attribute TouchEventConstructor TouchEvent;
     [EnabledAtRuntime=touch] attribute TouchListConstructor TouchList;
@@ -538,7 +536,7 @@
     attribute ClipboardConstructor Clipboard;
 
     attribute WorkerConstructor Worker; // Usable with the new operator
-    [Conditional=SHARED_WORKERS, EnabledAtRuntime] attribute SharedWorkerConstructor SharedWorker; // Usable with the new operator
+    [EnabledAtRuntime] attribute SharedWorkerConstructor SharedWorker; // Usable with the new operator
 
     attribute FileConstructor File;
     attribute FileListConstructor FileList;
@@ -550,7 +548,7 @@
 
     attribute EventSourceConstructor EventSource; // Usable with new the operator
 
-    // Mozilla has a separate XMLDocument object for XML documents. 
+    // Mozilla has a separate XMLDocument object for XML documents.
     // We just use Document for this.
     attribute DocumentConstructor XMLDocument;
     attribute DOMParserConstructor DOMParser;

@@ -48,14 +48,12 @@
     [RaisesException] AudioBuffer createBuffer(ArrayBuffer? buffer, boolean mixToMono);
 
     // Asynchronous audio file data decoding.
-    [RaisesException] void decodeAudioData(ArrayBuffer audioData, [Callback] AudioBufferCallback successCallback, [Callback] optional AudioBufferCallback errorCallback);
+    [RaisesException] void decodeAudioData(ArrayBuffer audioData, AudioBufferCallback successCallback, optional AudioBufferCallback errorCallback);
 
     // Sources
     AudioBufferSourceNode createBufferSource();
 
-#if defined(ENABLE_VIDEO) && ENABLE_VIDEO
     [RaisesException] MediaElementAudioSourceNode createMediaElementSource(HTMLMediaElement mediaElement);
-#endif
 
 #if defined(ENABLE_MEDIA_STREAM) && ENABLE_MEDIA_STREAM
     [RaisesException] MediaStreamAudioSourceNode createMediaStreamSource(MediaStream mediaStream);
@@ -84,11 +82,9 @@
     attribute EventListener oncomplete;
     void startRendering();
 
-#if defined(ENABLE_LEGACY_WEB_AUDIO) && ENABLE_LEGACY_WEB_AUDIO
     [MeasureAs=LegacyWebAudio, ImplementedAs=createGain] GainNode createGainNode();
     [MeasureAs=LegacyWebAudio, ImplementedAs=createDelay, RaisesException] DelayNode createDelayNode(optional double maxDelayTime);
 
     [MeasureAs=LegacyWebAudio, ImplementedAs=createScriptProcessor, RaisesException] ScriptProcessorNode createJavaScriptNode(unsigned long bufferSize, optional unsigned long numberOfInputChannels, optional unsigned long numberOfOutputChannels);
-#endif
 
 };

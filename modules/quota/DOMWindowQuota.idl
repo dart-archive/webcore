@@ -23,9 +23,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-[
-    Supplemental=DOMWindow
-] interface DOMWindowQuota {
-    [MeasureAs=StorageInfo] readonly attribute StorageInfo webkitStorageInfo;
+partial interface DOMWindow {
+    [DeprecateAs=StorageInfo] readonly attribute StorageInfo webkitStorageInfo;
 };
 

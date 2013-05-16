@@ -45,7 +45,7 @@
      DOMString getAttributeNS([TreatNullAs=NullString,Default=Undefined] optional DOMString namespaceURI,
                                             [Default=Undefined] optional DOMString localName);
      [RaisesException] void setAttributeNS([TreatNullAs=NullString,Default=Undefined] optional DOMString namespaceURI,
-                                       [Default=Undefined] optional DOMString qualifiedName, 
+                                       [Default=Undefined] optional DOMString qualifiedName,
                                        [Default=Undefined] optional DOMString value);
      void removeAttributeNS([TreatNullAs=NullString] DOMString namespaceURI,
                                           DOMString localName);
@@ -109,10 +109,10 @@
     [PerWorldBindings] readonly attribute unsigned long childElementCount;
 
     // ShadowAware API
-    [Reflect=pseudo, EnabledAtRuntime=shadowDOM, ImplementedAs=pseudo, PerWorldBindings] attribute DOMString webkitPseudo;
-    [EnabledAtRuntime=shadowDOM, ImplementedAs=createShadowRoot, RaisesException] ShadowRoot webkitCreateShadowRoot();
-    [EnabledAtRuntime=shadowDOM, ImplementedAs=shadowRoot, PerWorldBindings] readonly attribute ShadowRoot webkitShadowRoot;
-    [EnabledAtRuntime=shadowDOM, ImplementedAs=insertionParentForBinding, PerWorldBindings] readonly attribute Node webkitInsertionParent;
+    [Reflect=pseudo, ImplementedAs=pseudo, PerWorldBindings] attribute DOMString webkitPseudo;
+    [ImplementedAs=createShadowRoot, RaisesException] ShadowRoot webkitCreateShadowRoot();
+    [ImplementedAs=shadowRoot, PerWorldBindings] readonly attribute ShadowRoot webkitShadowRoot;
+    [ImplementedAs=insertionParentForBinding, PerWorldBindings] readonly attribute Node webkitInsertionParent;
 
     // DOM 4
     [RaisesException] void remove();
@@ -123,10 +123,10 @@
 
     // Mozilla version
     const unsigned short ALLOW_KEYBOARD_INPUT = 1;
-    [EnabledAtRuntime] void webkitRequestFullScreen([Default=Undefined] optional unsigned short flags);
+    [EnabledAtRuntime=fullscreen] void webkitRequestFullScreen([Default=Undefined] optional unsigned short flags);
 
     // W3C version
-    [EnabledAtRuntime] void webkitRequestFullscreen();
+    [EnabledAtRuntime=fullscreen] void webkitRequestFullscreen();
 
     void webkitRequestPointerLock();
 

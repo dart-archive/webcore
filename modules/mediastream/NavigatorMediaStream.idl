@@ -19,10 +19,9 @@
 
 [
     Conditional=MEDIA_STREAM,
-    Supplemental=Navigator
-] interface NavigatorMediaStream {
-    [EnabledAtRuntime, RaisesException] void webkitGetUserMedia(Dictionary options,
-                                                 [Callback] NavigatorUserMediaSuccessCallback successCallback,
-                                                 [Callback] optional NavigatorUserMediaErrorCallback errorCallback);
+] partial interface Navigator {
+    [EnabledAtRuntime=mediaStream, RaisesException] void webkitGetUserMedia(Dictionary options,
+                                                 NavigatorUserMediaSuccessCallback successCallback,
+                                                 optional NavigatorUserMediaErrorCallback errorCallback);
 };
 

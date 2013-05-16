@@ -145,9 +145,9 @@
     [TreatReturnedNullStringAs=Undefined] readonly attribute DOMString defaultCharset;
     [TreatReturnedNullStringAs=Undefined] readonly attribute DOMString readyState;
 
-    Element            elementFromPoint([Default=Undefined] optional long x, 
+    Element            elementFromPoint([Default=Undefined] optional long x,
                                         [Default=Undefined] optional long y);
-    Range              caretRangeFromPoint([Default=Undefined] optional long x, 
+    Range              caretRangeFromPoint([Default=Undefined] optional long x,
                                            [Default=Undefined] optional long y);
 
     // Mozilla extensions
@@ -171,22 +171,22 @@
     [RaisesException] NodeList querySelectorAll(DOMString selectors);
 
     // Mozilla version
-    [EnabledAtRuntime] readonly attribute boolean webkitIsFullScreen;
-    [EnabledAtRuntime] readonly attribute boolean webkitFullScreenKeyboardInputAllowed;
-    [EnabledAtRuntime] readonly attribute Element webkitCurrentFullScreenElement;
-    [EnabledAtRuntime] void webkitCancelFullScreen();
+    [EnabledAtRuntime=fullscreen] readonly attribute boolean webkitIsFullScreen;
+    [EnabledAtRuntime=fullscreen] readonly attribute boolean webkitFullScreenKeyboardInputAllowed;
+    [EnabledAtRuntime=fullscreen] readonly attribute Element webkitCurrentFullScreenElement;
+    [EnabledAtRuntime=fullscreen] void webkitCancelFullScreen();
 
     // W3C version
-    [EnabledAtRuntime] readonly attribute boolean webkitFullscreenEnabled;
-    [EnabledAtRuntime] readonly attribute Element webkitFullscreenElement;
-    [EnabledAtRuntime] void webkitExitFullscreen();
+    [EnabledAtRuntime=fullscreen] readonly attribute boolean webkitFullscreenEnabled;
+    [EnabledAtRuntime=fullscreen] readonly attribute Element webkitFullscreenElement;
+    [EnabledAtRuntime=fullscreen] void webkitExitFullscreen();
 
     void webkitExitPointerLock();
     readonly attribute Element webkitPointerLockElement;
 
     [Conditional=CSS_REGIONS, EnabledAtRuntime=cssRegions] DOMNamedFlowCollection webkitGetNamedFlows();
 
-    [Conditional=FONT_LOAD_EVENTS, EnabledAtRuntime=fontLoadEvents] readonly attribute FontLoader fontloader;
+    [EnabledAtRuntime=fontLoadEvents] readonly attribute FontLoader fontloader;
 
     // Event handler DOM attributes
     [NotEnumerable] attribute EventListener onabort;
@@ -277,12 +277,10 @@
                                                      [Default=Undefined] optional float webkitForce);
     [ReturnNewObject, EnabledAtRuntime=touch, Custom, RaisesException] TouchList createTouchList();
 
-#if defined(ENABLE_CUSTOM_ELEMENTS) && ENABLE_CUSTOM_ELEMENTS
-    [EnabledAtRuntime=customDOMElements, Conditional=CUSTOM_ELEMENTS, ImplementedAs=registerElement, CallWith=ScriptState, DeliverCustomElementCallbacks, RaisesException] CustomElementConstructor webkitRegister(DOMString name, optional Dictionary options);
+    [EnabledAtRuntime=customDOMElements, ImplementedAs=registerElement, CallWith=ScriptState, DeliverCustomElementCallbacks, RaisesException] CustomElementConstructor webkitRegister(DOMString name, optional Dictionary options);
     [ReturnNewObject, DeliverCustomElementCallbacks, PerWorldBindings, ActivityLog=AccessForIsolatedWorlds, RaisesException] Element createElement(DOMString localName, [TreatNullAs=NullString] DOMString typeExtension);
     [ReturnNewObject, DeliverCustomElementCallbacks, PerWorldBindings, ActivityLog=AccessForIsolatedWorlds, RaisesException] Element createElementNS([TreatNullAs=NullString] DOMString namespaceURI, DOMString qualifiedName,
                             [TreatNullAs=NullString] DOMString typeExtension);
-#endif
 
     // Page visibility API.
     readonly attribute DOMString webkitVisibilityState;

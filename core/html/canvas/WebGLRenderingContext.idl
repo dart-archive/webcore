@@ -236,7 +236,6 @@ typedef /*unrestricted*/ float GLclampf;
     const GLenum INT                            = 0x1404;
     const GLenum UNSIGNED_INT                   = 0x1405;
     const GLenum FLOAT                          = 0x1406;
-    const GLenum HALF_FLOAT_OES                 = 0x8D61;
 
     /* PixelFormat */
     const GLenum DEPTH_COMPONENT                = 0x1902;
@@ -587,7 +586,6 @@ typedef /*unrestricted*/ float GLclampf;
 
     [StrictTypeChecking, RaisesException] void         readPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, ArrayBufferView pixels);
     
-    [StrictTypeChecking] void         releaseShaderCompiler();
     [StrictTypeChecking] void         renderbufferStorage(GLenum target, GLenum internalformat, GLsizei width, GLsizei height);
     [StrictTypeChecking] void         sampleCoverage(GLclampf value, GLboolean invert);
     [StrictTypeChecking] void         scissor(GLint x, GLint y, GLsizei width, GLsizei height);
@@ -611,10 +609,8 @@ typedef /*unrestricted*/ float GLclampf;
                                                  GLenum format, GLenum type, HTMLImageElement? image);
     [StrictTypeChecking, RaisesException] void         texImage2D(GLenum target, GLint level, GLenum internalformat,
                                                  GLenum format, GLenum type, HTMLCanvasElement? canvas);
-#if defined(ENABLE_VIDEO) && ENABLE_VIDEO
     [StrictTypeChecking, RaisesException] void         texImage2D(GLenum target, GLint level, GLenum internalformat,
                                                  GLenum format, GLenum type, HTMLVideoElement? video);
-#endif
 
     [StrictTypeChecking, RaisesException] void         texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, 
                                                     GLsizei width, GLsizei height, 
@@ -625,10 +621,8 @@ typedef /*unrestricted*/ float GLclampf;
                                                     GLenum format, GLenum type, HTMLImageElement? image);
     [StrictTypeChecking, RaisesException] void         texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
                                                     GLenum format, GLenum type, HTMLCanvasElement? canvas);
-#if defined(ENABLE_VIDEO) && ENABLE_VIDEO
     [StrictTypeChecking, RaisesException] void         texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
                                                     GLenum format, GLenum type, HTMLVideoElement? video);
-#endif
 
     [StrictTypeChecking, RaisesException] void uniform1f(WebGLUniformLocation location, GLfloat x);
     [StrictTypeChecking, Custom, RaisesException] void uniform1fv(WebGLUniformLocation location, Float32Array v);

@@ -32,6 +32,8 @@
     boolean isPreloaded(DOMString url);
     boolean isLoadingFromMemoryCache(DOMString url);
 
+    void crash();
+
     [RaisesException] unsigned long numberOfScopedHTMLStyleChildren(Node scope);
     [RaisesException] CSSStyleDeclaration computedStyleIncludingVisitedInfo(Node node);
 
@@ -127,13 +129,11 @@
     [RaisesException] unsigned long lengthFromRange(Element scope, Range range);
     [RaisesException] DOMString rangeAsText(Range range);
 
-#if defined(ENABLE_TOUCH_ADJUSTMENT) && ENABLE_TOUCH_ADJUSTMENT
     [RaisesException] DOMPoint touchPositionAdjustedToBestClickableNode(long x, long y, long width, long height, Document document);
     [RaisesException] Node touchNodeAdjustedToBestClickableNode(long x, long y, long width, long height, Document document);
     [RaisesException] DOMPoint touchPositionAdjustedToBestContextMenuNode(long x, long y, long width, long height, Document document);
     [RaisesException] Node touchNodeAdjustedToBestContextMenuNode(long x, long y, long width, long height, Document document);
     [RaisesException] ClientRect bestZoomableAreaForTouchPoint(long x, long y, long width, long height, Document document);
-#endif
 
     [RaisesException] long lastSpellCheckRequestSequence(Document document);
     [RaisesException] long lastSpellCheckProcessedSequence(Document document);
@@ -174,6 +174,9 @@
     const unsigned short LAYER_TREE_INCLUDES_PAINTING_PHASES = 8;
     [RaisesException] DOMString layerTreeAsText(Document document, optional unsigned short flags);
 
+    [RaisesException] NodeList paintOrderListBeforePromote(Element element);
+    [RaisesException] NodeList paintOrderListAfterPromote(Element element);
+
     [RaisesException] DOMString scrollingStateTreeAsText(Document document);
     [RaisesException] DOMString mainThreadScrollingReasons(Document document);
     [RaisesException] ClientRectList nonFastScrollableRects(Document document);
@@ -209,9 +212,6 @@
 
     [RaisesException] void setPageScaleFactor(float scaleFactor, long x, long y);
 
-    void setHeaderHeight(Document document, float height);
-    void setFooterHeight(Document document, float height);
-
     void webkitWillEnterFullScreenForElement(Document document, Element element);
     void webkitDidEnterFullScreenForElement(Document document, Element element);
     void webkitWillExitFullScreenForElement(Document document, Element element);
@@ -241,8 +241,6 @@
     void setUsesOverlayScrollbars(boolean enabled);
 
     void forceReload(boolean endToEnd);
-
-    [Conditional=VIDEO] void simulateAudioInterruption(Node node);
 
     [Conditional=ENCRYPTED_MEDIA_V2] void initializeMockCDM();
 
