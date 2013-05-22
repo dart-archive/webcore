@@ -19,15 +19,14 @@
  */
 
 [
-    IndexedGetter,
-    CustomToJSObject,
+    CustomToV8,
     GenerateIsReachable=ImplOwnerNodeRoot,
     DependentLifetime,
     
     SkipVTableValidation
 ] interface HTMLCollection {
     readonly attribute unsigned long length;
-    Node item([Default=Undefined] optional unsigned long index);
+    getter Node item([Default=Undefined] optional unsigned long index);
     getter Node namedItem([Default=Undefined] optional DOMString name);
 };
 

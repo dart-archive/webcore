@@ -26,10 +26,10 @@
 
 [
     CheckSecurity,
-    CustomGetOwnPropertySlot,
     EventTarget,
-    CustomToJSObject,
-    NoWrapperCache,
+    CustomToV8,
+    CustomNamedGetter,
+    DoNotGenerateWrap,
     CustomIndexedGetter,
     InterfaceName=Window
 ] interface DOMWindow {
@@ -527,7 +527,7 @@
 
     attribute WebKitCSSKeyframeRuleConstructor WebKitCSSKeyframeRule;
     attribute WebKitCSSKeyframesRuleConstructor WebKitCSSKeyframesRule;
-    [Conditional=CSS_REGIONS, EnabledAtRuntime=cssRegions] attribute WebKitCSSRegionRuleConstructor WebKitCSSRegionRule;
+    [EnabledAtRuntime=cssRegions] attribute WebKitCSSRegionRuleConstructor WebKitCSSRegionRule;
 
     attribute WebKitCSSMatrixConstructor WebKitCSSMatrix; // Usable with the new operator
 
@@ -544,7 +544,6 @@
 
     attribute NodeFilterConstructor NodeFilter;
     attribute RangeConstructor Range;
-    attribute RangeExceptionConstructor RangeException;
 
     attribute EventSourceConstructor EventSource; // Usable with new the operator
 
@@ -555,13 +554,10 @@
     attribute XMLSerializerConstructor XMLSerializer;
     attribute XMLHttpRequestConstructor XMLHttpRequest; // Usable with the new operator
     attribute XMLHttpRequestUploadConstructor XMLHttpRequestUpload;
-    attribute XMLHttpRequestExceptionConstructor XMLHttpRequestException;
     attribute XSLTProcessorConstructor XSLTProcessor; // Usable with the new operator
 
-#if defined(ENABLE_CHANNEL_MESSAGING) && ENABLE_CHANNEL_MESSAGING
     attribute MessagePortConstructor MessagePort;
     attribute MessageChannelConstructor MessageChannel; // Usable with the new operator
-#endif
 
     attribute DOMPluginConstructor Plugin;
     attribute DOMPluginArrayConstructor PluginArray;

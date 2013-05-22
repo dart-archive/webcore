@@ -19,8 +19,7 @@
  */
 
 [
-    CustomNamedGetter,
-    CustomToJSObject,
+    CustomToV8,
     SkipVTableValidation
 ] interface HTMLDocument : Document {
     [Custom] void open();

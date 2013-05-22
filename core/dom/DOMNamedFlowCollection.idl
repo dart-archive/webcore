@@ -28,13 +28,11 @@
  */
 
 [
-    Conditional=CSS_REGIONS,
     EnabledAtRuntime=cssRegions,
     InterfaceName=WebKitNamedFlowCollection,
-    IndexedGetter,
     ImplementationLacksVTable
 ] interface DOMNamedFlowCollection {
     readonly attribute unsigned long length;
-    NamedFlow item(unsigned long index);
+    getter NamedFlow item(unsigned long index);
     getter NamedFlow namedItem(DOMString name);
 };

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Google Inc. All rights reserved.
+ * Copyright (C) 2013 Google Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -29,14 +29,8 @@
  */
 
 [
-    ImplementationLacksVTable
-] interface DataTransferItemList {
-    readonly attribute long length;
-    getter DataTransferItem item([Default=Undefined] optional unsigned long index);
-
-    void clear();
-    void add(File? file);
-    [RaisesException] void add([Default=Undefined] optional DOMString data, 
-             [Default=Undefined] optional DOMString type);
+    ActiveDOMObject,
+    EventTarget
+] interface MIDIInput : MIDIPort {
+    attribute EventListener onmidimessage;
 };
-
