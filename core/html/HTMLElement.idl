@@ -19,8 +19,7 @@
  */
 
 [
-    CustomToV8,
-    SkipVTableValidation
+    CustomToV8
 ] interface HTMLElement : Element {
              // iht.com relies on id returning the empty string when no id is present. 
              // Other browsers do this as well. So we don't convert null to JS null.
@@ -37,7 +36,7 @@
              [Reflect] attribute DOMString accessKey;
 
     // Extensions
-             [TreatNullAs=NullString, DeliverCustomElementCallbacks, SetterRaisesException] attribute DOMString innerHTML;
+             [TreatNullAs=NullString, DeliverCustomElementCallbacks, PerWorldBindings, ActivityLog=SetterForIsolatedWorlds, SetterRaisesException] attribute DOMString innerHTML;
              [TreatNullAs=NullString, SetterRaisesException] attribute DOMString innerText;
              [TreatNullAs=NullString, DeliverCustomElementCallbacks, SetterRaisesException] attribute DOMString outerHTML;
              [TreatNullAs=NullString, SetterRaisesException] attribute DOMString outerText;
@@ -49,7 +48,7 @@
     [RaisesException] void insertAdjacentText([Default=Undefined] optional DOMString where,
                             [Default=Undefined] optional DOMString text);
 
-    readonly attribute HTMLCollection children;
+    [EnabledAtRuntime=imeAPI] InputMethodContext getInputContext();
 
              [TreatNullAs=NullString, SetterRaisesException] attribute DOMString contentEditable;
     readonly attribute boolean isContentEditable;

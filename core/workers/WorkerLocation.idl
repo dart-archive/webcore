@@ -27,7 +27,7 @@
  */
 
 [
-    ImplementationLacksVTable
+    NoInterfaceObject
 ] interface WorkerLocation {
     readonly attribute DOMString href;
     readonly attribute DOMString protocol;

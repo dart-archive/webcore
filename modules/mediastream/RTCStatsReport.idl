@@ -23,7 +23,7 @@
  */
 
 [
-    ImplementationLacksVTable
+    NoInterfaceObject
 ] interface RTCStatsReport {
     readonly attribute Date timestamp;
     readonly attribute DOMString id;

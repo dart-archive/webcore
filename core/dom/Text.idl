@@ -17,8 +17,9 @@
  * Boston, MA 02110-1301, USA.
  */
 [
-    CustomToV8,
-    SkipVTableValidation,
+    Constructor([Default=NullString] optional DOMString data),
+    CallWith=ScriptExecutionContext,
+    CustomToV8
 ] interface Text : CharacterData {
 
     // DOM Level 1
@@ -27,7 +28,7 @@
 
     // Introduced in DOM Level 3:
     readonly attribute DOMString       wholeText;
-    [RaisesException] Text               replaceWholeText([Default=Undefined] optional DOMString content);
+    Text                               replaceWholeText([Default=Undefined] optional DOMString content);
     // ShadowAware API
     [ImplementedAs=insertionParentForBinding, PerWorldBindings] readonly attribute Node webkitInsertionParent;
 

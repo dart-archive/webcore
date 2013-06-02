@@ -26,9 +26,8 @@
 
 [
     Conditional=SVG,
-    CustomToV8,
+    CustomToV8
     
-    ImplementationLacksVTable
 ] interface SVGPathSeg {
     // Path Segment Types
     const unsigned short PATHSEG_UNKNOWN = 0;

@@ -27,8 +27,7 @@
  */
 
 [
-        DoNotCheckConstants,
-    ImplementationLacksVTable
+        DoNotCheckConstants
 ] interface WebKitCSSTransformValue : CSSValueList {
 
     // OperationTypes
@@ -56,5 +55,6 @@
     const unsigned short CSS_MATRIX3D    = 21;
 
     readonly attribute unsigned short operationType;
+    [ImplementedAs=item] getter CSSValue([Default=Undefined] optional unsigned long index);
 };
 

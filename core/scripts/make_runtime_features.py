@@ -32,56 +32,27 @@ import sys
 
 from in_file import InFile
 import in_generator
-import license
 
-
-HEADER_TEMPLATE = """%(license)s
-#ifndef %(class_name)s_h
-#define %(class_name)s_h
-
-namespace WebCore {
-
-// A class that stores static enablers for all experimental features.
-
-class %(class_name)s {
-public:
-%(method_declarations)s
-private:
-    %(class_name)s() { }
-
-%(storage_declarations)s
-};
-
-} // namespace WebCore
-
-#endif // %(class_name)s_h
-"""
-
-IMPLEMENTATION_TEMPLATE = """%(license)s
-#include "config.h"
-#include "%(class_name)s.h"
-
-namespace WebCore {
-
-%(storage_definitions)s
-
-} // namespace WebCore
-"""
 
 class RuntimeFeatureWriter(in_generator.Writer):
-    class_name = "RuntimeEnabledFeatures"
+    class_name = 'RuntimeEnabledFeatures'
+
+    # FIXME: valid_values and defaults should probably roll into one object.
+    valid_values = {
+        'status': ['stable', 'experimental', 'test'],
+    }
     defaults = {
         'condition' : None,
         'depends_on' : [],
-        'default': 'false',
         'custom': False,
+        'status': None,
     }
 
-    def __init__(self, in_file_path):
-        super(RuntimeFeatureWriter, self).__init__(in_file_path)
-        self._all_features = self.in_file.name_dictionaries
+    def __init__(self, in_file_path, enabled_conditions):
+        super(RuntimeFeatureWriter, self).__init__(in_file_path, enabled_conditions)
+        self._features = self.in_file.name_dictionaries
         # Make sure the resulting dictionaries have all the keys we expect.
-        for feature in self._all_features:
+        for feature in self._features:
             feature['first_lowered_name'] = self._lower_first(feature['name'])
             # Most features just check their isFooEnabled bool
             # but some depend on more than one bool.
@@ -89,49 +60,30 @@ class RuntimeFeatureWriter(in_generator.Writer):
             for dependant_name in feature['depends_on']:
                 enabled_condition += " && is%sEnabled" % dependant_name
             feature['enabled_condition'] = enabled_condition
-        self._non_custom_features = filter(lambda feature: not feature['custom'], self._all_features)
+        self._non_custom_features = filter(lambda feature: not feature['custom'], self._features)
 
     def _lower_first(self, string):
         lowered = string[0].lower() + string[1:]
         lowered = lowered.replace("cSS", "css")
         lowered = lowered.replace("iME", "ime")
+        lowered = lowered.replace("hTML", "html")
         return lowered
 
-    def _method_declaration(self, feature):
-        if feature['custom']:
-            return "    static bool %(first_lowered_name)sEnabled();\n" % feature
-        unconditional = """    static void set%(name)sEnabled(bool isEnabled) { is%(name)sEnabled = isEnabled; }
-    static bool %(first_lowered_name)sEnabled() { return %(enabled_condition)s; }
-"""
-        conditional = "#if ENABLE(%(condition)s)\n" + unconditional + """#else
-    static void set%(name)sEnabled(bool) { }
-    static bool %(first_lowered_name)sEnabled() { return false; }
-#endif
-"""
-        template = conditional if feature['condition'] else unconditional
-        return template % feature
-
-    def _storage_declarations(self, feature):
-        declaration = "    static bool is%(name)sEnabled;" % feature
-        return self.wrap_with_condition(declaration, feature['condition'])
+    def _feature_sets(self):
+        # Another way to think of the status levels is as "sets of features"
+        # which is how we're referring to them in this generator.
+        return self.valid_values['status']
 
     def generate_header(self):
-        return HEADER_TEMPLATE % {
-            'class_name' : self.class_name,
-            'license' : license.license_for_generated_cpp(),
-            'method_declarations' : "\n".join(map(self._method_declaration, self._all_features)),
-            'storage_declarations' : "\n".join(map(self._storage_declarations, self._non_custom_features)),
+        return {
+            'features': self._features,
+            'feature_sets': self._feature_sets(),
         }
 
-    def _storage_definition(self, feature):
-        definition = "bool RuntimeEnabledFeatures::is%(name)sEnabled = %(default)s;" % feature
-        return self.wrap_with_condition(definition, feature['condition'])
-
     def generate_implementation(self):
-        return IMPLEMENTATION_TEMPLATE % {
-            'class_name' : self.class_name,
-            'license' : license.license_for_generated_cpp(),
-            'storage_definitions' : "\n".join(map(self._storage_definition, self._non_custom_features)),
+        return {
+            'features': self._features,
+            'feature_sets': self._feature_sets(),
         }
 
 

@@ -24,8 +24,8 @@
  */
 
 [
-    Constructor,
-    ImplementationLacksVTable
+    NoInterfaceObject,
+    Constructor
 ] interface SpeechGrammarList {
     readonly attribute unsigned long length;
     getter SpeechGrammar item([IsIndex] unsigned long index);

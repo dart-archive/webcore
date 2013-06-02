@@ -23,8 +23,9 @@
  */
 
 [
+    NoInterfaceObject,
     EnabledAtRuntime=customDOMElements,
     WrapAsFunction,
-    CustomCall
+    CustomLegacyCall
 ] interface CustomElementConstructor {
 };

@@ -24,8 +24,7 @@
  */
 
 [
-    Conditional=SVG,
-    ImplementationLacksVTable
+    Conditional=SVG
 ] interface SVGAnimatedPreserveAspectRatio {
     readonly attribute SVGPreserveAspectRatio baseVal;
     readonly attribute SVGPreserveAspectRatio animVal;

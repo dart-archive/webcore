@@ -24,8 +24,8 @@
  */
 
 [
-    Constructor,
-    ImplementationLacksVTable
+    NoInterfaceObject,
+    Constructor
 ] interface SpeechGrammar {
     [URL,CallWith=ScriptExecutionContext] attribute DOMString src;
     attribute float weight;

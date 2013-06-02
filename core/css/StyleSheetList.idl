@@ -20,9 +20,8 @@
 
 // Introduced in DOM Level 2:
 [
-    GenerateIsReachable=ImplDocument,
-    CustomNamedGetter,
-    ImplementationLacksVTable
+    GenerateIsReachable=document,
+    CustomNamedGetter
 ] interface StyleSheetList {
     readonly attribute unsigned long    length;
     getter StyleSheet         item([Default=Undefined] optional unsigned long index);

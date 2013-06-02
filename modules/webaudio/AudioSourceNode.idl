@@ -27,7 +27,7 @@
  */
 
 [
-    Conditional=WEB_AUDIO,
-    ImplementationLacksVTable
+    NoInterfaceObject,
+    Conditional=WEB_AUDIO
 ] interface AudioSourceNode : AudioNode {
 };

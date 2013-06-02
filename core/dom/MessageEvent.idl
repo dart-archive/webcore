@@ -31,8 +31,8 @@
     [InitializedByEventConstructor] readonly attribute DOMString origin;
     [InitializedByEventConstructor] readonly attribute DOMString lastEventId;
     [InitializedByEventConstructor] readonly attribute DOMWindow source;
-    [InitializedByEventConstructor, CachedAttribute, CustomGetter] readonly attribute any data;
-    [InitializedByEventConstructor, CustomGetter] readonly attribute Array ports;
+    [InitializedByEventConstructor, CustomGetter] readonly attribute any data;
+    [InitializedByEventConstructor] readonly attribute MessagePort[] ports;
 
     [Custom] void initMessageEvent([Default=Undefined] optional DOMString typeArg, 
                                    [Default=Undefined] optional boolean canBubbleArg, 

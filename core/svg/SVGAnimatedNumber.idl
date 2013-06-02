@@ -25,8 +25,7 @@
  */
 
 [
-    Conditional=SVG,
-    ImplementationLacksVTable
+    Conditional=SVG
 ] interface SVGAnimatedNumber {
     [StrictTypeChecking, SetterRaisesException] attribute float baseVal;
     readonly attribute float animVal;

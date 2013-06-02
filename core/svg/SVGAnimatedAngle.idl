@@ -24,8 +24,7 @@
  */
 
 [
-    Conditional=SVG,
-    ImplementationLacksVTable
+    Conditional=SVG
 ] interface SVGAnimatedAngle {
     readonly attribute SVGAngle baseVal;
     readonly attribute SVGAngle animVal;

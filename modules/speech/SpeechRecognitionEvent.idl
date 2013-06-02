@@ -24,7 +24,8 @@
  */
 
 [
-    ConstructorTemplate=Event,
+    NoInterfaceObject,
+    ConstructorTemplate=Event
 ] interface SpeechRecognitionEvent : Event {
     [InitializedByEventConstructor] readonly attribute unsigned long resultIndex;
     [InitializedByEventConstructor] readonly attribute SpeechRecognitionResultList results;

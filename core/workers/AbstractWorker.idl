@@ -30,6 +30,7 @@
  */
 
 [
+    NoInterfaceObject,
     ActiveDOMObject,
     EventTarget
 ] interface AbstractWorker {

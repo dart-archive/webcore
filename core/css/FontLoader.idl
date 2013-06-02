@@ -29,10 +29,11 @@
  */
 
 [
+    NoInterfaceObject,
     EnabledAtRuntime=fontLoadEvents,
     ActiveDOMObject,
     EventTarget,
-    GenerateIsReachable=ImplDocument,
+    GenerateIsReachable=document
 ] interface FontLoader {
 
     attribute EventListener onloading;

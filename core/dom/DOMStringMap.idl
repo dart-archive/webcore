@@ -24,12 +24,11 @@
  */
 
 [
-    GenerateIsReachable=ImplElementRoot,
-    CustomNamedGetter,
+    GenerateIsReachable=element,
     CustomDeleteProperty,
     CustomEnumerateProperty,
-    CustomNamedSetter,
-    SkipVTableValidation
+    CustomNamedSetter
 ] interface DOMStringMap {
+    [ImplementedAs=item, OverrideBuiltins] getter DOMString (DOMString name);
 };
 

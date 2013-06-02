@@ -24,7 +24,7 @@
  */
 
 [
-    SkipVTableValidation
+    EnabledPerContext=dialogElement
 ] interface HTMLDialogElement : HTMLElement {
     [Reflect] attribute boolean open;
     [RaisesException] void close();

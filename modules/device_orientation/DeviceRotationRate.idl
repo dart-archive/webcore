@@ -24,7 +24,7 @@
  */
 
 [
-    ImplementationLacksVTable
+    NoInterfaceObject
 ] interface DeviceRotationRate {
     readonly attribute double? alpha;
     readonly attribute double? beta;

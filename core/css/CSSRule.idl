@@ -22,8 +22,7 @@
 [
     CustomToV8,
 
-    DependentLifetime,
-    SkipVTableValidation
+    DependentLifetime
 ] interface CSSRule {
 
     // RuleType

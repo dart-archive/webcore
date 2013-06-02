@@ -24,8 +24,8 @@
  */
 
 [
-    Conditional=INPUT_SPEECH,
-    ImplementationLacksVTable
+    NoInterfaceObject,
+    Conditional=INPUT_SPEECH
 ] interface SpeechInputResult {
     readonly attribute DOMString utterance;
     readonly attribute float confidence;

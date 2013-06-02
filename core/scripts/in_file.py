@@ -44,7 +44,7 @@ import os
 # Bare arguments (no '=') are treated as names with value True.
 # The first field will always be labeled 'name'.
 #
-# InFile.load_from_path('file.in', {'arg': None, 'arg2': []})
+# InFile.load_from_files(['file.in'], {'arg': None, 'arg2': []})
 #
 # Parsing produces an array of dictionaries:
 # [ { 'name' : 'name1', 'arg' :' value', arg2=['value2', 'value3'] }
@@ -53,16 +53,20 @@ def _is_comment(line):
     return line.startswith("//") or line.startswith("#")
 
 class InFile(object):
-    def __init__(self, lines, defaults, default_parameters):
+    def __init__(self, lines, defaults, valid_values=None, default_parameters=None):
         self.name_dictionaries = []
         self.parameters = copy.deepcopy(default_parameters if default_parameters else {})
         self._defaults = defaults
+        self._valid_values = copy.deepcopy(valid_values if valid_values else {})
         self._parse(map(str.strip, lines))
 
     @classmethod
-    def load_from_path(self, path, defaults, default_parameters):
-        with open(os.path.abspath(path)) as in_file:
-            return InFile(in_file.readlines(), defaults, default_parameters)
+    def load_from_files(self, file_paths, defaults, valid_values, default_parameters):
+        lines = []
+        for path in file_paths:
+            with open(os.path.abspath(path)) as in_file:
+                lines += in_file.readlines()
+        return InFile(lines, defaults, valid_values, default_parameters)
 
     def _is_sequence(self, arg):
         return (not hasattr(arg, "strip")
@@ -107,6 +111,9 @@ class InFile(object):
                 arg_name, arg_value = arg_string, True
             if arg_name not in self._defaults:
                 self._fatal("Unknown argument: '%s' in line:\n%s\nKnown arguments: %s" % (arg_name, line, self._defaults.keys()))
+            valid_values = self._valid_values.get(arg_name)
+            if valid_values and arg_value not in valid_values:
+                self._fatal("Unknown value: '%s' in line:\n%s\nKnown values: %s" % (arg_value, line, valid_values))
             if self._is_sequence(args[arg_name]):
                 args[arg_name].append(arg_value)
             else:

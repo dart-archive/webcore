@@ -27,27 +27,46 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import os.path
+import shlex
 import shutil
+import optparse
 
 from in_file import InFile
+import template_expander
 
 
 class Writer(object):
     # Subclasses should override.
     class_name = None
     defaults = None
+    valid_values = None
     default_parameters = None
 
-    def __init__(self, in_file_path):
-        self.in_file = InFile.load_from_path(in_file_path, self.defaults, self.default_parameters)
+    def __init__(self, in_files, enabled_conditions):
+        if isinstance(in_files, basestring):
+            in_files = [in_files]
+        self.in_file = InFile.load_from_files(in_files, self.defaults, self.valid_values, self.default_parameters)
+        self._enabled_conditions = enabled_conditions
 
     # Subclasses should override.
     def generate_header(self):
-        raise NotImplementedError
+        return ''
+
+    # Subclasses should override.
+    def generate_interfaces_header(self):
+        return ''
+
+    # Subclasses should override.
+    def generate_headers_header(self):
+        return ''
 
     # Subclasses should override.
     def generate_implementation(self):
-        raise NotImplementedError
+        return ''
+
+    # Subclasses should override.
+    def generate_idl(self):
+        return ''
 
     def wrap_with_condition(self, string, condition):
         if not condition:
@@ -69,33 +88,72 @@ class Writer(object):
         with open(file_path, "w") as file_to_write:
             file_to_write.write(contents)
 
-    def write_header(self, output_dir):
-        contents = self.generate_header()
+    def _write_file(self, output_dir, generator, file_name):
+        contents = generator()
+        if type(contents) is dict:
+            contents = template_expander.apply_template(file_name + ".tmpl", contents)
         if not contents:
             return
-        path = os.path.join(output_dir, self.class_name + ".h")
+        path = os.path.join(output_dir, file_name)
         self._forcibly_create_text_file_at_path_with_contents(path, contents)
 
+    def write_header(self, output_dir):
+        self._write_file(output_dir, self.generate_header, self.class_name + '.h')
+
+    def write_headers_header(self, output_dir):
+        self._write_file(output_dir, self.generate_headers_header, self.class_name + 'Headers.h')
+
+    def write_interfaces_header(self, output_dir):
+        self._write_file(output_dir, self.generate_interfaces_header, self.class_name + 'Interfaces.h')
+
     def write_implmentation(self, output_dir):
-        contents = self.generate_implementation()
-        if not contents:
-            return
-        path = os.path.join(output_dir, self.class_name + ".cpp")
-        self._forcibly_create_text_file_at_path_with_contents(path, contents)
+        self._write_file(output_dir, self.generate_implementation, self.class_name + '.cpp')
+
+    def write_idl(self, output_dir):
+        self._write_file(output_dir, self.generate_idl, self.class_name + '.idl')
 
 
 class Maker(object):
     def __init__(self, writer_class):
         self._writer_class = writer_class
 
+    def _enabled_conditions_from_defines(self, defines_arg_string):
+        if not defines_arg_string:
+            return []
+
+        defines_strings = shlex.split(defines_arg_string)
+
+        # We only care about feature defines.
+        enable_prefix = 'ENABLE_'
+
+        enabled_conditions = []
+        for define_string in defines_strings:
+            split_define = define_string.split('=')
+            if split_define[1] != '1':
+                continue
+            define = split_define[0]
+            if not define.startswith(enable_prefix):
+                continue
+            enabled_conditions.append(define[len(enable_prefix):])
+        return enabled_conditions
+
     def main(self, argv):
         script_name = os.path.basename(argv[0])
         args = argv[1:]
         if len(args) < 1:
-            print "USAGE: %i INPUT_FILE [OUTPUT_DIRECTORY]" % script_name
+            print "USAGE: %i INPUT_FILES" % script_name
             exit(1)
-        output_dir = args[1] if len(args) > 1 else os.getcwd()
 
-        writer = self._writer_class(args[0])
-        writer.write_header(output_dir)
-        writer.write_implmentation(output_dir)
+        parser = optparse.OptionParser()
+        parser.add_option("--defines")
+        parser.add_option("--output_dir", default=os.getcwd())
+        (options, args) = parser.parse_args()
+
+        enabled_conditions = self._enabled_conditions_from_defines(options.defines)
+
+        writer = self._writer_class(args, enabled_conditions)
+        writer.write_header(options.output_dir)
+        writer.write_headers_header(options.output_dir)
+        writer.write_interfaces_header(options.output_dir)
+        writer.write_implmentation(options.output_dir)
+        writer.write_idl(options.output_dir)

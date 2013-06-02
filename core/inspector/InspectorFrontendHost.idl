@@ -31,7 +31,7 @@
  */
 
 [
-    ImplementationLacksVTable
+    NoInterfaceObject
 ] interface InspectorFrontendHost {
     void closeWindow();
     void bringToFront();

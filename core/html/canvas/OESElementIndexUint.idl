@@ -24,6 +24,7 @@
  */
 
 [
-    Conditional=WEBGL,
+    NoInterfaceObject,
+    Conditional=WEBGL
 ] interface OESElementIndexUint {
 };

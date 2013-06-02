@@ -27,17 +27,8 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
-// http://www.w3.org/TR/ime-api/
-[
-    ImplementationLacksVTable
-] interface InputMethodContext {
-    readonly attribute Composition composition;
-    attribute boolean enabled;
-    readonly attribute DOMString locale;
-
-    void confirmComposition();
-    void setCaretRectangle(Node anchor, long x, long y, long w, long h);
-    void setExclusionRectangle(Node anchor, long x, long y, long w, long h);
-    boolean open();
+partial interface DOMWindow {
+    [EnabledAtRuntime=webKitMediaSource] attribute WebKitMediaSourceConstructor WebKitMediaSource;
+    [EnabledAtRuntime=webKitMediaSource] attribute WebKitSourceBufferConstructor WebKitSourceBuffer;
+    [EnabledAtRuntime=webKitMediaSource] attribute WebKitSourceBufferListConstructor WebKitSourceBufferList;
 };

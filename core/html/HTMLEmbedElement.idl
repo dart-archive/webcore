@@ -21,10 +21,9 @@
 [
     CustomNamedGetter,
     CustomNamedSetter,
-    CustomCall,
+    CustomLegacyCall,
     CustomIndexedGetter,
-    CustomIndexedSetter,
-    SkipVTableValidation
+    CustomIndexedSetter
 ] interface HTMLEmbedElement : HTMLElement {
 [Reflect] attribute DOMString align;
 [Reflect] attribute DOMString height;

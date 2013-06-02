@@ -38,7 +38,6 @@
     [RaisesException] CSSStyleDeclaration computedStyleIncludingVisitedInfo(Node node);
 
     [RaisesException] ShadowRoot ensureShadowRoot(Element host);
-    [RaisesException] ShadowRoot createShadowRoot(Element host);
     [RaisesException] ShadowRoot shadowRoot(Element host);
     [RaisesException] ShadowRoot youngestShadowRoot(Element host);
     [RaisesException] ShadowRoot oldestShadowRoot(Element host);
@@ -61,16 +60,11 @@
     [RaisesException] boolean hasSelectorForAttributeInShadow(Element host, DOMString attributeName);
     [RaisesException] boolean hasSelectorForPseudoClassInShadow(Element host, DOMString pseudoClass);
 
-    // CSS Animation testing.
+    // CSS Animation and Transition testing.
     unsigned long numberOfActiveAnimations();
     [RaisesException] void suspendAnimations(Document document);
     [RaisesException] void resumeAnimations(Document document);
-    [RaisesException] boolean pauseAnimationAtTimeOnElement(DOMString animationName, double pauseTime, Element element);
-    [RaisesException] boolean pauseAnimationAtTimeOnPseudoElement(DOMString animationName, double pauseTime, Element element, DOMString pseudoId);
-
-    // CSS Transition testing.
-    [RaisesException] boolean pauseTransitionAtTimeOnElement(DOMString propertyName, double pauseTime, Element element);
-    [RaisesException] boolean pauseTransitionAtTimeOnPseudoElement(DOMString property, double pauseTime, Element element, DOMString pseudoId);
+    [RaisesException] void pauseAnimations(double pauseTime);
 
     [RaisesException] Node nextSiblingByWalker(Node node);
     [RaisesException] Node firstChildByWalker(Node node);
@@ -87,9 +81,7 @@
     [RaisesException] DOMString[] formControlStateOfPreviousHistoryItem();
     [RaisesException] void setFormControlStateOfPreviousHistoryItem(sequence<DOMString> values);
     [RaisesException] void setEnableMockPagePopup(boolean enabled);
-#if defined(ENABLE_PAGE_POPUP) && ENABLE_PAGE_POPUP
     readonly attribute PagePopupController pagePopupController;
-#endif
 
     [RaisesException] ClientRect absoluteCaretBounds();
 
@@ -154,7 +146,6 @@
 
     [RaisesException] boolean hasSpellingMarker(Document document, long from, long length);
     [RaisesException] boolean hasGrammarMarker(Document document, long from, long length);
-    [RaisesException] boolean hasAutocorrectedMarker(Document document, long from, long length);
     [RaisesException] void setContinuousSpellCheckingEnabled(boolean enabled);
 
     [RaisesException] boolean isOverwriteModeEnabled(Document document);
@@ -165,6 +156,7 @@
     [RaisesException] boolean isPageBoxVisible(Document document, long pageNumber);
 
     readonly attribute InternalSettings settings;
+    readonly attribute InternalRuntimeFlags runtimeFlags;
     readonly attribute unsigned long workerThreadCount;
 
     // Flags for layerTreeAsText.
@@ -210,6 +202,7 @@
     [RaisesException] DOMString pageProperty(DOMString propertyName, long pageNumber);
     [RaisesException] DOMString pageSizeAndMarginsInPixels(long pageIndex, long width, long height, long marginTop, long marginRight, long marginBottom, long marginLeft);
 
+    [RaisesException] void setDeviceScaleFactor(float scaleFactor);
     [RaisesException] void setPageScaleFactor(float scaleFactor, long x, long y);
 
     [RaisesException] void setIsCursorVisible(Document document, boolean isVisible);
@@ -246,7 +239,7 @@
 
     [Conditional=ENCRYPTED_MEDIA_V2] void initializeMockCDM();
 
-    [Conditional=SPEECH_SYNTHESIS] void enableMockSpeechSynthesizer();
+    void enableMockSpeechSynthesizer();
 
     [RaisesException] DOMString getImageSourceURL(Element element);
 

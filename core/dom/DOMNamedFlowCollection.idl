@@ -28,9 +28,9 @@
  */
 
 [
+    NoInterfaceObject,
     EnabledAtRuntime=cssRegions,
-    InterfaceName=WebKitNamedFlowCollection,
-    ImplementationLacksVTable
+    InterfaceName=WebKitNamedFlowCollection
 ] interface DOMNamedFlowCollection {
     readonly attribute unsigned long length;
     getter NamedFlow item(unsigned long index);

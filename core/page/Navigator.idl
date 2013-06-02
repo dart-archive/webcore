@@ -17,16 +17,15 @@
     Boston, MA 02110-1301, USA.
 */
 
-[
-] interface Navigator {
+interface Navigator {
     readonly attribute DOMString appCodeName;
     readonly attribute DOMString appName;
     readonly attribute DOMString appVersion;
     readonly attribute DOMString language;
     readonly attribute DOMString userAgent;
     readonly attribute DOMString platform;
-    readonly attribute DOMPluginArray plugins;
-    readonly attribute DOMMimeTypeArray mimeTypes;
+    readonly attribute PluginArray plugins;
+    readonly attribute MimeTypeArray mimeTypes;
     readonly attribute DOMString product;
     readonly attribute DOMString productSub;
     readonly attribute DOMString vendor;

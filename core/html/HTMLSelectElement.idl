@@ -19,8 +19,7 @@
  */
 
 [
-    CustomIndexedSetter,
-    SkipVTableValidation
+    CustomIndexedSetter
 ] interface HTMLSelectElement : HTMLElement {
     [Reflect] attribute boolean autofocus;
     [Reflect] attribute boolean disabled;

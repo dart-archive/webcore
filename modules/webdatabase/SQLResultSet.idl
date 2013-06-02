@@ -27,7 +27,7 @@
  */
 
 [
-    ImplementationLacksVTable
+    NoInterfaceObject
 ] interface SQLResultSet {
     readonly attribute SQLResultSetRowList rows;
 

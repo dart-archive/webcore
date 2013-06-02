@@ -24,9 +24,8 @@
  */
 
 [
-    Conditional=ENCRYPTED_MEDIA,
-    EnabledAtRuntime=encryptedMedia,
-    ConstructorTemplate=Event 
+    EnabledAtRuntime=legacyEncryptedMedia,
+    ConstructorTemplate=Event
 ] interface MediaKeyEvent : Event {
     [InitializedByEventConstructor] readonly attribute DOMString keySystem;
     [InitializedByEventConstructor] readonly attribute DOMString sessionId;

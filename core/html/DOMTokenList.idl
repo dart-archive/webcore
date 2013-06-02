@@ -23,8 +23,7 @@
  */
 
 [
-    GenerateIsReachable=ImplElementRoot,
-    SkipVTableValidation
+    GenerateIsReachable=element
 ] interface DOMTokenList {
     readonly attribute unsigned long length;
     [TreatReturnedNullStringAs=Null] getter DOMString item(unsigned long index);

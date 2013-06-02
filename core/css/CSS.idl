@@ -28,11 +28,9 @@
  */
 
 [
-    InterfaceName=CSS,
-    ImplementationLacksVTable
-] interface DOMWindowCSS {
-
+    NoInterfaceObject,
+    ImplementedAs=DOMWindowCSS
+] interface CSS {
     boolean supports(DOMString property, DOMString value);
     boolean supports(DOMString conditionText);
-
 };

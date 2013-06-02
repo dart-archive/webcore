@@ -20,13 +20,12 @@
  * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
  * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 [
-    EnabledAtRuntime=webkitVideoTrack,
-    EventTarget,
-    SkipVTableValidation
+    EnabledAtRuntime=videoTrack,
+    EventTarget
 ] interface TextTrack {
     readonly attribute DOMString kind;
     readonly attribute DOMString label;
@@ -48,11 +47,11 @@
 #endif
 
     // EventTarget interface
-    void addEventListener(DOMString type, 
-                          EventListener listener, 
+    void addEventListener(DOMString type,
+                          EventListener listener,
                           optional boolean useCapture);
-    void removeEventListener(DOMString type, 
-                             EventListener listener, 
+    void removeEventListener(DOMString type,
+                             EventListener listener,
                              optional boolean useCapture);
     [RaisesException] boolean dispatchEvent(Event evt);
 };

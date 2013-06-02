@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 Google Inc. All rights reserved.
+ * Copyright (C) 2013 Google Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -27,21 +27,10 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
- 
+
 [
-    EnabledAtRuntime=mediaSource
-] interface SourceBuffer {
-
-    // Returns the time ranges buffered.
-    [GetterRaisesException] readonly attribute TimeRanges buffered;
-
-    // Applies an offset to media segment timestamps.
-    [SetterRaisesException] attribute double timestampOffset;
-
-    // Append segment data.
-    [RaisesException] void append(Uint8Array data);
-
-    // Abort the current segment append sequence.
-    [RaisesException] void abort();
+    NoInterfaceObject
+] interface MIDIOutput : MIDIPort {
+    void send(Uint8Array data, optional double timestamp);
+    void send(sequence<unsigned long> data, optional double timestamp);
 };
-
