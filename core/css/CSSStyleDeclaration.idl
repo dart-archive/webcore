@@ -20,9 +20,6 @@
 
 // Introduced in DOM Level 2:
 [
-    CustomNamedSetter,
-    CustomNamedGetter,
-    CustomEnumerateProperty,
     DependentLifetime
 ] interface CSSStyleDeclaration {
              [TreatReturnedNullStringAs=Null, TreatNullAs=NullString, SetterRaisesException] attribute DOMString        cssText;
@@ -37,6 +34,8 @@
 
     readonly attribute unsigned long    length;
     getter DOMString          item([Default=Undefined] optional unsigned long index);
+    [Custom, CustomEnumerateProperty] getter (DOMString or float) (DOMString name);
+    [Custom] setter void (DOMString propertyName, [TreatNullAs=NullString] DOMString propertyValue);
     readonly attribute CSSRule          parentRule;
 };
 

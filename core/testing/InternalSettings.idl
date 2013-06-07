@@ -42,15 +42,8 @@
     [RaisesException] void setMediaTypeOverride(DOMString mediaTypeOverride);
     [RaisesException] void setEditingBehavior(DOMString behavior);
 
-    [RaisesException] void setShouldDisplayTrackKind(DOMString kind, boolean enabled);
-    [RaisesException] boolean shouldDisplayTrackKind(DOMString trackKind);
     [RaisesException] void setImagesEnabled(boolean enabled);
     [RaisesException] void setDefaultVideoPosterURL(DOMString poster);
-
-    // FIXME: cssVariablesEnabled is a real Setting and not a
-    // RuntimeEnabledFeature, but it should be changed to be a REF.
-    [RaisesException] boolean cssVariablesEnabled();
-    [RaisesException] void setCSSVariablesEnabled(boolean enabled);
 
     // FIXME: The following are RuntimeEnabledFeatures and likely
     // cannot be changed after process start.  These setters should

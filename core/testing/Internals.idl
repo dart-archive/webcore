@@ -59,6 +59,7 @@
     [RaisesException] boolean hasSelectorForClassInShadow(Element host, DOMString className);
     [RaisesException] boolean hasSelectorForAttributeInShadow(Element host, DOMString attributeName);
     [RaisesException] boolean hasSelectorForPseudoClassInShadow(Element host, DOMString pseudoClass);
+    [RaisesException] unsigned short compareTreeScopePosition(Node treeScope1, Node treeScope2);
 
     // CSS Animation and Transition testing.
     unsigned long numberOfActiveAnimations();
@@ -169,6 +170,12 @@
     [RaisesException] NodeList paintOrderListBeforePromote(Element element);
     [RaisesException] NodeList paintOrderListAfterPromote(Element element);
 
+    // The values of these constants must be kept in sync with those in RenderLayer.
+    const unsigned short DoNotForceCompositedScrolling = 0;
+    const unsigned short CompositedScrollingAlwaysOn = 1;
+    const unsigned short CompositedScrollingAlwaysOff = 2;
+    [RaisesException] void setNeedsCompositedScrolling(Element element, unsigned short value);
+
     [RaisesException] DOMString scrollingStateTreeAsText(Document document);
     [RaisesException] DOMString mainThreadScrollingReasons(Document document);
     [RaisesException] ClientRectList nonFastScrollableRects(Document document);
@@ -192,7 +199,6 @@
     DOMWindow openDummyInspectorFrontend(DOMString url);
     void closeDummyInspectorFrontend();
     [RaisesException] void setInspectorResourcesDataSizeLimits(long maximumResourcesContentSize, long maximumSingleResourceContentSize);
-    [RaisesException] void setJavaScriptProfilingEnabled(boolean creates);
 
     DOMString counterValue(Element element);
     long pageNumber(Element element, optional float pageWidth, optional float pageHeight);

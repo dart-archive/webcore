@@ -24,11 +24,10 @@
  */
 
 [
-    GenerateIsReachable=element,
-    CustomDeleteProperty,
-    CustomEnumerateProperty,
-    CustomNamedSetter
+    GenerateIsReachable=element
 ] interface DOMStringMap {
     [ImplementedAs=item, OverrideBuiltins] getter DOMString (DOMString name);
+    [ImplementedAs=anonymousNamedDeleter, RaisesException] deleter boolean (DOMString name);
+    [ImplementedAs=anonymousNamedSetter, RaisesException, OverrideBuiltins] setter DOMString (DOMString name, DOMString value);
 };
 

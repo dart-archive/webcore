@@ -28,7 +28,6 @@
     CheckSecurity,
     EventTarget,
     CustomToV8,
-    CustomNamedGetter,
     DoNotGenerateWrap,
     InterfaceName=Window
 ] interface DOMWindow {
@@ -302,8 +301,6 @@
     // Constructors enabled at runtime but whose interface does not have EnabledAtRuntime
     // extended attribute.
     // FIXME: Remove these.
-    [EnabledAtRuntime=media] attribute HTMLMediaElementConstructor HTMLMediaElement;
-    [EnabledAtRuntime=media] attribute HTMLVideoElementConstructor HTMLVideoElement;
     [EnabledAtRuntime=media] attribute MediaErrorConstructor MediaError;
     [EnabledAtRuntime=media] attribute TimeRangesConstructor TimeRanges;
     [EnabledAtRuntime=media] attribute HTMLSourceElementConstructor HTMLSourceElement;
@@ -334,6 +331,7 @@
     // window.toString() requires special handling in V8
     [DoNotCheckSignature, DoNotCheckSecurity, Custom, NotEnumerable] DOMString toString();
 
-    [ImplementedAs=anonymousIndexedGetter] getter DOMWindow(unsigned long index);
+    [ImplementedAs=anonymousIndexedGetter, NotEnumerable] getter DOMWindow(unsigned long index);
+    [Custom, NotEnumerable] getter DOMWindow (DOMString name);
 };
 

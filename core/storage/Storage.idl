@@ -23,14 +23,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-[
-    CustomDeleteProperty,
-    CustomEnumerateProperty,
-    CustomIndexedSetter,
-    CustomNamedSetter
-] interface Storage {
-    [RaisesException, ImplementedAs=anonymousIndexedGetter] getter DOMString(unsigned long index);
+interface Storage {
+    [RaisesException, ImplementedAs=anonymousIndexedGetter, NotEnumerable] getter DOMString(unsigned long index);
+    [RaisesException, ImplementedAs=anonymousIndexedSetter] setter DOMString (unsigned long index, DOMString value);
+    [ImplementedAs=anonymousIndexedDeleter, RaisesException] deleter boolean (unsigned long index);
     [RaisesException, ImplementedAs=anonymousNamedGetter] getter DOMString(DOMString name);
+    [RaisesException, ImplementedAs=anonymousNamedSetter] setter DOMString(DOMString name, DOMString value);
+    [ImplementedAs=anonymousNamedDeleter, RaisesException] deleter boolean (DOMString name);
     [NotEnumerable, GetterRaisesException] readonly attribute unsigned long length;
     [NotEnumerable, TreatReturnedNullStringAs=Null, RaisesException] DOMString key(unsigned long index);
     [NotEnumerable, TreatReturnedNullStringAs=Null, PerWorldBindings, ActivityLog=AccessForIsolatedWorlds, RaisesException] DOMString getItem(DOMString key);
