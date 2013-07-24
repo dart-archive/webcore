@@ -226,7 +226,11 @@ class RawTypes(object):
 
         @classmethod
         def get_raw_validator_call_text(cls):
-            return "RuntimeCastHelper::assertType<InspectorValue::Type%s>" % cls.get_validate_method_params().template_type
+            return "RuntimeCastHelper::assertType<JSONValue::Type%s>" % cls.get_validate_method_params().template_type
+
+        @staticmethod
+        def get_validate_method_params():
+            raise Exception("Abstract method")
 
     class String(BaseType):
         @staticmethod
@@ -234,6 +238,10 @@ class RawTypes(object):
             return "String"
 
         get_setter_name = get_getter_name
+
+        @staticmethod
+        def get_constructor_pattern():
+            return "InspectorString::create(%s)"
 
         @staticmethod
         def get_c_initializer():
@@ -271,6 +279,10 @@ class RawTypes(object):
             return "Number"
 
         @staticmethod
+        def get_constructor_pattern():
+            return "InspectorBasicValue::create(%s)"
+
+        @staticmethod
         def get_c_initializer():
             return "0"
 
@@ -304,6 +316,10 @@ class RawTypes(object):
             return "Number"
 
         @staticmethod
+        def get_constructor_pattern():
+            return "InspectorBasicValue::create(%s)"
+
+        @staticmethod
         def get_c_initializer():
             return "0"
 
@@ -335,6 +351,10 @@ class RawTypes(object):
             return "Boolean"
 
         get_setter_name = get_getter_name
+
+        @staticmethod
+        def get_constructor_pattern():
+            return "InspectorBasicValue::create(%s)"
 
         @staticmethod
         def get_c_initializer():
@@ -372,8 +392,12 @@ class RawTypes(object):
             return "Value"
 
         @staticmethod
+        def get_constructor_pattern():
+            return "%s"
+
+        @staticmethod
         def get_c_initializer():
-            return "InspectorObject::create()"
+            return "JSONObject::create()"
 
         @staticmethod
         def get_output_argument_prefix():
@@ -395,7 +419,7 @@ class RawTypes(object):
 
         @staticmethod
         def get_array_item_raw_c_type_text():
-            return "InspectorObject"
+            return "JSONObject"
 
         @staticmethod
         def get_raw_type_model():
@@ -413,6 +437,10 @@ class RawTypes(object):
             raise Exception("Unsupported")
 
         @staticmethod
+        def get_constructor_pattern():
+            raise Exception("Unsupported")
+
+        @staticmethod
         def get_raw_validator_call_text():
             return "RuntimeCastHelper::assertAny"
 
@@ -426,7 +454,7 @@ class RawTypes(object):
 
         @staticmethod
         def get_array_item_raw_c_type_text():
-            return "InspectorValue"
+            return "JSONValue"
 
         @staticmethod
         def get_raw_type_model():
@@ -442,8 +470,12 @@ class RawTypes(object):
             return "Value"
 
         @staticmethod
+        def get_constructor_pattern():
+            return "%s"
+
+        @staticmethod
         def get_c_initializer():
-            return "InspectorArray::create()"
+            return "JSONArray::create()"
 
         @staticmethod
         def get_output_argument_prefix():
@@ -465,7 +497,7 @@ class RawTypes(object):
 
         @staticmethod
         def get_array_item_raw_c_type_text():
-            return "InspectorArray"
+            return "JSONArray"
 
         @staticmethod
         def get_raw_type_model():
@@ -662,14 +694,14 @@ class TypeModel:
             cls.Int = cls.ValueType("int", False)
         cls.Number = cls.ValueType("double", False)
         cls.String = cls.ValueType("String", True,)
-        cls.Object = cls.RefPtrBased("InspectorObject")
-        cls.Array = cls.RefPtrBased("InspectorArray")
-        cls.Any = cls.RefPtrBased("InspectorValue")
+        cls.Object = cls.RefPtrBased("JSONObject")
+        cls.Array = cls.RefPtrBased("JSONArray")
+        cls.Any = cls.RefPtrBased("JSONValue")
 
 TypeModel.init_class()
 
 
-# Collection of InspectorObject class methods that are likely to be overloaded in generated class.
+# Collection of JSONObject class methods that are likely to be overloaded in generated class.
 # We must explicitly import all overloaded methods or they won't be available to user.
 INSPECTOR_OBJECT_SETTER_NAMES = frozenset(["setValue", "setBoolean", "setNumber", "setString", "setValue", "setObject", "setArray"])
 
@@ -865,14 +897,14 @@ class TypeBindings:
 
                                 if enum_binding_cls.need_internal_runtime_cast_:
                                     writer.append("#if %s\n" % VALIDATOR_IFDEF_NAME)
-                                    writer.newline("    static void assertCorrectValue(InspectorValue* value);\n")
+                                    writer.newline("    static void assertCorrectValue(JSONValue* value);\n")
                                     writer.append("#endif  // %s\n" % VALIDATOR_IFDEF_NAME)
 
                                     validator_writer = generate_context.validator_writer
 
                                     domain_fixes = DomainNameFixes.get_fixed_data(context_domain_name)
 
-                                    validator_writer.newline("void %s%s::assertCorrectValue(InspectorValue* value)\n" % (helper.full_name_prefix_for_impl, enum_name))
+                                    validator_writer.newline("void %s%s::assertCorrectValue(JSONValue* value)\n" % (helper.full_name_prefix_for_impl, enum_name))
                                     validator_writer.newline("{\n")
                                     validator_writer.newline("    WTF::String s;\n")
                                     validator_writer.newline("    bool cast_res = value->asString(&s);\n")
@@ -1018,7 +1050,7 @@ class TypeBindings:
 
                         @classmethod
                         def get_array_item_c_type_text(cls):
-                            return "const %s%s&" % (helper.full_name_prefix_for_use, fixed_type_name.class_name)
+                            return "%s%s" % (helper.full_name_prefix_for_use, fixed_type_name.class_name)
 
                     return TypedefString
 
@@ -1103,9 +1135,9 @@ class TypeBindings:
                                 writer.append(class_name)
                                 writer.append(" : public ")
                                 if is_open_type:
-                                    writer.append("InspectorObject")
+                                    writer.append("JSONObject")
                                 else:
-                                    writer.append("InspectorObjectBase")
+                                    writer.append("JSONObjectBase")
                                 writer.append(" {\n")
                                 writer.newline("public:\n")
                                 ad_hoc_type_writer = writer.insert_writer("    ")
@@ -1182,25 +1214,25 @@ class TypeBindings:
 
 
                                     if setter_name in INSPECTOR_OBJECT_SETTER_NAMES:
-                                        writer.newline("    using InspectorObjectBase::%s;\n\n" % setter_name)
+                                        writer.newline("    using JSONObjectBase::%s;\n\n" % setter_name)
 
                                 if class_binding_cls.need_user_runtime_cast_:
-                                    writer.newline("    static PassRefPtr<%s> runtimeCast(PassRefPtr<InspectorValue> value)\n" % class_name)
+                                    writer.newline("    static PassRefPtr<%s> runtimeCast(PassRefPtr<JSONValue> value)\n" % class_name)
                                     writer.newline("    {\n")
-                                    writer.newline("        RefPtr<InspectorObject> object;\n")
+                                    writer.newline("        RefPtr<JSONObject> object;\n")
                                     writer.newline("        bool castRes = value->asObject(&object);\n")
                                     writer.newline("        ASSERT_UNUSED(castRes, castRes);\n")
                                     writer.append("#if %s\n" % VALIDATOR_IFDEF_NAME)
                                     writer.newline("        assertCorrectValue(object.get());\n")
                                     writer.append("#endif  // %s\n" % VALIDATOR_IFDEF_NAME)
-                                    writer.newline("        COMPILE_ASSERT(sizeof(%s) == sizeof(InspectorObjectBase), type_cast_problem);\n" % class_name)
-                                    writer.newline("        return static_cast<%s*>(static_cast<InspectorObjectBase*>(object.get()));\n" % class_name)
+                                    writer.newline("        COMPILE_ASSERT(sizeof(%s) == sizeof(JSONObjectBase), type_cast_problem);\n" % class_name)
+                                    writer.newline("        return static_cast<%s*>(static_cast<JSONObjectBase*>(object.get()));\n" % class_name)
                                     writer.newline("    }\n")
                                     writer.append("\n")
 
                                 if class_binding_cls.need_internal_runtime_cast_:
                                     writer.append("#if %s\n" % VALIDATOR_IFDEF_NAME)
-                                    writer.newline("    static void assertCorrectValue(InspectorValue* value);\n")
+                                    writer.newline("    static void assertCorrectValue(JSONValue* value);\n")
                                     writer.append("#endif  // %s\n" % VALIDATOR_IFDEF_NAME)
 
                                     closed_field_set = (context_domain_name + "." + class_name) not in TYPES_WITH_OPEN_FIELD_LIST_SET
@@ -1209,15 +1241,15 @@ class TypeBindings:
 
                                     domain_fixes = DomainNameFixes.get_fixed_data(context_domain_name)
 
-                                    validator_writer.newline("void %s%s::assertCorrectValue(InspectorValue* value)\n" % (helper.full_name_prefix_for_impl, class_name))
+                                    validator_writer.newline("void %s%s::assertCorrectValue(JSONValue* value)\n" % (helper.full_name_prefix_for_impl, class_name))
                                     validator_writer.newline("{\n")
-                                    validator_writer.newline("    RefPtr<InspectorObject> object;\n")
+                                    validator_writer.newline("    RefPtr<JSONObject> object;\n")
                                     validator_writer.newline("    bool castRes = value->asObject(&object);\n")
                                     validator_writer.newline("    ASSERT_UNUSED(castRes, castRes);\n")
                                     for prop_data in resolve_data.main_properties:
                                         validator_writer.newline("    {\n")
                                         it_name = "%sPos" % prop_data.p["name"]
-                                        validator_writer.newline("        InspectorObject::iterator %s;\n" % it_name)
+                                        validator_writer.newline("        JSONObject::iterator %s;\n" % it_name)
                                         validator_writer.newline("        %s = object->find(\"%s\");\n" % (it_name, prop_data.p["name"]))
                                         validator_writer.newline("        ASSERT(%s != object->end());\n" % it_name)
                                         validator_writer.newline("        %s(%s->value.get());\n" % (prop_data.param_type_binding.get_validator_call_text(), it_name))
@@ -1229,7 +1261,7 @@ class TypeBindings:
                                     for prop_data in resolve_data.optional_properties:
                                         validator_writer.newline("    {\n")
                                         it_name = "%sPos" % prop_data.p["name"]
-                                        validator_writer.newline("        InspectorObject::iterator %s;\n" % it_name)
+                                        validator_writer.newline("        JSONObject::iterator %s;\n" % it_name)
                                         validator_writer.newline("        %s = object->find(\"%s\");\n" % (it_name, prop_data.p["name"]))
                                         validator_writer.newline("        if (%s != object->end()) {\n" % it_name)
                                         validator_writer.newline("            %s(%s->value.get());\n" % (prop_data.param_type_binding.get_validator_call_text(), it_name))
@@ -1340,7 +1372,7 @@ class TypeBindings:
 
                     @staticmethod
                     def get_validator_call_text():
-                        return "RuntimeCastHelper::assertType<InspectorValue::TypeObject>"
+                        return "RuntimeCastHelper::assertType<JSONValue::TypeObject>"
 
                     @classmethod
                     def get_array_item_c_type_text(cls):
@@ -1650,7 +1682,8 @@ class Templates:
     frontend_domain_class = string.Template(CodeGeneratorInspectorStrings.frontend_domain_class)
     backend_method = string.Template(CodeGeneratorInspectorStrings.backend_method)
     frontend_method = string.Template(CodeGeneratorInspectorStrings.frontend_method)
-    callback_method = string.Template(CodeGeneratorInspectorStrings.callback_method)
+    callback_main_methods = string.Template(CodeGeneratorInspectorStrings.callback_main_methods)
+    callback_failure_method = string.Template(CodeGeneratorInspectorStrings.callback_failure_method)
     frontend_h = string.Template(file_header_ + CodeGeneratorInspectorStrings.frontend_h)
     backend_h = string.Template(file_header_ + CodeGeneratorInspectorStrings.backend_h)
     backend_cpp = string.Template(file_header_ + CodeGeneratorInspectorStrings.backend_cpp)
@@ -1839,7 +1872,7 @@ class Generator:
     class EventMethodStructTemplate:
         @staticmethod
         def append_prolog(line_list):
-            line_list.append("    RefPtr<InspectorObject> paramsObject = InspectorObject::create();\n")
+            line_list.append("    RefPtr<JSONObject> paramsObject = JSONObject::create();\n")
 
         @staticmethod
         def append_epilog(line_list):
@@ -1855,7 +1888,7 @@ class Generator:
 
         Generator.method_name_enum_list.append("        %s," % cmd_enum_name)
         Generator.method_handler_list.append("            &InspectorBackendDispatcherImpl::%s_%s," % (domain_name, json_command_name))
-        Generator.backend_method_declaration_list.append("    void %s_%s(long callId, InspectorObject* requestMessageObject);" % (domain_name, json_command_name))
+        Generator.backend_method_declaration_list.append("    void %s_%s(long callId, JSONObject* requestMessageObject);" % (domain_name, json_command_name))
 
         ad_hoc_type_output = []
         Generator.backend_agent_interface_list.append(ad_hoc_type_output)
@@ -1866,13 +1899,34 @@ class Generator:
         method_in_code = ""
         method_out_code = ""
         agent_call_param_list = []
-        response_cook_list = []
         request_message_param = ""
+        normal_response_cook_text = ""
+        error_response_cook_text = ""
+        error_type_binding = None
+        if "error" in json_command:
+            json_error = json_command["error"]
+            error_type_binding = Generator.resolve_type_and_generate_ad_hoc(json_error, json_command_name + "Error", json_command_name, domain_name, ad_hoc_type_writer, agent_interface_name + "::")
+            error_type_model = error_type_binding.get_type_model().get_optional()
+            error_annotated_type = error_type_model.get_command_return_pass_model().get_output_parameter_type()
+            agent_call_param_list.append(", %serrorData" % error_type_model.get_command_return_pass_model().get_output_argument_prefix())
+            Generator.backend_agent_interface_list.append(", %s errorData" % error_annotated_type)
+            method_in_code += "    %s errorData;\n" % error_type_model.get_command_return_pass_model().get_return_var_type()
+
+            setter_argument = error_type_model.get_command_return_pass_model().get_output_to_raw_expression() % "errorData"
+            if error_type_binding.get_setter_value_expression_pattern():
+                setter_argument = error_type_binding.get_setter_value_expression_pattern() % setter_argument
+            error_assigment_value = error_type_binding.reduce_to_raw_type().get_constructor_pattern() % setter_argument
+
+            cook = "            resultErrorData = %s;\n" % error_assigment_value
+
+            error_condition_pattern = error_type_model.get_command_return_pass_model().get_set_return_condition()
+            cook = ("            if (%s)\n    " % (error_condition_pattern % "errorData")) + cook
+            error_response_cook_text = "        if (error.length()) {\n" + cook + "        }\n"
+
         if "parameters" in json_command:
             json_params = json_command["parameters"]
             method_in_code += Templates.param_container_access_code
             request_message_param = " requestMessageObject"
-            js_param_list = []
 
             for json_parameter in json_params:
                 json_param_name = json_parameter["name"]
@@ -1909,7 +1963,6 @@ class Generator:
                 agent_call_param_list.append(param)
                 Generator.backend_agent_interface_list.append(", %s in_%s" % (formal_param_type_pattern % non_optional_type_model.get_command_return_pass_model().get_return_var_type(), json_param_name))
 
-        response_cook_text = ""
         if json_command.get("async") == True:
             callback_name = Capitalizer.lower_camel_case_to_upper(json_command_name) + "Callback"
 
@@ -1920,33 +1973,51 @@ class Generator:
             Generator.generate_send_method(json_command.get("returns"), json_command_name, domain_name, ad_hoc_type_writer,
                                            decl_parameter_list,
                                            Generator.CallbackMethodStructTemplate,
-                                           Generator.backend_method_implementation_list, Templates.callback_method,
+                                           Generator.backend_method_implementation_list, Templates.callback_main_methods,
                                            {"callbackName": callback_name, "agentName": agent_interface_name})
 
             callback_writer.newline("class " + callback_name + " : public CallbackBase {\n")
             callback_writer.newline("public:\n")
             callback_writer.newline("    " + callback_name + "(PassRefPtr<InspectorBackendDispatcherImpl>, int id);\n")
             callback_writer.newline("    void sendSuccess(" + ", ".join(decl_parameter_list) + ");\n")
+            error_part_writer = callback_writer.insert_writer("")
             callback_writer.newline("};\n")
+
+            if error_type_binding:
+                annotated_type = error_type_model.get_input_param_type_text()
+                error_part_writer.newline("    void sendFailure(const ErrorString&, %s);\n" % annotated_type)
+                error_part_writer.newline("    using CallbackBase::sendFailure;\n")
+
+                assigment_value = error_type_model.get_event_setter_expression_pattern() % "errorData"
+                assigment_value = error_type_binding.reduce_to_raw_type().get_constructor_pattern() % assigment_value
+
+                Generator.backend_method_implementation_list.append(Templates.callback_failure_method.substitute(None,
+                    agentName=agent_interface_name,
+                    callbackName=callback_name,
+                    parameter=annotated_type + " errorData",
+                    argument=assigment_value))
+
+
 
             ad_hoc_type_output.append(callback_output)
 
             method_out_code += "    RefPtr<" + agent_interface_name + "::" + callback_name + "> callback = adoptRef(new " + agent_interface_name + "::" + callback_name + "(this, callId));\n"
             agent_call_param_list.append(", callback")
-            response_cook_text += "        if (!error.length()) \n"
-            response_cook_text += "            return;\n"
-            response_cook_text += "        callback->disable();\n"
+            normal_response_cook_text += "        if (!error.length()) \n"
+            normal_response_cook_text += "            return;\n"
+            normal_response_cook_text += "        callback->disable();\n"
             Generator.backend_agent_interface_list.append(", PassRefPtr<%s> callback" % callback_name)
         else:
             if "returns" in json_command:
                 method_out_code += "\n"
+                response_cook_list = []
                 for json_return in json_command["returns"]:
 
                     json_return_name = json_return["name"]
 
                     optional = bool(json_return.get("optional"))
 
-                    return_type_binding = Generator.resolve_type_and_generate_ad_hoc(json_return, json_command_name, domain_name, ad_hoc_type_writer, agent_interface_name + "::")
+                    return_type_binding = Generator.resolve_param_type_and_generate_ad_hoc(json_return, json_command_name, domain_name, ad_hoc_type_writer, agent_interface_name + "::")
 
                     raw_type = return_type_binding.reduce_to_raw_type()
                     setter_type = raw_type.get_setter_name()
@@ -1971,7 +2042,7 @@ class Generator:
                         cook = ("            if (%s)\n    " % (set_condition_pattern % var_name)) + cook
                     annotated_type = type_model.get_command_return_pass_model().get_output_parameter_type()
 
-                    param_name = "out_%s" % json_return_name
+                    param_name = var_name
                     if optional:
                         param_name = "opt_" + param_name
 
@@ -1981,10 +2052,10 @@ class Generator:
                     method_out_code += code
                     agent_call_param_list.append(param)
 
-                response_cook_text = "".join(response_cook_list)
+                normal_response_cook_text += "".join(response_cook_list)
 
-                if len(response_cook_text) != 0:
-                    response_cook_text = "        if (!error.length()) {\n" + response_cook_text + "        }"
+                if len(normal_response_cook_text) != 0:
+                    normal_response_cook_text = "        if (!error.length()) {\n" + normal_response_cook_text + "        }"
 
         Generator.backend_method_implementation_list.append(Templates.backend_method.substitute(None,
             domainName=domain_name, methodName=json_command_name,
@@ -1993,7 +2064,8 @@ class Generator:
             methodOutCode=method_out_code,
             agentCallParams="".join(agent_call_param_list),
             requestMessageObject=request_message_param,
-            responseCook=response_cook_text,
+            responseCook=normal_response_cook_text,
+            errorCook=error_response_cook_text,
             commandNameIndex=cmd_enum_name))
         Generator.backend_method_name_declaration_list.append("    \"%s.%s\"," % (domain_name, json_command_name))
 
@@ -2021,7 +2093,7 @@ class Generator:
             for json_parameter in parameters:
                 parameter_name = json_parameter["name"]
 
-                param_type_binding = Generator.resolve_type_and_generate_ad_hoc(json_parameter, event_name, domain_name, ad_hoc_type_writer, "")
+                param_type_binding = Generator.resolve_param_type_and_generate_ad_hoc(json_parameter, event_name, domain_name, ad_hoc_type_writer, "")
 
                 raw_type = param_type_binding.reduce_to_raw_type()
                 raw_type_binding = RawTypeBinding(raw_type)
@@ -2057,9 +2129,13 @@ class Generator:
             parameters=", ".join(decl_parameter_list),
             code="".join(method_line_list), **template_params))
 
-    @staticmethod
-    def resolve_type_and_generate_ad_hoc(json_param, method_name, domain_name, ad_hoc_type_writer, container_relative_name_prefix_param):
+    @classmethod
+    def resolve_param_type_and_generate_ad_hoc(cls, json_param, method_name, domain_name, ad_hoc_type_writer, container_relative_name_prefix_param):
         param_name = json_param["name"]
+        return cls.resolve_type_and_generate_ad_hoc(json_param, param_name, method_name, domain_name, ad_hoc_type_writer, container_relative_name_prefix_param)
+
+    @staticmethod
+    def resolve_type_and_generate_ad_hoc(typable_element, element_name, method_name, domain_name, ad_hoc_type_writer, container_relative_name_prefix_param):
         ad_hoc_type_list = []
 
         class AdHocTypeContext:
@@ -2069,11 +2145,11 @@ class Generator:
             @staticmethod
             def get_type_name_fix():
                 class NameFix:
-                    class_name = Capitalizer.lower_camel_case_to_upper(param_name)
+                    class_name = Capitalizer.lower_camel_case_to_upper(element_name)
 
                     @staticmethod
                     def output_comment(writer):
-                        writer.newline("// Named after parameter '%s' while generating command/event %s.\n" % (param_name, method_name))
+                        writer.newline("// Named after parameter '%s' while generating command/event %s.\n" % (element_name, method_name))
 
                 return NameFix
 
@@ -2081,7 +2157,7 @@ class Generator:
             def add_type(binding):
                 ad_hoc_type_list.append(binding)
 
-        type_binding = resolve_param_type(json_param, domain_name, AdHocTypeContext)
+        type_binding = resolve_param_type(typable_element, domain_name, AdHocTypeContext)
 
         class InterfaceForwardListener:
             @staticmethod

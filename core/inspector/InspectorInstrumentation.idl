@@ -36,7 +36,7 @@
 *
 * The syntax for an instrumentation method is as follows:
 *
-*    [methodAttributes] returnValue methodName([paramAttributes] paramList)
+*    [methodAttributes] returnValue methodName([paramAttr1] param1, [paramAttr2] param2, ...)
 *
 * Where:
 *   methodAttributes - optional list of method attributes.
@@ -48,8 +48,9 @@
 *       Attributes without "=" are the names of the agents to be invoked.
 *           Examples: DOM, Page, Debugger.
 *
-*   paramAttributes - options list of attributes controlling the parameters handling.
+*   paramAttr - optional attribute controlling the parameters handling (one attribute per parameter max).
 *       Keep - pass first parameter (used to access the InstrumentingAgents instance) to agents.
+*       FastReturn - return early from the inline method if this parameter is 0/false.
 *
 *   returnValue: C++ return value. Only "void" and "InspectorInstrumentationCookie" are supported.
 *
@@ -113,6 +114,9 @@ interface InspectorInstrumentation {
 
     [DOMDebugger, Inline=FastReturn]
     void willSendXMLHttpRequest(ScriptExecutionContext*, const String& url);
+
+    [DOMDebugger, Inline=FastReturn]
+    void didFireWebGLError(Document*, const String& errorName);
 
     [Timeline, Inline=FastReturn]
     void didScheduleResourceRequest([Keep] Document*, const String& url);
@@ -222,8 +226,8 @@ interface InspectorInstrumentation {
     [CSS, Inline=FastReturn]
     void didMatchRule(const InspectorInstrumentationCookie&, bool matched);
 
-    [CSS, Inline=Custom]
-    InspectorInstrumentationCookie willProcessRule(Document* document, StyleRule* rule, StyleResolver* styleResolver);
+    [CSS, Inline=FastReturn]
+    InspectorInstrumentationCookie willProcessRule(Document* document, [FastReturn] StyleRule* rule, StyleResolver* styleResolver);
 
     [CSS, Inline=FastReturn]
     void didProcessRule(const InspectorInstrumentationCookie&);
@@ -241,7 +245,7 @@ interface InspectorInstrumentation {
     void applyEmulatedMedia(Frame*, String* media);
 
     [Timeline, Resource]
-    void willSendRequest(Frame*, unsigned long identifier, DocumentLoader*, ResourceRequest&, const ResourceResponse& redirectResponse);
+    void willSendRequest(Frame*, unsigned long identifier, DocumentLoader*, ResourceRequest&, const ResourceResponse& redirectResponse, const CachedResourceInitiatorInfo&);
 
     void continueAfterPingLoader(Frame*, unsigned long identifier, DocumentLoader*, ResourceRequest&, const ResourceResponse&);
 
@@ -288,7 +292,7 @@ interface InspectorInstrumentation {
     void didFailXHRLoading(ScriptExecutionContext*, ThreadableLoaderClient* client);
 
     [Console, Resource]
-    void didFinishXHRLoading(ScriptExecutionContext*, ThreadableLoaderClient* client, unsigned long identifier, const String& sourceString, const String& url, const String& sendURL, unsigned sendLineNumber);
+    void didFinishXHRLoading(ScriptExecutionContext*, ThreadableLoaderClient* client, unsigned long identifier, ScriptString sourceString, const String& url, const String& sendURL, unsigned sendLineNumber);
 
     [Resource]
     void didReceiveXHRResponse(ScriptExecutionContext*, unsigned long identifier);
@@ -365,36 +369,6 @@ interface InspectorInstrumentation {
     [Timeline, Inline=FastReturn]
     void didFireAnimationFrame(const InspectorInstrumentationCookie&);
 
-    [Console, Debugger, Inline=Custom]  // FIXME: Drop this once we no longer generate stacks outside of Inspector.
-    void addMessageToConsole(Page* page, MessageSource source, MessageType type, MessageLevel level, const String& message, PassRefPtr<ScriptCallStack> callStack, unsigned long requestIdentifier = 0);
-
-    [Console, Debugger, Inline=Custom]
-    void addMessageToConsole(Page* page, MessageSource source, MessageType type, MessageLevel level, const String& message, ScriptState* state, PassRefPtr<ScriptArguments> arguments, unsigned long requestIdentifier = 0);
-
-    [Console, Inline=Custom]
-    void addMessageToConsole(Page* page, MessageSource source, MessageType type, MessageLevel level, const String& message, const String& scriptId, unsigned lineNumber, ScriptState* state = 0, unsigned long requestIdentifier = 0);
-
-    [Console, Inline=Custom]
-    void consoleCount(Page* page, ScriptState* state, PassRefPtr<ScriptArguments> arguments);
-
-    [Timeline, Console, Inline=Custom]
-    void startConsoleTiming([Keep] Frame* frame, const String& title);
-
-    [Console, Timeline, Inline=Custom]
-    void stopConsoleTiming([Keep] Frame* frame, const String& title, PassRefPtr<ScriptCallStack> stack);
-
-    [Timeline, Inline=Custom]
-    void consoleTimeStamp([Keep] Frame* frame, PassRefPtr<ScriptArguments> arguments);
-
-    [Profiler, Inline=Custom]
-    void addStartProfilingMessageToConsole(Page* page, const String& title, unsigned lineNumber, const String& sourceURL);
-
-    [Profiler, Inline=Custom]
-    void addProfile(Page* page, PassRefPtr<ScriptProfile> profile, PassRefPtr<ScriptCallStack> callStack);
-
-    [Database, Inline=Custom]
-    void didOpenDatabase(ScriptExecutionContext* context, PassRefPtr<Database> database, const String& domain, const String& name, const String& version);
-
     [DOMStorage, Inline=FastReturn]
     void didDispatchDOMStorageEvent(Page* page, const String& key, const String& oldValue, const String& newValue, StorageType storageType, SecurityOrigin* securityOrigin);
 
@@ -442,4 +416,88 @@ interface InspectorInstrumentation {
 
     [LayerTree]
     void pseudoElementDestroyed(Page*, PseudoElement*);
+}
+
+interface InspectorConsoleInstrumentation {
+
+#include "core/inspector/ScriptArguments.h"
+#include "core/inspector/ScriptCallStack.h"
+#include "core/inspector/ScriptProfile.h"
+
+    [Console, Debugger]  // FIXME: Drop this once we no longer generate stacks outside of Inspector.
+    void addMessageToConsole(Page* page, MessageSource source, MessageType type, MessageLevel level, const String& message, PassRefPtr<ScriptCallStack> callStack, unsigned long requestIdentifier = 0);
+
+    [Console, Debugger]
+    void addMessageToConsole(Page* page, MessageSource source, MessageType type, MessageLevel level, const String& message, ScriptState* state, PassRefPtr<ScriptArguments> arguments, unsigned long requestIdentifier = 0);
+
+    [Console]
+    void addMessageToConsole(Page* page, MessageSource source, MessageType type, MessageLevel level, const String& message, const String& scriptId, unsigned lineNumber, ScriptState* state = 0, unsigned long requestIdentifier = 0);
+
+    // FIXME: Convert to ScriptArguments to match non-worker context.
+    // Use the same implementation as above as a similar method dispatched on Page.
+    void addMessageToConsole(WorkerContext* workerContext, MessageSource source, MessageType type, MessageLevel level, const String& message, PassRefPtr<ScriptCallStack> callStack, unsigned long requestIdentifier = 0);
+
+    // Use the same implementation as above as a similar method dispatched on Page.
+    void addMessageToConsole(WorkerContext* workerContext, MessageSource source, MessageType type, MessageLevel level, const String& message, const String& scriptId, unsigned lineNumber, ScriptState* state, unsigned long requestIdentifier = 0);
+
+    [Console]
+    void consoleCount(Page* page, ScriptState* state, PassRefPtr<ScriptArguments> arguments);
+
+    [Timeline, Console]
+    void startConsoleTiming([Keep] Frame* frame, const String& title);
+
+    [Console, Timeline]
+    void stopConsoleTiming([Keep] Frame* frame, const String& title, PassRefPtr<ScriptCallStack> stack);
+
+    [Timeline, Inline=FastReturn]
+    void consoleTimeStamp([Keep] Frame* frame, PassRefPtr<ScriptArguments> arguments);
+
+    [Profiler]
+    void addStartProfilingMessageToConsole(Page* page, const String& title, unsigned lineNumber, const String& sourceURL);
+
+    [Profiler]
+    void addProfile(Page* page, PassRefPtr<ScriptProfile> profile, PassRefPtr<ScriptCallStack> callStack);
+}
+
+interface InspectorDatabaseInstrumentation {
+
+#include "modules/webdatabase/Database.h"
+
+    [Database]
+    void didOpenDatabase(ScriptExecutionContext* context, PassRefPtr<Database> database, const String& domain, const String& name, const String& version);
+}
+
+interface InspectorOverrides {
+    [CSS, Inline=FastReturn]
+    bool forcePseudoState([Keep] Element* element, CSSSelector::PseudoType pseudoState);
+
+    [Page, Inline=FastReturn]
+    bool shouldApplyScreenWidthOverride(Frame* frame);
+
+    [Page, Inline=FastReturn]
+    bool shouldApplyScreenHeightOverride(Frame* frame);
+
+    [Worker, Inline=FastReturn]
+    bool shouldPauseDedicatedWorkerOnStart(ScriptExecutionContext* context);
+
+    [Page, Inline=FastReturn]
+    GeolocationPosition* overrideGeolocationPosition(Page* page, [DefaultReturn] GeolocationPosition* position);
+
+    [Page, Inline=FastReturn]
+    DeviceOrientationData* overrideDeviceOrientation(Page* page, [DefaultReturn] DeviceOrientationData* deviceOrientation);
+
+    [Profiler]
+    String getCurrentUserInitiatedProfileName(Page* page, bool incrementProfileNumber);
+}
+
+
+interface InspectorCanvasInstrumentation {
+
+#include "bindings/v8/ScriptObject.h"
+
+    [Canvas]
+    ScriptObject wrapCanvas2DRenderingContextForInstrumentation(Document*, const ScriptObject&);
+
+    [Canvas]
+    ScriptObject wrapWebGLRenderingContextForInstrumentation(Document*, const ScriptObject&);
 }

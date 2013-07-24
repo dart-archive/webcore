@@ -24,9 +24,10 @@
  */
 
 interface SVGGElement : SVGStyledElement,
-                        SVGTests,
                         SVGLangSpace,
-                        SVGExternalResourcesRequired,
                         SVGTransformable {
 };
+
+SVGGElement implements SVGExternalResourcesRequired;
+SVGGElement implements SVGTests;
 

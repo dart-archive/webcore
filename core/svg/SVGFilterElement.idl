@@ -25,10 +25,7 @@
  */
 
 interface SVGFilterElement : SVGStyledElement,
-                             SVGURIReference,
-                             SVGLangSpace,
-                             SVGExternalResourcesRequired
-                             /* SVGUnitTypes */ {
+                             SVGLangSpace {
     readonly attribute SVGAnimatedEnumeration filterUnits;
     readonly attribute SVGAnimatedEnumeration primitiveUnits;
     readonly attribute SVGAnimatedLength      x;
@@ -41,4 +38,7 @@ interface SVGFilterElement : SVGStyledElement,
     void setFilterRes([Default=Undefined] optional unsigned long filterResX, 
                       [Default=Undefined] optional unsigned long filterResY);
 };
+
+SVGFilterElement implements SVGExternalResourcesRequired;
+SVGFilterElement implements SVGURIReference;
 

@@ -34,26 +34,27 @@ import sys
 
 template_h = string.Template("""// Code generated from InspectorInstrumentation.idl
 
-#ifndef InspectorInstrumentationInl_h
-#define InspectorInstrumentationInl_h
+#ifndef ${file_name}_h
+#define ${file_name}_h
+
+${includes}
 
 namespace WebCore {
 
 namespace InspectorInstrumentation {
 
-$impl_declarations
-$inline_methods
+$methods
 } // namespace InspectorInstrumentation
 
 } // namespace WebCore
 
-#endif // !defined(InspectorInstrumentationInl_h)
+#endif // !defined(${file_name}_h)
 """)
 
 template_inline = string.Template("""
 inline void ${name}(${params_public})
 {   ${fast_return}
-    if (InstrumentingAgents* instrumentingAgents = ${agents_getter})
+    if (${condition})
         ${name}Impl(${params_impl});
 }
 """)
@@ -65,20 +66,12 @@ inline void ${name}(${params_public})
 }
 """)
 
-template_inline_accepts_cookie = string.Template("""
-inline void ${name}(${params_public})
+template_inline_returns_value = string.Template("""
+inline ${return_type} ${name}(${params_public})
 {   ${fast_return}
-    if (${cookie}.isValid())
-        ${name}Impl(${params_impl});
-}
-""")
-
-template_inline_returns_cookie = string.Template("""
-inline InspectorInstrumentationCookie ${name}(${params_public})
-{   ${fast_return}
-    if (InstrumentingAgents* instrumentingAgents = ${agents_getter})
+    if (${condition})
         return ${name}Impl(${params_impl});
-    return InspectorInstrumentationCookie();
+    return ${default_return_value};
 }
 """)
 
@@ -86,36 +79,14 @@ inline InspectorInstrumentationCookie ${name}(${params_public})
 template_cpp = string.Template("""// Code generated from InspectorInstrumentation.idl
 
 #include "config.h"
-#include "core/inspector/InspectorInstrumentation.h"
 
-#include "core/inspector/InspectorAgent.h"
-#include "core/inspector/InspectorApplicationCacheAgent.h"
-#include "core/inspector/InspectorCSSAgent.h"
-#include "core/inspector/InspectorCanvasAgent.h"
-#include "core/inspector/InspectorConsoleAgent.h"
-#include "core/inspector/InspectorConsoleInstrumentation.h"
-#include "core/inspector/InspectorDOMAgent.h"
-#include "core/inspector/InspectorDOMDebuggerAgent.h"
-#include "core/inspector/InspectorDOMStorageAgent.h"
-#include "core/inspector/InspectorDatabaseAgent.h"
-#include "core/inspector/InspectorDatabaseInstrumentation.h"
-#include "core/inspector/InspectorDebuggerAgent.h"
-#include "core/inspector/InspectorHeapProfilerAgent.h"
-#include "core/inspector/InspectorLayerTreeAgent.h"
-#include "core/inspector/InspectorPageAgent.h"
-#include "core/inspector/InspectorProfilerAgent.h"
-#include "core/inspector/InspectorResourceAgent.h"
-#include "core/inspector/InspectorTimelineAgent.h"
-#include "core/inspector/InspectorWorkerAgent.h"
-#include "core/inspector/InstrumentingAgents.h"
-#include "core/inspector/PageDebuggerAgent.h"
-#include "core/inspector/PageRuntimeAgent.h"
-#include "core/inspector/WorkerRuntimeAgent.h"
+${includes}
 
 namespace WebCore {
+${extra_definitions}
 
 namespace InspectorInstrumentation {
-$out_of_line_methods
+$methods
 
 } // namespace InspectorInstrumentation
 
@@ -123,79 +94,277 @@ $out_of_line_methods
 """)
 
 template_outofline = string.Template("""
-void ${name}Impl(${params_impl})
-{${agent_calls}
+${return_type} ${name}Impl(${params_impl})
+{${impl_lines}
 }""")
 
 template_agent_call = string.Template("""
-    if (${agent_class}* ${agent}Agent = ${agent_fetch})
-        ${agent}Agent->${name}(${params_agent});""")
+    if (${agent_class}* agent = ${agent_fetch})
+        ${maybe_return}agent->${name}(${params_agent});""")
 
-template_timeline_agent_call = string.Template("""
+template_agent_call_timeline_returns_cookie = string.Template("""
     int timelineAgentId = 0;
-    if (InspectorTimelineAgent* timelineAgent = instrumentingAgents->inspectorTimelineAgent()) {
-        if (timelineAgent->${name}(${params_agent}))
-            timelineAgentId = timelineAgent->id();
+    if (InspectorTimelineAgent* agent = agents->inspectorTimelineAgent()) {
+        if (agent->${name}(${params_agent}))
+            timelineAgentId = agent->id();
     }""")
 
-template_outofline_returns_cookie = string.Template("""
-${return_type} ${name}Impl(${params_impl})
-{${agent_calls}
-    return InspectorInstrumentationCookie(instrumentingAgents, ${timeline_agent_id});
+
+template_instrumenting_agents_h = string.Template("""// Code generated from InspectorInstrumentation.idl
+
+#ifndef InstrumentingAgentsInl_h
+#define InstrumentingAgentsInl_h
+
+#include <wtf/FastAllocBase.h>
+#include <wtf/Noncopyable.h>
+#include <wtf/PassRefPtr.h>
+#include <wtf/RefCounted.h>
+
+namespace WebCore {
+
+${forward_list}
+
+class InstrumentingAgents : public RefCounted<InstrumentingAgents> {
+    WTF_MAKE_NONCOPYABLE(InstrumentingAgents);
+    WTF_MAKE_FAST_ALLOCATED;
+public:
+    static PassRefPtr<InstrumentingAgents> create()
+    {
+        return adoptRef(new InstrumentingAgents());
+    }
+    ~InstrumentingAgents() { }
+    void reset();
+
+${accessor_list}
+
+private:
+    InstrumentingAgents();
+
+${member_list}
+};
+
+}
+
+#endif // !defined(InstrumentingAgentsInl_h)
+""")
+
+template_instrumenting_agent_accessor = string.Template("""
+    ${class_name}* ${getter_name}() const { return ${member_name}; }
+    void set${class_name}(${class_name}* agent) { ${member_name} = agent; }""")
+
+template_instrumenting_agents_cpp = string.Template("""
+InstrumentingAgents::InstrumentingAgents()
+    : $init_list
+{
+}
+
+void InstrumentingAgents::reset()
+{
+    $reset_list
 }""")
 
 
+
+def match_and_consume(pattern, source):
+    match = re.match(pattern, source)
+    if match:
+        return match, source[len(match.group(0)):].strip()
+    return None, source
+
+
 def load_model_from_idl(source):
-    source = re.sub("//.*\n", "", source)    # Remove line comments
-    source = re.sub("\n", " ", source)       # Remove newlines
-    source = re.sub("/\*.*\*/", "", source)  # Remove block comments
-    source = re.sub("\s\s+", " ", source)    # Collapse whitespace
+    source = re.sub("//.*", "", source)  # Remove line comments
+    source = re.sub("/\*(.|\n)*?\*/", "", source, re.MULTILINE)  # Remove block comments
+    source = re.sub("\]\s*?\n\s*", "] ", source)  # Merge the method annotation with the next line
     source = source.strip()
 
-    match = re.match("interface\s\w*\s?\{(.*)\}", source)
-    if not match:
-        sys.stderr.write("Cannot parse the file")
-        sys.exit(1)
-    lines = match.group(1)
+    model = []
 
-    methods = []
-    for line in map(str.strip, lines.split(";")):
-        if len(line) == 0:
-            continue
-        methods.append(Method(line))
-    return methods
+    while len(source):
+        match, source = match_and_consume("interface\s(\w*)\s?\{([^\{]*)\}", source)
+        if not match:
+            sys.stderr.write("Cannot parse %s\n" % source[:100])
+            sys.exit(1)
+        model.append(File(match.group(1), match.group(2)))
+
+    return model
+
+
+class File:
+    def __init__(self, name, source):
+        self.name = name
+        self.header_name = self.name + "Inl"
+        self.includes = [include_inspector_header("InspectorInstrumentation")]
+        self.declarations = []
+        for line in map(str.strip, source.split("\n")):
+            line = re.sub("\s{2,}", " ", line).strip()  # Collapse whitespace
+            if len(line) == 0:
+                continue
+            if line[0] == "#":
+                self.includes.append(line)
+            else:
+                self.declarations.append(Method(line))
+        self.includes.sort()
+
+    def generate(self, cpp_lines, used_agents):
+        header_lines = []
+        for declaration in self.declarations:
+            for agent in set(declaration.agents):
+                used_agents.add(agent)
+            declaration.generate_header(header_lines)
+            declaration.generate_cpp(cpp_lines)
+
+        return template_h.substitute(None,
+                                     file_name=self.header_name,
+                                     includes="\n".join(self.includes),
+                                     methods="\n".join(header_lines))
 
 
 class Method:
     def __init__(self, source):
-        match = re.match("(\[[\w|,|=|\s]*\])?\s?(\w*) (\w*)\((.*)\)", source)
+        match = re.match("(\[[\w|,|=|\s]*\])?\s?(\w*\*?) (\w*)\((.*)\)\s?;", source)
         if not match:
             sys.stderr.write("Cannot parse %s\n" % source)
             sys.exit(1)
 
-        self.method_options = []
+        self.options = []
         if match.group(1):
-            method_options_str = re.sub("\s", "", match.group(1)[1:-1])
-            if len(method_options_str) != 0:
-                self.method_options = method_options_str.split(",")
+            options_str = re.sub("\s", "", match.group(1)[1:-1])
+            if len(options_str) != 0:
+                self.options = options_str.split(",")
 
         self.return_type = match.group(2)
 
         self.name = match.group(3)
 
-        param_string = match.group(4)
+        # Splitting parameters by a comma, assuming that attribute lists contain no more than one attribute.
+        self.params = map(Parameter, map(str.strip, match.group(4).split(",")))
 
-        self.param_options = []
-        options_match = re.match("\[(.*)\]\s?(.*)", param_string)
-        if options_match:
-            param_string = options_match.group(2)
-            self.param_options = map(str.strip, options_match.group(1).split(","))
+        self.accepts_cookie = len(self.params) and self.params[0].type == "const InspectorInstrumentationCookie&"
+        self.returns_cookie = self.return_type == "InspectorInstrumentationCookie"
 
-        self.params = map(Parameter, map(str.strip, param_string.split(",")))
+        self.returns_value = self.return_type != "void"
+
+        if self.return_type == "bool":
+            self.default_return_value = "false"
+        elif self.return_type == "String":
+            self.default_return_value = "\"\""
+        else:
+            self.default_return_value = self.return_type + "()"
+
+        for param in self.params:
+            if "DefaultReturn" in param.options:
+                self.default_return_value = param.name
+
+        self.params_impl = self.params
+        if not self.accepts_cookie and not "Inline=Forward" in self.options:
+            if not "Keep" in self.params_impl[0].options:
+                self.params_impl = self.params_impl[1:]
+            self.params_impl = [Parameter("InstrumentingAgents* agents")] + self.params_impl
+            self.agents_selector_class = re.match("(\w*)", self.params[0].type).group(1)
+
+        self.agents = filter(lambda option: not "=" in option, self.options)
+
+    def generate_header(self, header_lines):
+        if "Inline=Custom" in self.options:
+            return
+
+        header_lines.append("%s %sImpl(%s);" % (
+            self.return_type, self.name, ", ".join(map(Parameter.to_str_class, self.params_impl))))
+
+        if "Inline=FastReturn" in self.options or "Inline=Forward" in self.options:
+            fast_return = "\n    FAST_RETURN_IF_NO_FRONTENDS(%s);" % self.default_return_value
+        else:
+            fast_return = ""
+
+        for param in self.params:
+            if "FastReturn" in param.options:
+                fast_return += "\n    if (!%s)\n        return %s;" % (param.name, self.default_return_value)
+
+        if self.accepts_cookie:
+            condition = "%s.isValid()" % self.params_impl[0].name
+            template = template_inline
+        elif "Inline=Forward" in self.options:
+            condition = ""
+            template = template_inline_forward
+        else:
+            condition = "InstrumentingAgents* agents = instrumentingAgentsFor%s(%s)" % (
+                self.agents_selector_class, self.params[0].name)
+
+            if self.returns_value:
+                template = template_inline_returns_value
+            else:
+                template = template_inline
+
+        header_lines.append(template.substitute(
+            None,
+            name=self.name,
+            fast_return=fast_return,
+            return_type=self.return_type,
+            default_return_value=self.default_return_value,
+            params_public=", ".join(map(Parameter.to_str_full, self.params)),
+            params_impl=", ".join(map(Parameter.to_str_name, self.params_impl)),
+            condition=condition))
+
+    def generate_cpp(self, cpp_lines):
+        if len(self.agents) == 0:
+            return
+
+        body_lines = map(self.generate_agent_call, self.agents)
+
+        if self.returns_cookie:
+            if "Timeline" in self.agents:
+                timeline_agent_id = "timelineAgentId"
+            else:
+                timeline_agent_id = "0"
+            body_lines.append("\n    return InspectorInstrumentationCookie(agents, %s);" % timeline_agent_id)
+        elif self.returns_value:
+            body_lines.append("\n    return %s;" % self.default_return_value)
+
+        cpp_lines.append(template_outofline.substitute(
+            None,
+            return_type=self.return_type,
+            name=self.name,
+            params_impl=", ".join(map(Parameter.to_str_class_and_name, self.params_impl)),
+            impl_lines="".join(body_lines)))
+
+    def generate_agent_call(self, agent):
+        agent_class, agent_getter = agent_getter_signature(agent)
+
+        leading_param_name = self.params_impl[0].name
+        if not self.accepts_cookie:
+            agent_fetch = "%s->%s()" % (leading_param_name, agent_getter)
+        elif agent == "Timeline":
+            agent_fetch = "retrieveTimelineAgent(%s)" % leading_param_name
+        else:
+            agent_fetch = "%s.instrumentingAgents()->%s()" % (leading_param_name, agent_getter)
+
+        if agent == "Timeline" and self.returns_cookie:
+            template = template_agent_call_timeline_returns_cookie
+        else:
+            template = template_agent_call
+
+        if not self.returns_value or self.returns_cookie:
+            maybe_return = ""
+        else:
+            maybe_return = "return "
+
+        return template.substitute(
+            None,
+            name=self.name,
+            agent_class=agent_class,
+            agent_fetch=agent_fetch,
+            maybe_return=maybe_return,
+            params_agent=", ".join(map(Parameter.to_str_name, self.params_impl)[1:]))
 
 
 class Parameter:
     def __init__(self, source):
+        self.options = []
+        match, source = match_and_consume("\[(\w*)\]", source)
+        if match:
+            self.options.append(match.group(1))
+
         parts = map(str.strip, source.split("="))
         if len(parts) == 1:
             self.default_value = None
@@ -232,45 +401,9 @@ class Parameter:
         return self.name
 
 
-# This function is only needed to minimize the diff with the handwritten code.
-# In fact it is sufficient to return a globally unique string.
 def generate_param_name(param_type):
-    base_name = re.match("(const |RefPtr<|PassRefPtr<)?(\w*)", param_type).group(2)
-
-    custom_param_types = {
-        "CharacterData": "characterData",
-        "CSSSelector": "pseudoState",
-        "DocumentStyleSheetCollection": "styleSheetCollection",
-        "EventPath": "eventPath",
-        "FormData": "formData",
-        "InspectorCSSOMWrappers": "inspectorCSSOMWrappers",
-        "InstrumentingAgents": "instrumentingAgents",
-        "NamedFlow": "namedFlow",
-        "RenderObject": "renderer",
-        "RenderLayer": "renderLayer",
-        "ResourceLoader": "resourceLoader",
-        "PseudoElement": "pseudoElement",
-        "ScriptState": "scriptState"}
-    if base_name in custom_param_types:
-        return custom_param_types[base_name]
-
-    match = re.match("(.*)([A-Z][a-z]+)", base_name)
-    if match:
-        return match.group(2).lower()  # CamelCaseWord -> word
-
-    if base_name.lower() == base_name:
-        return base_name + "_"
-    return base_name.lower()
-
-
-# This function is only needed to minimize the diff with the handwritten code.
-# In fact is is sufficient to hardcode a constant string (e.g. "agent") into the template.
-def agent_variable_name(agent):
-    if re.match("DOM", agent):
-        return re.sub("DOM", "dom", agent)
-    if agent.upper() == agent:
-        return agent.lower()
-    return agent[0].lower() + agent[1:]
+    base_name = re.match("(const |PassRefPtr<)?(\w*)", param_type).group(2)
+    return "param" + base_name
 
 
 def agent_class_name(agent):
@@ -280,178 +413,93 @@ def agent_class_name(agent):
     return "Inspector%sAgent" % agent
 
 
-def agent_getter_name(agent):
-    name = agent_class_name(agent)
-    return name[0].lower() + name[1:]
+def agent_getter_signature(agent):
+    agent_class = agent_class_name(agent)
+    return agent_class, agent_class[0].lower() + agent_class[1:]
+
+
+def include_header(name):
+    return "#include \"%s.h\"" % name
+
+
+def include_inspector_header(name):
+    return include_header("core/inspector/" + name)
+
+
+def generate_instrumenting_agents(used_agents):
+    agents = list(used_agents)
+
+    forward_list = []
+    accessor_list = []
+    member_list = []
+    init_list = []
+    reset_list = []
+
+    for agent in agents:
+        class_name, getter_name = agent_getter_signature(agent)
+        member_name = "m_" + getter_name
+
+        forward_list.append("class %s;" % class_name)
+        accessor_list.append(template_instrumenting_agent_accessor.substitute(
+            None,
+            class_name=class_name,
+            getter_name=getter_name,
+            member_name=member_name))
+        member_list.append("    %s* %s;" % (class_name, member_name))
+        init_list.append("%s(0)" % member_name)
+        reset_list.append("%s = 0;" % member_name)
+
+    forward_list.sort()
+    accessor_list.sort()
+    member_list.sort()
+    init_list.sort()
+    reset_list.sort()
+
+    header_lines = template_instrumenting_agents_h.substitute(
+        None,
+        forward_list="\n".join(forward_list),
+        accessor_list="\n".join(accessor_list),
+        member_list="\n".join(member_list))
+
+    cpp_lines = template_instrumenting_agents_cpp.substitute(
+        None,
+        init_list="\n    , ".join(init_list),
+        reset_list="\n    ".join(reset_list))
+
+    return header_lines, cpp_lines
 
 
 def generate(input_path, output_h_dir, output_cpp_dir):
     fin = open(input_path, "r")
-    declarations = load_model_from_idl(fin.read())
+    files = load_model_from_idl(fin.read())
     fin.close()
 
-    impl_declarations = []
-    inline_methods = []
-    out_of_line_methods = []
+    cpp_includes = []
+    cpp_lines = []
+    used_agents = set()
+    for f in files:
+        cpp_includes.append(include_header(f.header_name))
 
-    for declaration in declarations:
-        param_string_public = ", ".join(map(Parameter.to_str_full, declaration.params))
+        fout = open(output_h_dir + "/" + f.header_name + ".h", "w")
+        fout.write(f.generate(cpp_lines, used_agents))
+        fout.close()
 
-        param_list_impl_parsed = declaration.params[:]
+    for agent in used_agents:
+        cpp_includes.append(include_inspector_header(agent_class_name(agent)))
+    cpp_includes.append(include_header("InstrumentingAgentsInl"))
+    cpp_includes.sort()
 
-        accepts_cookie = (declaration.params[0].type == "const InspectorInstrumentationCookie&")
-        if not accepts_cookie and not "Inline=Forward" in declaration.method_options:
-            if not "Keep" in declaration.param_options:
-                param_list_impl_parsed = param_list_impl_parsed[1:]
-            param_list_impl_parsed = [Parameter("InstrumentingAgents*")] + param_list_impl_parsed
+    instrumenting_agents_header, instrumenting_agents_cpp = generate_instrumenting_agents(used_agents)
 
-        generate_inline = not "Inline=Custom" in declaration.method_options
-        if generate_inline:
-            impl_declarations.append("%s %sImpl(%s);" % (
-                declaration.return_type, declaration.name, ", ".join(map(Parameter.to_str_class, param_list_impl_parsed))))
-
-        leading_impl_param_name = param_list_impl_parsed[0].name
-        param_string_impl_full = ", ".join(map(Parameter.to_str_class_and_name, param_list_impl_parsed))
-
-        param_list_impl_names_only = map(Parameter.to_str_name, param_list_impl_parsed)
-        param_string_impl_names_only = ", ".join(param_list_impl_names_only)
-        param_string_agent = ", ".join(param_list_impl_names_only[1:])
-
-        def is_agent_name(name):
-            return not "=" in name
-
-        agents = filter(is_agent_name, declaration.method_options)
-
-        if "Inline=FastReturn" in declaration.method_options or "Inline=Forward" in declaration.method_options:
-            fast_return = "\n    FAST_RETURN_IF_NO_FRONTENDS(%s());" % declaration.return_type
-        else:
-            fast_return = ""
-
-        if accepts_cookie:
-            if generate_inline:
-                inline_methods.append(
-                    template_inline_accepts_cookie.substitute(
-                        None,
-                        name=declaration.name,
-                        fast_return=fast_return,
-                        params_public=param_string_public,
-                        params_impl=param_string_impl_names_only,
-                        cookie=leading_impl_param_name))
-            if len(agents):
-                agent_calls = []
-                for agent in agents:
-                    if agent == "Timeline":
-                        agent_fetch = "retrieveTimelineAgent(%s)" % leading_impl_param_name
-                    else:
-                        agent_fetch = "%s.instrumentingAgents()->%s()" % (leading_impl_param_name, agent_getter_name(agent))
-                    agent_calls.append(
-                        template_agent_call.substitute(
-                            None,
-                            name=declaration.name,
-                            agent_fetch=agent_fetch,
-                            params_agent=param_string_agent,
-                            agent_class=agent_class_name(agent),
-                            agent=agent_variable_name(agent)))
-                out_of_line_methods.append(
-                    template_outofline.substitute(
-                        None,
-                        name=declaration.name,
-                        params_impl=param_string_impl_full,
-                        agent_calls="".join(agent_calls)))
-        else:
-            leading_public_param = declaration.params[0]
-            selector_class = re.match("(\w*)", leading_public_param.type).group(1)
-            agents_getter = "instrumentingAgentsFor%s(%s)" % (selector_class, leading_public_param.name)
-            if declaration.return_type == "void":
-                if generate_inline:
-                    if "Inline=Forward" in declaration.method_options:
-                        inline_methods.append(
-                            template_inline_forward.substitute(
-                                None,
-                                name=declaration.name,
-                                fast_return=fast_return,
-                                params_public=param_string_public,
-                                params_impl=param_string_impl_names_only))
-                    else:
-                        inline_methods.append(
-                            template_inline.substitute(
-                                None,
-                                name=declaration.name,
-                                fast_return=fast_return,
-                                params_public=param_string_public,
-                                params_impl=param_string_impl_names_only,
-                                agents_getter=agents_getter))
-                if len(agents):
-                    agent_calls = []
-                    for agent in agents:
-                        agent_fetch = "%s->%s()" % (leading_impl_param_name, agent_getter_name(agent))
-                        agent_call = template_agent_call.substitute(
-                            None,
-                            name=declaration.name,
-                            agent_fetch=agent_fetch,
-                            params_agent=param_string_agent,
-                            agent_class=agent_class_name(agent),
-                            agent=agent_variable_name(agent))
-                        agent_calls.append(agent_call)
-                    out_of_line_methods.append(
-                        template_outofline.substitute(
-                            None,
-                            name=declaration.name,
-                            params_impl=param_string_impl_full,
-                            agent_calls="".join(agent_calls)))
-            elif declaration.return_type == "InspectorInstrumentationCookie":
-                if generate_inline:
-                    inline_methods.append(
-                        template_inline_returns_cookie.substitute(
-                            None,
-                            name=declaration.name,
-                            fast_return=fast_return,
-                            params_public=param_string_public,
-                            params_impl=param_string_impl_names_only,
-                            agents_getter=agents_getter))
-
-                if len(agents):
-                    timeline_agent_id = "0"
-                    agent_calls = []
-                    for agent in agents:
-                        if agent == "Timeline":
-                            agent_call = template_timeline_agent_call.substitute(
-                                None,
-                                name=declaration.name,
-                                params_agent=param_string_agent)
-                            timeline_agent_id = "timelineAgentId"
-                        else:
-                            agent_fetch = "%s->%s()" % (leading_impl_param_name, agent_getter_name(agent))
-                            agent_call = template_agent_call.substitute(
-                                None,
-                                name=declaration.name,
-                                agent_fetch=agent_fetch,
-                                params_agent=param_string_agent,
-                                agent_class=agent_class_name(agent),
-                                agent=agent_variable_name(agent))
-                        agent_calls.append(agent_call)
-
-                    out_of_line_methods.append(
-                        template_outofline_returns_cookie.substitute(
-                            None,
-                            return_type=declaration.return_type,
-                            name=declaration.name,
-                            params_impl=param_string_impl_full,
-                            agent_calls="".join(agent_calls),
-                            timeline_agent_id=timeline_agent_id))
-            else:
-                sys.stderr.write("Unsupported return type %s" % declaration.return_type)
-                sys.exit(1)
-
-    fout = open(output_h_dir + "/InspectorInstrumentationInl.h", "w")
-    fout.write(template_h.substitute(None,
-                                     impl_declarations="\n".join(impl_declarations),
-                                     inline_methods="".join(inline_methods)))
+    fout = open(output_h_dir + "/" + "InstrumentingAgentsInl.h", "w")
+    fout.write(instrumenting_agents_header)
     fout.close()
 
     fout = open(output_cpp_dir + "/InspectorInstrumentationImpl.cpp", "w")
     fout.write(template_cpp.substitute(None,
-                                       out_of_line_methods="\n".join(out_of_line_methods)))
+                                       includes="\n".join(cpp_includes),
+                                       extra_definitions=instrumenting_agents_cpp,
+                                       methods="\n".join(cpp_lines)))
     fout.close()
 
 

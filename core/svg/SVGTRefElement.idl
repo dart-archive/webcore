@@ -23,7 +23,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-interface SVGTRefElement : SVGTextPositioningElement,
-                           SVGURIReference {
+interface SVGTRefElement : SVGTextPositioningElement {
 };
+
+SVGTRefElement implements SVGURIReference;
 

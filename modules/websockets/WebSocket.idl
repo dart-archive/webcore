@@ -34,8 +34,8 @@
     Constructor(DOMString url),
     Constructor(DOMString url, sequence<DOMString> protocols),
     Constructor(DOMString url, DOMString protocol),
-    RaisesException,
-    CallWith=ScriptExecutionContext,
+    ConstructorRaisesException,
+    ConstructorCallWith=ScriptExecutionContext,
     EventTarget
 ] interface WebSocket {
     readonly attribute DOMString URL; // Lowercased .url is the one in the spec, but leaving .URL for compatibility reasons.
@@ -61,10 +61,10 @@
 
     attribute DOMString binaryType;
 
-    [RaisesException] boolean send(ArrayBuffer data);
-    [RaisesException] boolean send(ArrayBufferView data);
-    [RaisesException] boolean send(Blob data);
-    [RaisesException] boolean send(DOMString data);
+    [RaisesException] void send(ArrayBuffer data);
+    [RaisesException] void send(ArrayBufferView data);
+    [RaisesException] void send(Blob data);
+    [RaisesException] void send(DOMString data);
 
     [RaisesException] void close([Clamp] optional unsigned short code, optional DOMString reason);
 

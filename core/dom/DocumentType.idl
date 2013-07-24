@@ -29,11 +29,7 @@ interface DocumentType : Node {
 
     [TreatReturnedNullStringAs=Null] readonly attribute DOMString publicId;
     [TreatReturnedNullStringAs=Null] readonly attribute DOMString systemId;
-    [TreatReturnedNullStringAs=Null] readonly attribute DOMString internalSubset;        
-
-    // ChildNode interface API
-    readonly attribute Element previousElementSibling;
-    readonly attribute Element nextElementSibling;
-    [RaisesException] void remove();
+    [TreatReturnedNullStringAs=Null] readonly attribute DOMString internalSubset;
 };
 
+DocumentType implements ChildNode;

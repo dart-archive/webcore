@@ -27,13 +27,16 @@
 
 [
     Constructor(DOMString scriptUrl),
-    CallWith=ScriptExecutionContext,
-    RaisesException
-] interface Worker : AbstractWorker {
+    ConstructorCallWith=ScriptExecutionContext,
+    ConstructorRaisesException,
+    ActiveDOMObject
+] interface Worker : EventTarget {
 
     attribute EventListener onmessage;
 
     [Custom, RaisesException] void postMessage(SerializedScriptValue message, optional Array messagePorts);
     void terminate();
 };
+
+Worker implements AbstractWorker;
 

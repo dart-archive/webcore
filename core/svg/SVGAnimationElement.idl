@@ -26,8 +26,6 @@
 [
     NoInterfaceObject
 ] interface SVGAnimationElement : SVGElement,
-                                  SVGTests,
-                                  SVGExternalResourcesRequired,
                                   ElementTimeControl {
     readonly attribute SVGElement targetElement;
 
@@ -35,4 +33,7 @@
     float getCurrentTime();
     float getSimpleDuration();
 };
+
+SVGAnimationElement implements SVGExternalResourcesRequired;
+SVGAnimationElement implements SVGTests;
 
