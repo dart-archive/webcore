@@ -27,15 +27,14 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
- 
+
 [
     NoInterfaceObject,
     EnabledAtRuntime=webKitMediaSource,
     ActiveDOMObject,
-    EventTarget,
     Constructor,
     ConstructorCallWith=ScriptExecutionContext
-] interface WebKitMediaSource {
+] interface WebKitMediaSource : EventTarget {
     // All the source buffers created by this object.
     readonly attribute WebKitSourceBufferList sourceBuffers;
 
@@ -48,18 +47,9 @@
     [RaisesException] void removeSourceBuffer(WebKitSourceBuffer buffer);
 
     readonly attribute DOMString readyState;
-    
+
     [RaisesException] void endOfStream([Default=NullString] optional DOMString error);
 
     static boolean isTypeSupported (DOMString type);
-
-    // EventTarget interface
-    void addEventListener(DOMString type,
-                          EventListener listener,
-                          optional boolean useCapture);
-    void removeEventListener(DOMString type,
-                             EventListener listener,
-                             optional boolean useCapture);
-    [RaisesException] boolean dispatchEvent(Event event);
 };
 

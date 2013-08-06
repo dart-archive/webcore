@@ -30,6 +30,8 @@
     [Reflect] attribute DOMString dirName;
     [Reflect] attribute boolean disabled;
     readonly attribute HTMLFormElement form;
+    // The 'files' attribute is intentionally not readonly.
+    // https://www.w3.org/Bugs/Public/show_bug.cgi?id=22682
     attribute FileList files;
     [Reflect, URL] attribute DOMString formAction;
     [TreatNullAs=NullString] attribute DOMString formEnctype;
@@ -57,6 +59,7 @@
     [TreatNullAs=NullString, SetterRaisesException] attribute DOMString value;
     [SetterRaisesException] attribute Date valueAsDate;
     [SetterRaisesException] attribute double valueAsNumber;
+    [EnabledAtRuntime=inputModeAttribute, Reflect] attribute DOMString inputMode;
 
     [RaisesException] void stepUp(optional long n);
     [RaisesException] void stepDown(optional long n);
@@ -96,5 +99,5 @@
     [Conditional=INPUT_SPEECH, NotEnumerable] attribute EventListener onwebkitspeechchange;
 
     // See http://www.w3.org/TR/html-media-capture/
-    [Conditional=MEDIA_CAPTURE] attribute DOMString capture;
+    [Conditional=MEDIA_CAPTURE, Reflect] attribute boolean capture;
 };

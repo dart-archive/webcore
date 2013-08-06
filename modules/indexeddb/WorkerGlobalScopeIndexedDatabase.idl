@@ -24,7 +24,7 @@
  *
  */
 
-partial interface WorkerContext {
+partial interface WorkerGlobalScope {
     [ImplementedAs=indexedDB,EnabledAtRuntime=indexedDB] readonly attribute IDBFactory webkitIndexedDB;
 
     attribute IDBCursorConstructor webkitIDBCursor;

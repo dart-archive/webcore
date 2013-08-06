@@ -17,15 +17,15 @@
  * Boston, MA 02110-1301, USA.
  */
 
-interface SVGFEDropShadowElement : SVGStyledElement,
-                                   SVGFilterPrimitiveStandardAttributes {
+interface SVGFEDropShadowElement : SVGStyledElement {
     readonly attribute SVGAnimatedString in1;
     readonly attribute SVGAnimatedNumber dx;
     readonly attribute SVGAnimatedNumber dy;
     readonly attribute SVGAnimatedNumber stdDeviationX;
     readonly attribute SVGAnimatedNumber stdDeviationY;
 
-    void setStdDeviation([Default=Undefined] optional float stdDeviationX, 
+    void setStdDeviation([Default=Undefined] optional float stdDeviationX,
                          [Default=Undefined] optional float stdDeviationY);
 };
 
+SVGFEDropShadowElement implements SVGFilterPrimitiveStandardAttributes;

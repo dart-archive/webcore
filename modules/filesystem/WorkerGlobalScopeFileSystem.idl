@@ -20,39 +20,19 @@
  * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
  * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
 
-[
-    NoInterfaceObject,
-    EventTarget,
-    CustomToV8,
-    DoNotGenerateWrap
-] interface WorkerContext {
+partial interface WorkerGlobalScope {
+    const unsigned short TEMPORARY = 0;
+    const unsigned short PERSISTENT = 1;
 
-    // WorkerGlobalScope
-             [Replaceable] readonly attribute  WorkerContext self;
-             [Replaceable] readonly attribute WorkerLocation location;
-    void close();
-             attribute EventListener onerror;
+    [EnabledAtRuntime=FileSystem] void webkitRequestFileSystem(unsigned short type, long long size, optional FileSystemCallback successCallback, optional ErrorCallback errorCallback);
+    [EnabledAtRuntime=FileSystem, RaisesException] DOMFileSystemSync webkitRequestFileSystemSync(unsigned short type, long long size);
+    [EnabledAtRuntime=FileSystem] void webkitResolveLocalFileSystemURL(DOMString url, EntryCallback successCallback, optional ErrorCallback errorCallback);
+    [EnabledAtRuntime=FileSystem, RaisesException] EntrySync webkitResolveLocalFileSystemSyncURL(DOMString url);
 
-    // WorkerUtils
-    [Custom] void importScripts(/*[Variadic] in DOMString urls */);
-             [Replaceable] readonly attribute WorkerNavigator navigator;
-
-    // EventTarget interface
-    void addEventListener(DOMString type, 
-                          EventListener listener, 
-                          optional boolean useCapture);
-    void removeEventListener(DOMString type, 
-                             EventListener listener, 
-                             optional boolean useCapture);
-    [RaisesException] boolean dispatchEvent(Event evt);
-
-    // Additional constructors
-    attribute URLConstructor webkitURL; // FIXME: deprecate this.
+    [EnabledAtRuntime=FileSystem] attribute FileErrorConstructor FileError;
 };
-
-WorkerContext implements WindowTimers;
 

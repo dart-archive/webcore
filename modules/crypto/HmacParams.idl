@@ -29,7 +29,7 @@
  */
 
 [
-    EnabledAtRuntime=HighResolutionTimeInWorkers
-] partial interface WorkerContext {
-    readonly attribute WorkerPerformance performance;
+    NoInterfaceObject,
+] interface HmacParams : Algorithm {
+    readonly attribute Algorithm hash;
 };

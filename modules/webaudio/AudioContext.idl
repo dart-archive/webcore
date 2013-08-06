@@ -27,9 +27,8 @@
     NoInterfaceObject,
     Conditional=WEB_AUDIO,
     ActiveDOMObject,
-    CustomConstructor,
-    EventTarget
-] interface AudioContext {
+    CustomConstructor
+] interface AudioContext : EventTarget {
     // All rendered audio ultimately connects to destination, which represents the audio hardware.
     readonly attribute AudioDestinationNode destination;
 
@@ -44,7 +43,7 @@
 
     // Number of AudioBufferSourceNodes that are currently playing.
     readonly attribute unsigned long activeSourceCount;
-    
+
     [RaisesException] AudioBuffer createBuffer(unsigned long numberOfChannels, unsigned long numberOfFrames, float sampleRate);
     [RaisesException] AudioBuffer createBuffer(ArrayBuffer? buffer, boolean mixToMono);
 
@@ -70,7 +69,7 @@
     AnalyserNode createAnalyser();
     [RaisesException] ScriptProcessorNode createScriptProcessor(unsigned long bufferSize, optional unsigned long numberOfInputChannels, optional unsigned long numberOfOutputChannels);
     OscillatorNode createOscillator();
-    [RaisesException] WaveTable createWaveTable(Float32Array real, Float32Array imag);
+    [RaisesException] PeriodicWave createPeriodicWave(Float32Array real, Float32Array imag);
 
     // Channel splitting and merging
     [RaisesException] ChannelSplitterNode createChannelSplitter(optional unsigned long numberOfOutputs);

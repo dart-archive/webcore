@@ -85,6 +85,8 @@
     [RaisesException] void setEnableMockPagePopup(boolean enabled);
     readonly attribute PagePopupController pagePopupController;
 
+    [RaisesException] ClientRect unscaledViewportRect();
+
     [RaisesException] ClientRect absoluteCaretBounds();
 
     [RaisesException] ClientRect boundingBox(Element element);
@@ -137,7 +139,8 @@
 
     [RaisesException] unsigned long wheelEventHandlerCount(Document document);
     [RaisesException] unsigned long touchEventHandlerCount(Document document);
-    [RaisesException] ClientRectList touchEventTargetClientRects(Document document);
+    [RaisesException] LayerRectList touchEventTargetLayerRects(Document document);
+    [RaisesException] unsigned long touchEventTargetLayerRectsUpdateCount(Document document);
 
     [RaisesException] NodeList nodesFromRect(Document document, long x, long y,
         unsigned long topPadding, unsigned long rightPadding, unsigned long bottomPadding, unsigned long leftPadding,
@@ -158,6 +161,7 @@
     [RaisesException] boolean isPageBoxVisible(Document document, long pageNumber);
 
     readonly attribute InternalSettings settings;
+    readonly attribute InternalProfilers profilers;
     readonly attribute InternalRuntimeFlags runtimeFlags;
     readonly attribute unsigned long workerThreadCount;
 
@@ -165,6 +169,7 @@
     // The values of these constants must be kept in sync with the values of LayerTreeAsTextBehaviorFlags in GraphicsLayerClient.h.
     const unsigned short LAYER_TREE_INCLUDES_REPAINT_RECTS = 2;
     const unsigned short LAYER_TREE_INCLUDES_PAINTING_PHASES = 4;
+    const unsigned short LAYER_TREE_INCLUDES_ROOT_LAYER = 8;
     [RaisesException] DOMString layerTreeAsText(Document document, optional unsigned short flags);
     [RaisesException] DOMString elementLayerTreeAsText(Element element, optional unsigned short flags);
 
@@ -184,6 +189,7 @@
     [RaisesException] DOMString repaintRectsAsText(Document document);
 
     [RaisesException] void garbageCollectDocumentResources(Document document);
+    void evictAllResources();
 
     void allowRoundingHacks();
 
@@ -195,6 +201,7 @@
     sequence<DOMString> consoleMessageArgumentCounts(Document document);
     Window openDummyInspectorFrontend(DOMString url);
     void closeDummyInspectorFrontend();
+    unsigned long[] setMemoryCacheCapacities(unsigned long minDeadBytes, unsigned long maxDeadBytes, unsigned long totalBytes);
     [RaisesException] void setInspectorResourcesDataSizeLimits(long maximumResourcesContentSize, long maximumSingleResourceContentSize);
 
     DOMString counterValue(Element element);
@@ -233,6 +240,8 @@
 
     [RaisesException] DOMString markerTextForListItem(Element element);
 
+    [RaisesException] DOMString baseURL(Document document);
+
     SerializedScriptValue deserializeBuffer(ArrayBuffer buffer);
     ArrayBuffer serializeObject(SerializedScriptValue obj);
 
@@ -247,4 +256,6 @@
     boolean isSelectPopupVisible(Node node);
 
     [RaisesException] ClientRect selectionBounds();
+
+    boolean loseSharedGraphicsContext3D();
 };

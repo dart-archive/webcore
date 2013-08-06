@@ -2,7 +2,7 @@
  * Copyright (C) 2006, 2007, 2009 Apple Inc. All rights reserved.
  * Copyright (C) 2006 Samuel Weinig <sam.weinig@gmail.com>
  * Copyright (C) 2013 Samsung Electronics. All rights reserved.
- * 
+ *
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -20,10 +20,12 @@
  * Boston, MA 02110-1301, USA.
  */
 
-[NoInterfaceObject]
-interface ChildNode {
+[
+    NoInterfaceObject,
+    LegacyImplementedInBaseClass
+] interface ChildNode {
     [PerWorldBindings] readonly attribute Element previousElementSibling;
     [PerWorldBindings] readonly attribute Element nextElementSibling;
-    [RaisesException] void remove();
+    [RaisesException, DeliverCustomElementCallbacks] void remove();
 };
 

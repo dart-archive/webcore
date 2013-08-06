@@ -112,11 +112,20 @@ interface InspectorInstrumentation {
     [CSS, Inline=FastReturn]
     void didUpdateRegionLayout([Keep] Document*, NamedFlow*);
 
+    [CSS, Inline=FastReturn]
+    void didChangeRegionOverset([Keep] Document*, NamedFlow*);
+
     [DOMDebugger, Inline=FastReturn]
     void willSendXMLHttpRequest(ScriptExecutionContext*, const String& url);
 
     [DOMDebugger, Inline=FastReturn]
-    void didFireWebGLError(Document*, const String& errorName);
+    void didFireWebGLError(Element*, const String& errorName);
+
+    [DOMDebugger, Inline=FastReturn]
+    void didFireWebGLWarning(Element*);
+
+    [DOMDebugger, Inline=FastReturn]
+    void didFireWebGLErrorOrWarning(Element*, const String& message);
 
     [Timeline, Inline=FastReturn]
     void didScheduleResourceRequest([Keep] Document*, const String& url);
@@ -197,10 +206,10 @@ interface InspectorInstrumentation {
     void didDispatchXHRLoadEvent(const InspectorInstrumentationCookie&);
 
     [Timeline, Inline=FastReturn]
-    void willScrollLayer([Keep] Frame*);
+    void willScrollLayer([Keep] RenderObject*);
 
     [Timeline, Inline=FastReturn]
-    void didScrollLayer(Frame*);
+    void didScrollLayer(RenderObject*);
 
     [Timeline, Inline=FastReturn]
     void willPaint([Keep] RenderObject*);
@@ -245,7 +254,7 @@ interface InspectorInstrumentation {
     void applyEmulatedMedia(Frame*, String* media);
 
     [Timeline, Resource]
-    void willSendRequest(Frame*, unsigned long identifier, DocumentLoader*, ResourceRequest&, const ResourceResponse& redirectResponse, const CachedResourceInitiatorInfo&);
+    void willSendRequest(Frame*, unsigned long identifier, DocumentLoader*, ResourceRequest&, const ResourceResponse& redirectResponse, const FetchInitiatorInfo&);
 
     void continueAfterPingLoader(Frame*, unsigned long identifier, DocumentLoader*, ResourceRequest&, const ResourceResponse&);
 
@@ -321,6 +330,9 @@ interface InspectorInstrumentation {
     [Canvas, Page, CSS]
     void frameDetachedFromParent([Keep] Frame*);
 
+    [Page]
+    void childDocumentOpened([Keep] Document*);
+
     [Console, Resource, CSS, Database, DOM, LayerTree, Inspector, Canvas, Page]
     void didCommitLoad([Keep] Frame*, DocumentLoader*);
 
@@ -349,7 +361,7 @@ interface InspectorInstrumentation {
     void didRunJavaScriptDialog(const InspectorInstrumentationCookie&);
 
     [Inline=Forward]
-    void willDestroyCachedResource(CachedResource* cachedResource);
+    void willDestroyResource(Resource* cachedResource);
 
     [Timeline, Inline=FastReturn]
     InspectorInstrumentationCookie willWriteHTML([Keep] Document*, unsigned startLine);
@@ -373,13 +385,13 @@ interface InspectorInstrumentation {
     void didDispatchDOMStorageEvent(Page* page, const String& key, const String& oldValue, const String& newValue, StorageType storageType, SecurityOrigin* securityOrigin);
 
     [Worker]
-    void didStartWorkerContext(ScriptExecutionContext*, WorkerContextProxy* proxy, const KURL& url);
+    void didStartWorkerGlobalScope(ScriptExecutionContext*, WorkerGlobalScopeProxy* proxy, const KURL& url);
 
     [WorkerRuntime]
-    void willEvaluateWorkerScript([Keep] WorkerContext* context, int workerThreadStartMode);
+    void willEvaluateWorkerScript([Keep] WorkerGlobalScope* context, int workerThreadStartMode);
 
     [Worker]
-    void workerContextTerminated(ScriptExecutionContext*, WorkerContextProxy* proxy);
+    void workerGlobalScopeTerminated(ScriptExecutionContext*, WorkerGlobalScopeProxy* proxy);
 
     [Resource, Timeline]
     void didCreateWebSocket([Keep] Document*, unsigned long identifier, const KURL& requestURL, const String& protocol);
@@ -431,14 +443,14 @@ interface InspectorConsoleInstrumentation {
     void addMessageToConsole(Page* page, MessageSource source, MessageType type, MessageLevel level, const String& message, ScriptState* state, PassRefPtr<ScriptArguments> arguments, unsigned long requestIdentifier = 0);
 
     [Console]
-    void addMessageToConsole(Page* page, MessageSource source, MessageType type, MessageLevel level, const String& message, const String& scriptId, unsigned lineNumber, ScriptState* state = 0, unsigned long requestIdentifier = 0);
+    void addMessageToConsole(Page* page, MessageSource source, MessageType type, MessageLevel level, const String& message, const String& scriptId, unsigned lineNumber, unsigned columnNumber = 0, ScriptState* state = 0, unsigned long requestIdentifier = 0);
 
     // FIXME: Convert to ScriptArguments to match non-worker context.
     // Use the same implementation as above as a similar method dispatched on Page.
-    void addMessageToConsole(WorkerContext* workerContext, MessageSource source, MessageType type, MessageLevel level, const String& message, PassRefPtr<ScriptCallStack> callStack, unsigned long requestIdentifier = 0);
+    void addMessageToConsole(WorkerGlobalScope* workerGlobalScope, MessageSource source, MessageType type, MessageLevel level, const String& message, PassRefPtr<ScriptCallStack> callStack, unsigned long requestIdentifier = 0);
 
     // Use the same implementation as above as a similar method dispatched on Page.
-    void addMessageToConsole(WorkerContext* workerContext, MessageSource source, MessageType type, MessageLevel level, const String& message, const String& scriptId, unsigned lineNumber, ScriptState* state, unsigned long requestIdentifier = 0);
+    void addMessageToConsole(WorkerGlobalScope* workerGlobalScope, MessageSource source, MessageType type, MessageLevel level, const String& message, const String& scriptId, unsigned lineNumber, unsigned columnNumber, ScriptState* state, unsigned long requestIdentifier = 0);
 
     [Console]
     void consoleCount(Page* page, ScriptState* state, PassRefPtr<ScriptArguments> arguments);

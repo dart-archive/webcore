@@ -27,12 +27,12 @@
     [TreatReturnedNullStringAs=Null, PerWorldBindings] readonly attribute DOMString tagName;
 
     [TreatReturnedNullStringAs=Null] DOMString getAttribute([Default=Undefined] optional DOMString name);
-    [RaisesException] void setAttribute([Default=Undefined] optional DOMString name,
+    [RaisesException, DeliverCustomElementCallbacks] void setAttribute([Default=Undefined] optional DOMString name,
                                      [Default=Undefined] optional DOMString value);
-    void removeAttribute([Default=Undefined] optional DOMString name);
+    [DeliverCustomElementCallbacks] void removeAttribute([Default=Undefined] optional DOMString name);
     Attr getAttributeNode([Default=Undefined] optional DOMString name);
-    [RaisesException] Attr setAttributeNode([Default=Undefined, StrictTypeChecking] optional Attr newAttr);
-    [RaisesException] Attr removeAttributeNode([Default=Undefined, StrictTypeChecking] optional Attr oldAttr);
+    [RaisesException, DeliverCustomElementCallbacks] Attr setAttributeNode([Default=Undefined, StrictTypeChecking] optional Attr newAttr);
+    [RaisesException, DeliverCustomElementCallbacks] Attr removeAttributeNode([Default=Undefined, StrictTypeChecking] optional Attr oldAttr);
     [PerWorldBindings] NodeList getElementsByTagName([Default=Undefined] optional DOMString name);
 
     // For ObjC this is defined on Node for legacy support.
@@ -43,10 +43,10 @@
 
      DOMString getAttributeNS([TreatNullAs=NullString,Default=Undefined] optional DOMString namespaceURI,
                                             [Default=Undefined] optional DOMString localName);
-     [RaisesException] void setAttributeNS([TreatNullAs=NullString,Default=Undefined] optional DOMString namespaceURI,
+     [RaisesException, DeliverCustomElementCallbacks] void setAttributeNS([TreatNullAs=NullString,Default=Undefined] optional DOMString namespaceURI,
                                        [Default=Undefined] optional DOMString qualifiedName,
                                        [Default=Undefined] optional DOMString value);
-     void removeAttributeNS([TreatNullAs=NullString] DOMString namespaceURI,
+     [DeliverCustomElementCallbacks] void removeAttributeNS([TreatNullAs=NullString] DOMString namespaceURI,
                                           DOMString localName);
      NodeList getElementsByTagNameNS([TreatNullAs=NullString,Default=Undefined] optional DOMString namespaceURI,
                                                    [Default=Undefined] optional DOMString localName);
@@ -100,10 +100,15 @@
     // WebKit extension, pending specification.
     [RaisesException] boolean webkitMatchesSelector([Default=Undefined] optional DOMString selectors);
 
-    // ShadowAware API
-    [Reflect=pseudo, ImplementedAs=pseudo, PerWorldBindings] attribute DOMString webkitPseudo;
-    [ImplementedAs=createShadowRoot, RaisesException] ShadowRoot webkitCreateShadowRoot();
-    [ImplementedAs=shadowRoot, PerWorldBindings] readonly attribute ShadowRoot webkitShadowRoot;
+    // Shadow DOM API
+    [EnabledAtRuntime=ShadowDOM, Reflect, PerWorldBindings] attribute DOMString pseudo;
+    [EnabledAtRuntime=ShadowDOM, RaisesException] ShadowRoot createShadowRoot();
+    [EnabledAtRuntime=ShadowDOM, PerWorldBindings] readonly attribute ShadowRoot shadowRoot;
+
+    // To-be-deprecated prefixed Shadow DOM API
+    [Reflect=pseudo, ImplementedAs=pseudo, PerWorldBindings, MeasureAs=ShadowDOMPrefixedPseudo] attribute DOMString webkitPseudo;
+    [ImplementedAs=createShadowRoot, RaisesException, MeasureAs=ShadowDOMPrefixedCreateShadowRoot] ShadowRoot webkitCreateShadowRoot();
+    [ImplementedAs=shadowRoot, PerWorldBindings, MeasureAs=ShadowDOMPrefixedShadowRoot] readonly attribute ShadowRoot webkitShadowRoot;
 
     // CSSOM View Module API
     ClientRectList getClientRects();
@@ -126,30 +131,32 @@
     [NotEnumerable, PerWorldBindings] attribute EventListener onabort;
     [NotEnumerable, PerWorldBindings] attribute EventListener onblur;
     [NotEnumerable, PerWorldBindings] attribute EventListener onchange;
-    [NotEnumerable, PerWorldBindings] attribute EventListener onclick;
+    [NotEnumerable, PerWorldBindings, ActivityLog=SetterForIsolatedWorlds] attribute EventListener onclick;
     [NotEnumerable, PerWorldBindings] attribute EventListener oncontextmenu;
-    [NotEnumerable, PerWorldBindings] attribute EventListener ondblclick;
-    [NotEnumerable, PerWorldBindings] attribute EventListener ondrag;
-    [NotEnumerable, PerWorldBindings] attribute EventListener ondragend;
-    [NotEnumerable, PerWorldBindings] attribute EventListener ondragenter;
-    [NotEnumerable, PerWorldBindings] attribute EventListener ondragleave;
-    [NotEnumerable, PerWorldBindings] attribute EventListener ondragover;
-    [NotEnumerable, PerWorldBindings] attribute EventListener ondragstart;
-    [NotEnumerable, PerWorldBindings] attribute EventListener ondrop;
+    [NotEnumerable, PerWorldBindings, ActivityLog=SetterForIsolatedWorlds] attribute EventListener ondblclick;
+    [NotEnumerable, PerWorldBindings, ActivityLog=SetterForIsolatedWorlds] attribute EventListener ondrag;
+    [NotEnumerable, PerWorldBindings, ActivityLog=SetterForIsolatedWorlds] attribute EventListener ondragend;
+    [NotEnumerable, PerWorldBindings, ActivityLog=SetterForIsolatedWorlds] attribute EventListener ondragenter;
+    [NotEnumerable, PerWorldBindings, ActivityLog=SetterForIsolatedWorlds] attribute EventListener ondragleave;
+    [NotEnumerable, PerWorldBindings, ActivityLog=SetterForIsolatedWorlds] attribute EventListener ondragover;
+    [NotEnumerable, PerWorldBindings, ActivityLog=SetterForIsolatedWorlds] attribute EventListener ondragstart;
+    [NotEnumerable, PerWorldBindings, ActivityLog=SetterForIsolatedWorlds] attribute EventListener ondrop;
     [NotEnumerable, PerWorldBindings] attribute EventListener onerror;
     [NotEnumerable, PerWorldBindings] attribute EventListener onfocus;
-    [NotEnumerable, PerWorldBindings] attribute EventListener oninput;
+    [NotEnumerable, PerWorldBindings, ActivityLog=SetterForIsolatedWorlds] attribute EventListener oninput;
     [NotEnumerable, PerWorldBindings] attribute EventListener oninvalid;
-    [NotEnumerable, PerWorldBindings] attribute EventListener onkeydown;
-    [NotEnumerable, PerWorldBindings] attribute EventListener onkeypress;
-    [NotEnumerable, PerWorldBindings] attribute EventListener onkeyup;
+    [NotEnumerable, PerWorldBindings, ActivityLog=SetterForIsolatedWorlds] attribute EventListener onkeydown;
+    [NotEnumerable, PerWorldBindings, ActivityLog=SetterForIsolatedWorlds] attribute EventListener onkeypress;
+    [NotEnumerable, PerWorldBindings, ActivityLog=SetterForIsolatedWorlds] attribute EventListener onkeyup;
     [NotEnumerable, PerWorldBindings] attribute EventListener onload;
-    [NotEnumerable, PerWorldBindings] attribute EventListener onmousedown;
-    [NotEnumerable, PerWorldBindings] attribute EventListener onmousemove;
-    [NotEnumerable, PerWorldBindings] attribute EventListener onmouseout;
-    [NotEnumerable, PerWorldBindings] attribute EventListener onmouseover;
-    [NotEnumerable, PerWorldBindings] attribute EventListener onmouseup;
-    [NotEnumerable, PerWorldBindings] attribute EventListener onmousewheel;
+    [NotEnumerable, PerWorldBindings, ActivityLog=SetterForIsolatedWorlds] attribute EventListener onmousedown;
+    [NotEnumerable, PerWorldBindings, ActivityLog=SetterForIsolatedWorlds] attribute EventListener onmouseenter;
+    [NotEnumerable, PerWorldBindings, ActivityLog=SetterForIsolatedWorlds] attribute EventListener onmouseleave;
+    [NotEnumerable, PerWorldBindings, ActivityLog=SetterForIsolatedWorlds] attribute EventListener onmousemove;
+    [NotEnumerable, PerWorldBindings, ActivityLog=SetterForIsolatedWorlds] attribute EventListener onmouseout;
+    [NotEnumerable, PerWorldBindings, ActivityLog=SetterForIsolatedWorlds] attribute EventListener onmouseover;
+    [NotEnumerable, PerWorldBindings, ActivityLog=SetterForIsolatedWorlds] attribute EventListener onmouseup;
+    [NotEnumerable, PerWorldBindings, ActivityLog=SetterForIsolatedWorlds] attribute EventListener onmousewheel;
     [NotEnumerable, PerWorldBindings] attribute EventListener onscroll;
     [NotEnumerable, PerWorldBindings] attribute EventListener onselect;
     [NotEnumerable, PerWorldBindings] attribute EventListener onsubmit;

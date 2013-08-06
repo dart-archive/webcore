@@ -21,12 +21,10 @@
  * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
  * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-[
-    EventTarget
-] interface SVGElementInstance : EventTarget
+interface SVGElementInstance : EventTarget
 {
     readonly attribute SVGElement correspondingElement;
     readonly attribute SVGUseElement correspondingUseElement;
@@ -52,6 +50,8 @@
     [NotEnumerable] attribute EventListener onkeyup;
     [NotEnumerable] attribute EventListener onload;
     [NotEnumerable] attribute EventListener onmousedown;
+    [NotEnumerable] attribute EventListener onmouseenter;
+    [NotEnumerable] attribute EventListener onmouseleave;
     [NotEnumerable] attribute EventListener onmousemove;
     [NotEnumerable] attribute EventListener onmouseout;
     [NotEnumerable] attribute EventListener onmouseover;

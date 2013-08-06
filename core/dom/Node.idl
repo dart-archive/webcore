@@ -18,12 +18,10 @@
  * Boston, MA 02110-1301, USA.
  */
 
-// FIXME: Node should inherit EventTarget.
 [
     CustomToV8,
-    EventTarget,
     DependentLifetime
-] interface Node {
+] interface Node : EventTarget {
     // NodeType
     const unsigned short      ELEMENT_NODE                   = 1;
     const unsigned short      ATTRIBUTE_NODE                 = 2;
@@ -41,7 +39,7 @@
     [TreatReturnedNullStringAs=Null, PerWorldBindings] readonly attribute DOMString        nodeName;
 
              // FIXME: the spec says this can also raise on retrieval.
-             [TreatReturnedNullStringAs=Null, TreatNullAs=NullString, PerWorldBindings, SetterRaisesException] attribute DOMString        nodeValue;
+             [TreatReturnedNullStringAs=Null, TreatNullAs=NullString, PerWorldBindings] attribute DOMString        nodeValue;
 
     [PerWorldBindings] readonly attribute unsigned short   nodeType;
     [PerWorldBindings] readonly attribute Node             parentNode;
@@ -59,11 +57,11 @@
 
     boolean            hasChildNodes();
     [DeliverCustomElementCallbacks, PerWorldBindings]
-    Node               cloneNode([Default=Undefined] optional boolean deep);
+    Node               cloneNode(optional boolean deep);
     void               normalize();
 
     // Introduced in DOM Level 2:
-     boolean isSupported([Default=Undefined] optional DOMString feature, 
+     boolean isSupported([Default=Undefined] optional DOMString feature,
                                        [TreatNullAs=NullString,Default=Undefined] optional DOMString version);
 
     [TreatReturnedNullStringAs=Null, PerWorldBindings] readonly attribute DOMString        namespaceURI;
@@ -74,7 +72,7 @@
     [TreatReturnedNullStringAs=Null, PerWorldBindings] readonly attribute DOMString       baseURI;
 
              // FIXME: the spec says this can also raise on retrieval.
-             [TreatReturnedNullStringAs=Null, TreatNullAs=NullString, PerWorldBindings, SetterRaisesException] attribute DOMString       textContent;
+             [TreatReturnedNullStringAs=Null, TreatNullAs=NullString, PerWorldBindings, SetterRaisesException, DeliverCustomElementCallbacks] attribute DOMString       textContent;
 
     boolean            isSameNode([Default=Undefined] optional Node other);
     boolean            isEqualNode([Default=Undefined] optional Node other);
@@ -97,12 +95,4 @@
 
     // IE extensions
     [PerWorldBindings] readonly attribute Element          parentElement;
-
-    void addEventListener(DOMString type, 
-                          EventListener listener, 
-                          optional boolean useCapture);
-    void removeEventListener(DOMString type, 
-                             EventListener listener, 
-                             optional boolean useCapture);
-    [RaisesException] boolean dispatchEvent(Event event);
 };

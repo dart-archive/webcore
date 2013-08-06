@@ -20,13 +20,12 @@
  * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
  * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 [
     DoNotCheckConstants
-] interface SVGFECompositeElement : SVGStyledElement,
-                                    SVGFilterPrimitiveStandardAttributes {
+] interface SVGFECompositeElement : SVGStyledElement {
     // Composite Operators
     const unsigned short SVG_FECOMPOSITE_OPERATOR_UNKNOWN    = 0;
     const unsigned short SVG_FECOMPOSITE_OPERATOR_OVER       = 1;
@@ -38,10 +37,11 @@
 
     readonly attribute SVGAnimatedString      in1;
     readonly attribute SVGAnimatedString      in2;
-    readonly attribute SVGAnimatedEnumeration operator;
+    [ImplementedAs=svgOperator] readonly attribute SVGAnimatedEnumeration operator;
     readonly attribute SVGAnimatedNumber      k1;
     readonly attribute SVGAnimatedNumber      k2;
     readonly attribute SVGAnimatedNumber      k3;
     readonly attribute SVGAnimatedNumber      k4;
 };
 
+SVGFECompositeElement implements SVGFilterPrimitiveStandardAttributes;
