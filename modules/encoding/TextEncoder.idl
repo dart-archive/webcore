@@ -29,20 +29,11 @@
  */
 
 [
-    NoInterfaceObject,
-    EnabledAtRuntime=fontLoadEvents,
-    ActiveDOMObject,
-    GenerateIsReachable=document
-] interface FontLoader : EventTarget {
-
-    attribute EventHandler onloading;
-    attribute EventHandler onloadingdone;
-    attribute EventHandler onloadstart;
-    attribute EventHandler onload;
-    attribute EventHandler onerror;
-
-    boolean checkFont(DOMString font, [Default=NullString] optional DOMString text);
-    void loadFont(Dictionary params);
-    void notifyWhenFontsReady(VoidCallback callback);
-    readonly attribute boolean loading;
+    EnabledAtRuntime=EncodingAPI,
+    GlobalContext=Window&WorkerGlobalScope,
+    Constructor([Default=NullString] optional DOMString utfLabel),
+    ConstructorRaisesException
+] interface TextEncoder {
+    readonly attribute DOMString encoding;
+    Uint8Array encode([Default=NullString] optional DOMString input, optional Dictionary options);
 };

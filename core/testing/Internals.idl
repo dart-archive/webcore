@@ -29,6 +29,8 @@
 ] interface Internals {
     DOMString address(Node node);
 
+    GCObservation observeGC(any observed);
+
     [RaisesException] DOMString elementRenderTreeAsText(Element element);
     boolean isPreloaded(DOMString url);
     boolean isLoadingFromMemoryCache(DOMString url);
@@ -213,7 +215,6 @@
     [RaisesException] DOMString pageSizeAndMarginsInPixels(long pageIndex, long width, long height, long marginTop, long marginRight, long marginBottom, long marginLeft);
 
     [RaisesException] void setDeviceScaleFactor(float scaleFactor);
-    [RaisesException] void setPageScaleFactor(float scaleFactor, long x, long y);
 
     [RaisesException] void setIsCursorVisible(Document document, boolean isVisible);
 

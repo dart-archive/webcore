@@ -21,36 +21,33 @@
 [
     CustomToV8
 ] interface HTMLElement : Element {
-             // iht.com relies on id returning the empty string when no id is present.
-             // Other browsers do this as well. So we don't convert null to JS null.
-             [Reflect] attribute DOMString id;
              [Reflect] attribute DOMString title;
              [Reflect] attribute DOMString lang;
              attribute boolean             translate;
              [Reflect] attribute DOMString dir;
 
-             attribute long              tabIndex;
-             attribute boolean           draggable;
+             [CustomElementCallbacks=Enable] attribute long              tabIndex;
+             [CustomElementCallbacks=Enable] attribute boolean           draggable;
              [Reflect] attribute DOMString webkitdropzone;
              [Reflect] attribute boolean hidden;
              [Reflect] attribute DOMString accessKey;
 
     // Extensions
-             [TreatNullAs=NullString, DeliverCustomElementCallbacks, PerWorldBindings, ActivityLog=SetterForIsolatedWorlds, SetterRaisesException] attribute DOMString innerHTML;
-             [TreatNullAs=NullString, SetterRaisesException] attribute DOMString innerText;
-             [TreatNullAs=NullString, DeliverCustomElementCallbacks, SetterRaisesException] attribute DOMString outerHTML;
-             [TreatNullAs=NullString, SetterRaisesException] attribute DOMString outerText;
+             [TreatNullAs=NullString, CustomElementCallbacks=Enable, PerWorldBindings, ActivityLog=SetterForIsolatedWorlds, SetterRaisesException] attribute DOMString innerHTML;
+             [TreatNullAs=NullString, CustomElementCallbacks=Enable, SetterRaisesException] attribute DOMString innerText;
+             [TreatNullAs=NullString, CustomElementCallbacks=Enable, SetterRaisesException] attribute DOMString outerHTML;
+             [TreatNullAs=NullString, CustomElementCallbacks=Enable, SetterRaisesException] attribute DOMString outerText;
 
-    [RaisesException] Element insertAdjacentElement([Default=Undefined] optional DOMString where,
+    [RaisesException, CustomElementCallbacks=Enable] Element insertAdjacentElement([Default=Undefined] optional DOMString where,
                                   [Default=Undefined] optional Element element);
-    [DeliverCustomElementCallbacks, RaisesException] void insertAdjacentHTML([Default=Undefined] optional DOMString where,
+    [CustomElementCallbacks=Enable, RaisesException] void insertAdjacentHTML([Default=Undefined] optional DOMString where,
                             [Default=Undefined] optional DOMString html);
     [RaisesException] void insertAdjacentText([Default=Undefined] optional DOMString where,
                             [Default=Undefined] optional DOMString text);
 
-    [EnabledAtRuntime=imeAPI] InputMethodContext getInputContext();
+    [EnabledAtRuntime=imeAPI] readonly attribute InputMethodContext inputMethodContext;
 
-             [TreatNullAs=NullString, SetterRaisesException] attribute DOMString contentEditable;
+    [TreatNullAs=NullString, CustomElementCallbacks=Enable, SetterRaisesException] attribute DOMString contentEditable;
     readonly attribute boolean isContentEditable;
 
              attribute boolean spellcheck;

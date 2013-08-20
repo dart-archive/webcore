@@ -21,14 +21,25 @@
 [
     ConstructorTemplate=Event
 ] interface KeyboardEvent : UIEvent {
+    const unsigned long DOM_KEY_LOCATION_STANDARD = 0x00;
+    const unsigned long DOM_KEY_LOCATION_LEFT     = 0x01;
+    const unsigned long DOM_KEY_LOCATION_RIGHT    = 0x02;
+    const unsigned long DOM_KEY_LOCATION_NUMPAD   = 0x03;
+    // FIXME: The following constants are defined in the specification but
+    // not yet supported (crbug.com/265446).
+    // const unsigned long DOM_KEY_LOCATION_MOBILE   = 0x04;
+    // const unsigned long DOM_KEY_LOCATION_JOYSTICK = 0x05;
 
     [InitializedByEventConstructor] readonly attribute DOMString        keyIdentifier;
-    [InitializedByEventConstructor] readonly attribute unsigned long    keyLocation;
+    [InitializedByEventConstructor] readonly attribute unsigned long    location;
+    [ImplementedAs=location, DeprecateAs=KeyboardEventKeyLocation, InitializedByEventConstructor] readonly attribute unsigned long keyLocation; // Deprecated.
     [InitializedByEventConstructor] readonly attribute boolean          ctrlKey;
     [InitializedByEventConstructor] readonly attribute boolean          shiftKey;
     [InitializedByEventConstructor] readonly attribute boolean          altKey;
     [InitializedByEventConstructor] readonly attribute boolean          metaKey;
     readonly attribute boolean          altGraphKey;
+
+    boolean getModifierState(DOMString keyArgument);
 
     // FIXME: this does not match the version in the DOM spec.
     void initKeyboardEvent([Default=Undefined] optional DOMString type,
@@ -36,7 +47,7 @@
                            [Default=Undefined] optional boolean cancelable,
                            [Default=Undefined] optional Window view,
                            [Default=Undefined] optional DOMString keyIdentifier,
-                           [Default=Undefined] optional unsigned long keyLocation,
+                           [Default=Undefined] optional unsigned long location,
                            [Default=Undefined] optional boolean ctrlKey,
                            [Default=Undefined] optional boolean altKey,
                            [Default=Undefined] optional boolean shiftKey,

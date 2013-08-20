@@ -229,18 +229,6 @@ interface InspectorInstrumentation {
     [Timeline, Resource, Inline=FastReturn]
     void didScheduleStyleRecalculation([Keep] Document*);
 
-    [CSS, Inline=FastReturn]
-    InspectorInstrumentationCookie willMatchRule(Document*, StyleRule*, InspectorCSSOMWrappers&, DocumentStyleSheetCollection*);
-
-    [CSS, Inline=FastReturn]
-    void didMatchRule(const InspectorInstrumentationCookie&, bool matched);
-
-    [CSS, Inline=FastReturn]
-    InspectorInstrumentationCookie willProcessRule(Document* document, [FastReturn] StyleRule* rule, StyleResolver* styleResolver);
-
-    [CSS, Inline=FastReturn]
-    void didProcessRule(const InspectorInstrumentationCookie&);
-
     [Resource, Inline=FastReturn]
     void applyUserAgentOverride(Frame*, String* userAgent);
 
@@ -330,7 +318,7 @@ interface InspectorInstrumentation {
     [Canvas, Page, CSS]
     void frameDetachedFromParent([Keep] Frame*);
 
-    [Page]
+    [Page, Inline=FastReturn]
     void childDocumentOpened([Keep] Document*);
 
     [Console, Resource, CSS, Database, DOM, LayerTree, Inspector, Canvas, Page]
@@ -422,12 +410,6 @@ interface InspectorInstrumentation {
 
     [LayerTree]
     void layerTreeDidChange(Page*);
-
-    [LayerTree]
-    void renderLayerDestroyed(Page*, const RenderLayer*);
-
-    [LayerTree]
-    void pseudoElementDestroyed(Page*, PseudoElement*);
 }
 
 interface InspectorConsoleInstrumentation {
