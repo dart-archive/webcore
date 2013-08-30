@@ -47,6 +47,7 @@ class RuntimeFeatureWriter(in_generator.Writer):
         'depends_on' : [],
         'custom': False,
         'status': None,
+        'writeable': False,
     }
 
     def __init__(self, in_file_path, enabled_conditions):
@@ -72,6 +73,7 @@ class RuntimeFeatureWriter(in_generator.Writer):
         lowered = lowered.replace("cSS", "css")
         lowered = lowered.replace("iME", "ime")
         lowered = lowered.replace("hTML", "html")
+        lowered = lowered.replace("sVG", "svg")
         lowered = lowered.replace("wOFF", "woff")
         return lowered
 

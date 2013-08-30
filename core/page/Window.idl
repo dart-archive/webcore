@@ -143,7 +143,7 @@
     WebKitPoint webkitConvertPointFromNodeToPage([Default=Undefined] optional Node node,
                                                  [Default=Undefined] optional WebKitPoint p);
 
-    [EnabledAtRuntime, PerWorldBindings, ActivityLog=GetterForIsolatedWorlds] readonly attribute DOMApplicationCache applicationCache;
+    [EnabledAtRuntime, PerWorldBindings, ActivityLog=GetterForIsolatedWorlds] readonly attribute ApplicationCache applicationCache;
 
     [EnabledAtRuntime, PerWorldBindings, ActivityLog=GetterForIsolatedWorlds, GetterRaisesException] readonly attribute Storage sessionStorage;
     [EnabledAtRuntime, PerWorldBindings, ActivityLog=GetterForIsolatedWorlds, GetterRaisesException] readonly attribute Storage localStorage;
@@ -208,7 +208,8 @@
     [PerWorldBindings, ActivityLog=SetterForIsolatedWorlds] attribute EventHandler onmouseout;
     [PerWorldBindings, ActivityLog=SetterForIsolatedWorlds] attribute EventHandler onmouseover;
     [PerWorldBindings, ActivityLog=SetterForIsolatedWorlds] attribute EventHandler onmouseup;
-    [PerWorldBindings, ActivityLog=SetterForIsolatedWorlds] attribute EventHandler onmousewheel;
+    [PerWorldBindings, ActivityLog=SetterForIsolatedWorlds] attribute EventHandler onmousewheel; // Deprecated in favor of onwheel.
+    [PerWorldBindings, ActivityLog=SetterForIsolatedWorlds] attribute EventHandler onwheel;
     attribute EventHandler onoffline;
     attribute EventHandler ononline;
     attribute EventHandler onpagehide;
@@ -263,6 +264,7 @@
 
     // Additional constructors.
     attribute TransitionEventConstructor WebKitTransitionEvent;
+    [EnabledAtRuntime=cssAnimationUnprefixed] attribute WebKitAnimationEventConstructor AnimationEvent;
     [CustomConstructor] attribute HTMLImageElementConstructorConstructor Image; // Usable with new operator
     // Mozilla has a separate XMLDocument object for XML documents.
     // We just use Document for this.

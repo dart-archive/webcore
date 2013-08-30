@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Google Inc. All rights reserved.
+ * Copyright (c) 2013, Google Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -28,14 +28,17 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+// FIXME: |PromiseValue| should be replaced with |Promise|. http://crbug.com/266700
+typedef any PromiseValue;
+
 [
     NoInterfaceObject,
-] interface CryptoOperation {
-    readonly attribute Algorithm algorithm;
-
-    CryptoOperation process(ArrayBuffer data);
-    CryptoOperation process(ArrayBufferView data);
-
-    any finish();
-    any abort();
+    EnabledAtRuntime=experimentalCanvasFeatures
+] interface ImageBitmapFactories {
+    [RaisesException] PromiseValue createImageBitmap(Blob blob);
+    [RaisesException] PromiseValue createImageBitmap(Blob blob, long sx, long sy, long sw, long sh);
+    [RaisesException] PromiseValue createImageBitmap(ImageData data);
+    [RaisesException] PromiseValue createImageBitmap(ImageData data, long sx, long sy, long sw, long sh);
+    [RaisesException] PromiseValue createImageBitmap(ImageBitmap bitmap);
+    [RaisesException] PromiseValue createImageBitmap(ImageBitmap bitmap, long sx, long sy, long sw, long sh);
 };
