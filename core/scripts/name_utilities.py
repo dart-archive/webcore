@@ -26,29 +26,15 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import os
-import sys
-
-_current_dir = os.path.dirname(os.path.realpath(__file__))
-# jinja2 is in chromium's third_party directory
-# Insert at front to override system libraries, and after path[0] == script dir
-sys.path.insert(1, os.path.join(_current_dir, *([os.pardir] * 4)))
-import jinja2
+ACRONYMS = ['CSS', 'HTML', 'IME', 'JS', 'SVG', 'URL', 'WOFF', 'XML', 'XSLT']
 
 
-def apply_template(path_to_template, params):
-    dirname, basename = os.path.split(path_to_template)
-    path_to_templates = os.path.join(_current_dir, "templates")
-    jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader([dirname, path_to_templates]), keep_trailing_newline=True)
-    template = jinja_env.get_template(basename)
-    return template.render(params)
+def lower_first(name):
+    """Return name with first letter or initial acronym lowercased.
 
-
-def use_jinja(template_file_name):
-    def real_decorator(generator):
-        def generator_internal(*args, **kwargs):
-            parameters = generator(*args, **kwargs)
-            return apply_template(template_file_name, parameters)
-        generator_internal.func_name = generator.func_name
-        return generator_internal
-    return real_decorator
+    E.g., 'SetURL' becomes 'setURL', but 'URLFoo' becomes 'urlFoo'.
+    """
+    for acronym in ACRONYMS:
+        if name.startswith(acronym):
+            return name.replace(acronym, acronym.lower())
+    return name[0].lower() + name[1:]

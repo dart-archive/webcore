@@ -27,22 +27,9 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 [
-    NoInterfaceObject,
-    EnabledAtRuntime=fontLoadEvents,
-    ActiveDOMObject,
-    GenerateIsReachable=document
-] interface FontLoader : EventTarget {
-
-    attribute EventHandler onloading;
-    attribute EventHandler onloadingdone;
-    attribute EventHandler onloadstart;
-    attribute EventHandler onload;
-    attribute EventHandler onerror;
-
-    boolean checkFont(DOMString font, [Default=NullString] optional DOMString text);
-    void loadFont(Dictionary params);
-    void notifyWhenFontsReady(VoidCallback callback);
-    readonly attribute boolean loading;
+    EnabledAtRuntime=ServiceWorker
+] partial interface Navigator {
+  [CallWith=ScriptExecutionContext, RaisesException] Promise registerServiceWorker(DOMString pattern, DOMString src);
+  [CallWith=ScriptExecutionContext, RaisesException] Promise unregisterServiceWorker(DOMString pattern);
 };
