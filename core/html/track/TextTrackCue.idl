@@ -24,9 +24,9 @@
  */
 
 [
-    EnabledAtRuntime=VideoTrack,
+    RuntimeEnabled=VideoTrack,
     Constructor(double startTime, double endTime, DOMString text),
-    ConstructorCallWith=ScriptExecutionContext
+    ConstructorCallWith=Document
 ] interface TextTrackCue : EventTarget {
     readonly attribute TextTrack track;
 
@@ -48,6 +48,6 @@
     attribute EventHandler onenter;
     attribute EventHandler onexit;
 
-    [Conditional=WEBVTT_REGIONS] attribute DOMString regionId;
+    [RuntimeEnabled=WebVTTRegions] attribute DOMString regionId;
 };
 

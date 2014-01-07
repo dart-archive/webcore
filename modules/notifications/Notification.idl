@@ -32,16 +32,16 @@
 [
     ActiveDOMObject,
     Constructor(DOMString title, [Default=Undefined] optional Dictionary options),
-    ConstructorCallWith=ScriptExecutionContext,
-    EnabledAtRuntime=notifications
+    ConstructorCallWith=ExecutionContext,
+    RuntimeEnabled=notifications
 ] interface Notification : EventTarget {
     void show();
     [Conditional=LEGACY_NOTIFICATIONS] void cancel();
     void close();
 
 
-    [CallWith=ScriptExecutionContext] static readonly attribute DOMString permission;
-    [CallWith=ScriptExecutionContext] static void requestPermission(optional NotificationPermissionCallback callback);
+    [CallWith=ExecutionContext] static readonly attribute DOMString permission;
+    [CallWith=ExecutionContext] static void requestPermission(optional NotificationPermissionCallback callback);
 
     attribute EventHandler onshow;
     [Conditional=LEGACY_NOTIFICATIONS] attribute EventHandler ondisplay;

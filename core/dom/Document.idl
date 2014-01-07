@@ -21,7 +21,7 @@
 callback CustomElementConstructor = Element ();
 
 [
-    CustomToV8
+    SpecialWrapFor=HTMLDocument|SVGDocument
 ] interface Document : Node {
 
     // DOM Level 1 Core
@@ -29,7 +29,7 @@ callback CustomElementConstructor = Element ();
     readonly attribute DOMImplementation implementation;
     readonly attribute Element documentElement;
 
-    [CustomElementCallbacks=Enable, PerWorldBindings, ActivityLog=AccessForIsolatedWorlds, RaisesException] Element createElement([TreatNullAs=NullString,Default=Undefined] optional DOMString tagName);
+    [CustomElementCallbacks, PerWorldBindings, ActivityLogging=AccessForIsolatedWorlds, RaisesException] Element createElement([TreatNullAs=NullString,Default=Undefined] optional DOMString tagName);
     DocumentFragment   createDocumentFragment();
     [PerWorldBindings] Text createTextNode([Default=Undefined] optional DOMString data);
     Comment createComment([Default=Undefined] optional DOMString data);
@@ -41,9 +41,9 @@ callback CustomElementConstructor = Element ();
 
     // Introduced in DOM Level 2:
 
-    [CustomElementCallbacks=Enable, PerWorldBindings, ActivityLog=AccessForIsolatedWorlds, RaisesException] Node importNode([Default=Undefined] optional Node importedNode,
+    [CustomElementCallbacks, PerWorldBindings, ActivityLogging=AccessForIsolatedWorlds, RaisesException] Node importNode([Default=Undefined] optional Node importedNode,
                     optional boolean deep);
-    [CustomElementCallbacks=Enable, PerWorldBindings, ActivityLog=AccessForIsolatedWorlds, RaisesException] Element createElementNS([TreatNullAs=NullString,Default=Undefined] optional DOMString namespaceURI,
+    [CustomElementCallbacks, PerWorldBindings, ActivityLogging=AccessForIsolatedWorlds, RaisesException] Element createElementNS([TreatNullAs=NullString,Default=Undefined] optional DOMString namespaceURI,
                             [TreatNullAs=NullString,Default=Undefined] optional DOMString qualifiedName);
     [RaisesException, MeasureAs=DocumentCreateAttributeNS] Attr createAttributeNS([TreatNullAs=NullString,Default=Undefined] optional DOMString namespaceURI,
                                                                                   [TreatNullAs=NullString,Default=Undefined] optional DOMString qualifiedName); // Removed from DOM4.
@@ -59,7 +59,7 @@ callback CustomElementConstructor = Element ();
     [TreatReturnedNullStringAs=Null, TreatNullAs=NullString, SetterRaisesException, MeasureAs=DocumentXMLVersion] attribute DOMString xmlVersion; // Removed from DOM4.
     [SetterRaisesException, MeasureAs=DocumentXMLStandalone] attribute boolean xmlStandalone; // Removed from DOM4.
 
-    [RaisesException, CustomElementCallbacks=Enable] Node               adoptNode([Default=Undefined] optional Node source);
+    [RaisesException, CustomElementCallbacks] Node               adoptNode([Default=Undefined] optional Node source);
 
     [TreatReturnedNullStringAs=Null] readonly attribute DOMString documentURI;
 
@@ -86,7 +86,7 @@ callback CustomElementConstructor = Element ();
 
     // DOM Level 2 Abstract Views (DocumentView interface)
 
-    readonly attribute Window defaultView;
+    [ImplementedAs=domWindow] readonly attribute Window defaultView;
 
     // DOM Level 2 Style (DocumentStyle interface)
 
@@ -98,7 +98,7 @@ callback CustomElementConstructor = Element ();
                                                         [Default=Undefined] optional DOMString pseudoElement);
 
     // Common extensions
-    [CustomElementCallbacks=Enable]
+    [CustomElementCallbacks]
     boolean            execCommand([Default=Undefined] optional DOMString command,
                                    [Default=Undefined] optional boolean userInterface,
                                    [TreatNullAs=NullString, TreatUndefinedAs=NullString,Default=Undefined] optional DOMString value);
@@ -111,14 +111,14 @@ callback CustomElementConstructor = Element ();
 
     // Moved down from HTMLDocument
 
-             [TreatNullAs=NullString, CustomElementCallbacks=Enable] attribute DOMString title;
+             [TreatNullAs=NullString, CustomElementCallbacks] attribute DOMString title;
     readonly attribute DOMString referrer;
              [TreatNullAs=NullString, SetterRaisesException] attribute DOMString domain;
     readonly attribute DOMString URL;
 
              [TreatNullAs=NullString, GetterRaisesException, SetterRaisesException] attribute DOMString cookie;
 
-             [SetterRaisesException, CustomElementCallbacks=Enable] attribute HTMLElement body;
+             [SetterRaisesException, CustomElementCallbacks] attribute HTMLElement body;
 
     readonly attribute HTMLHeadElement head;
     readonly attribute HTMLCollection images;
@@ -130,7 +130,7 @@ callback CustomElementConstructor = Element ();
 
     [PerWorldBindings] NodeList getElementsByName([Default=Undefined] optional DOMString elementName);
 
-    [Custom, Replaceable, PerWorldBindings, ActivityLog=AccessForIsolatedWorlds] readonly attribute Location location;
+    [PerWorldBindings, ActivityLogging=AccessForIsolatedWorlds, PutForwards=href] readonly attribute Location location;
 
     // IE extensions
     [MeasureAs=DocumentCharset, TreatReturnedNullStringAs=Undefined, TreatNullAs=NullString] attribute DOMString charset;
@@ -165,90 +165,31 @@ callback CustomElementConstructor = Element ();
     void webkitExitPointerLock();
     readonly attribute Element webkitPointerLockElement;
 
-    [EnabledAtRuntime=CSSRegions] WebKitNamedFlowCollection webkitGetNamedFlows();
+    [RuntimeEnabled=CSSRegions] WebKitNamedFlowCollection webkitGetNamedFlows();
 
-    [EnabledAtRuntime=FontLoadEvents] readonly attribute FontFaceSet fonts;
+    // Event handler attributes
+    attribute EventHandler onbeforecopy;
+    attribute EventHandler onbeforecut;
+    attribute EventHandler onbeforepaste;
+    attribute EventHandler oncopy;
+    attribute EventHandler oncut;
+    attribute EventHandler onpaste;
+    attribute EventHandler onreadystatechange;
+    attribute EventHandler onsearch;
+    [RuntimeEnabled=ExperimentalContentSecurityPolicyFeatures] attribute EventHandler onsecuritypolicyviolation;
+    attribute EventHandler onselectionchange;
+    attribute EventHandler onselectstart;
+    [RuntimeEnabled=Touch] attribute EventHandler ontouchcancel;
+    [RuntimeEnabled=Touch] attribute EventHandler ontouchend;
+    [RuntimeEnabled=Touch] attribute EventHandler ontouchmove;
+    [RuntimeEnabled=Touch] attribute EventHandler ontouchstart;
+    attribute EventHandler onwebkitfullscreenchange;
+    attribute EventHandler onwebkitfullscreenerror;
+    attribute EventHandler onwebkitpointerlockchange;
+    attribute EventHandler onwebkitpointerlockerror;
+    [ActivityLogging=SetterForAllWorlds] attribute EventHandler onwheel;
 
-    // Event handler DOM attributes
-    [NotEnumerable] attribute EventHandler onabort;
-    [NotEnumerable] attribute EventHandler onblur;
-    [NotEnumerable] attribute EventHandler onchange;
-    [NotEnumerable, PerWorldBindings, ActivityLog=SetterForIsolatedWorlds] attribute EventHandler onclick;
-    [NotEnumerable] attribute EventHandler oncontextmenu;
-    [NotEnumerable, PerWorldBindings, ActivityLog=SetterForIsolatedWorlds] attribute EventHandler ondblclick;
-    [NotEnumerable, PerWorldBindings, ActivityLog=SetterForIsolatedWorlds] attribute EventHandler ondrag;
-    [NotEnumerable, PerWorldBindings, ActivityLog=SetterForIsolatedWorlds] attribute EventHandler ondragend;
-    [NotEnumerable, PerWorldBindings, ActivityLog=SetterForIsolatedWorlds] attribute EventHandler ondragenter;
-    [NotEnumerable, PerWorldBindings, ActivityLog=SetterForIsolatedWorlds] attribute EventHandler ondragleave;
-    [NotEnumerable, PerWorldBindings, ActivityLog=SetterForIsolatedWorlds] attribute EventHandler ondragover;
-    [NotEnumerable, PerWorldBindings, ActivityLog=SetterForIsolatedWorlds] attribute EventHandler ondragstart;
-    [NotEnumerable, PerWorldBindings, ActivityLog=SetterForIsolatedWorlds] attribute EventHandler ondrop;
-    [NotEnumerable] attribute EventHandler onerror;
-    [NotEnumerable] attribute EventHandler onfocus;
-    [NotEnumerable, PerWorldBindings, ActivityLog=SetterForIsolatedWorlds] attribute EventHandler oninput;
-    [NotEnumerable] attribute EventHandler oninvalid;
-    [NotEnumerable, PerWorldBindings, ActivityLog=SetterForIsolatedWorlds] attribute EventHandler onkeydown;
-    [NotEnumerable, PerWorldBindings, ActivityLog=SetterForIsolatedWorlds] attribute EventHandler onkeypress;
-    [NotEnumerable, PerWorldBindings, ActivityLog=SetterForIsolatedWorlds] attribute EventHandler onkeyup;
-    [NotEnumerable] attribute EventHandler onload;
-    [NotEnumerable, PerWorldBindings, ActivityLog=SetterForIsolatedWorlds] attribute EventHandler onmousedown;
-    [NotEnumerable, PerWorldBindings, ActivityLog=SetterForIsolatedWorlds] attribute EventHandler onmouseenter;
-    [NotEnumerable, PerWorldBindings, ActivityLog=SetterForIsolatedWorlds] attribute EventHandler onmouseleave;
-    [NotEnumerable, PerWorldBindings, ActivityLog=SetterForIsolatedWorlds] attribute EventHandler onmousemove;
-    [NotEnumerable, PerWorldBindings, ActivityLog=SetterForIsolatedWorlds] attribute EventHandler onmouseout;
-    [NotEnumerable, PerWorldBindings, ActivityLog=SetterForIsolatedWorlds] attribute EventHandler onmouseover;
-    [NotEnumerable, PerWorldBindings, ActivityLog=SetterForIsolatedWorlds] attribute EventHandler onmouseup;
-    [NotEnumerable, PerWorldBindings, ActivityLog=SetterForIsolatedWorlds] attribute EventHandler onmousewheel; // Deprecated in favor of onwheel.
-    [NotEnumerable, PerWorldBindings, ActivityLog=SetterForIsolatedWorlds] attribute EventHandler onwheel;
-    [NotEnumerable] attribute EventHandler onreadystatechange;
-    [NotEnumerable] attribute EventHandler onscroll;
-    [NotEnumerable] attribute EventHandler onselect;
-    [NotEnumerable] attribute EventHandler onsubmit;
-
-    // attribute [NotEnumerable] EventHandler oncanplay;
-    // attribute [NotEnumerable] EventHandler oncanplaythrough;
-    // attribute [NotEnumerable] EventHandler ondurationchange;
-    // attribute [NotEnumerable] EventHandler onemptied;
-    // attribute [NotEnumerable] EventHandler onended;
-    // attribute [NotEnumerable] EventHandler onloadeddata;
-    // attribute [NotEnumerable] EventHandler onloadedmetadata;
-    // attribute [NotEnumerable] EventHandler onloadstart;
-    // attribute [NotEnumerable] EventHandler onpause;
-    // attribute [NotEnumerable] EventHandler onplay;
-    // attribute [NotEnumerable] EventHandler onplaying;
-    // attribute [NotEnumerable] EventHandler onprogress;
-    // attribute [NotEnumerable] EventHandler onratechange;
-    // attribute [NotEnumerable] EventHandler onseeked;
-    // attribute [NotEnumerable] EventHandler onseeking;
-    // attribute [NotEnumerable] EventHandler onshow;
-    // attribute [NotEnumerable] EventHandler onstalled;
-    // attribute [NotEnumerable] EventHandler onsuspend;
-    // attribute [NotEnumerable] EventHandler ontimeupdate;
-    // attribute [NotEnumerable] EventHandler onvolumechange;
-    // attribute [NotEnumerable] EventHandler onwaiting;
-
-    // WebKit extensions
-    [NotEnumerable] attribute EventHandler onbeforecut;
-    [NotEnumerable] attribute EventHandler oncut;
-    [NotEnumerable] attribute EventHandler onbeforecopy;
-    [NotEnumerable] attribute EventHandler oncopy;
-    [NotEnumerable] attribute EventHandler onbeforepaste;
-    [NotEnumerable] attribute EventHandler onpaste;
-    [NotEnumerable] attribute EventHandler onreset;
-    [NotEnumerable] attribute EventHandler onsearch;
-    [NotEnumerable] attribute EventHandler onselectstart;
-    [NotEnumerable] attribute EventHandler onselectionchange;
-    [NotEnumerable, EnabledAtRuntime=Touch] attribute EventHandler ontouchstart;
-    [NotEnumerable, EnabledAtRuntime=Touch] attribute EventHandler ontouchmove;
-    [NotEnumerable, EnabledAtRuntime=Touch] attribute EventHandler ontouchend;
-    [NotEnumerable, EnabledAtRuntime=Touch] attribute EventHandler ontouchcancel;
-    [NotEnumerable] attribute EventHandler onwebkitfullscreenchange;
-    [NotEnumerable] attribute EventHandler onwebkitfullscreenerror;
-    [NotEnumerable] attribute EventHandler onwebkitpointerlockchange;
-    [NotEnumerable] attribute EventHandler onwebkitpointerlockerror;
-    [NotEnumerable, EnabledAtRuntime=ExperimentalContentSecurityPolicyFeatures] attribute EventHandler onsecuritypolicyviolation;
-
-    [EnabledAtRuntime=Touch] Touch createTouch([Default=Undefined] optional Window window,
+    [RuntimeEnabled=Touch] Touch createTouch([Default=Undefined] optional Window window,
                                                [Default=Undefined] optional EventTarget target,
                                                [Default=Undefined] optional long identifier,
                                                [Default=Undefined] optional long pageX,
@@ -259,12 +200,12 @@ callback CustomElementConstructor = Element ();
                                                [Default=Undefined] optional long webkitRadiusY,
                                                [Default=Undefined] optional float webkitRotationAngle,
                                                [Default=Undefined] optional float webkitForce);
-    [EnabledAtRuntime=Touch] TouchList createTouchList(Touch... touches);
+    [RuntimeEnabled=Touch] TouchList createTouchList(Touch... touches);
 
-    [DeprecateAs=PrefixedDocumentRegister, EnabledAtRuntime=CustomElements, ImplementedAs=registerElement, CallWith=ScriptState, CustomElementCallbacks=Enable, RaisesException] CustomElementConstructor webkitRegister(DOMString name, optional Dictionary options);
-    [EnabledAtRuntime=CustomElements, ImplementedAs=registerElement, CallWith=ScriptState, CustomElementCallbacks=Enable, RaisesException] CustomElementConstructor register(DOMString name, optional Dictionary options);
-    [CustomElementCallbacks=Enable, PerWorldBindings, ActivityLog=AccessForIsolatedWorlds, RaisesException] Element createElement(DOMString localName, [TreatNullAs=NullString] DOMString typeExtension);
-    [CustomElementCallbacks=Enable, PerWorldBindings, ActivityLog=AccessForIsolatedWorlds, RaisesException] Element createElementNS([TreatNullAs=NullString] DOMString namespaceURI, DOMString qualifiedName,
+    [DeprecateAs=PrefixedDocumentRegister, RuntimeEnabled=CustomElements, ImplementedAs=registerElement, CallWith=ScriptState, CustomElementCallbacks, RaisesException] CustomElementConstructor webkitRegister(DOMString name, optional Dictionary options);
+    [RuntimeEnabled=CustomElements, ImplementedAs=registerElement, CallWith=ScriptState, CustomElementCallbacks, RaisesException] CustomElementConstructor register(DOMString name, optional Dictionary options);
+    [CustomElementCallbacks, PerWorldBindings, ActivityLogging=AccessForIsolatedWorlds, RaisesException] Element createElement(DOMString localName, [TreatNullAs=NullString] DOMString typeExtension);
+    [CustomElementCallbacks, PerWorldBindings, ActivityLogging=AccessForIsolatedWorlds, RaisesException] Element createElementNS([TreatNullAs=NullString] DOMString namespaceURI, DOMString qualifiedName,
                             [TreatNullAs=NullString] DOMString typeExtension);
 
     // Page visibility API.
@@ -272,10 +213,10 @@ callback CustomElementConstructor = Element ();
     readonly attribute boolean webkitHidden;
 
     // Security Policy API: http://dvcs.w3.org/hg/content-security-policy/raw-file/tip/csp-specification.dev.html#script-interfaces
-    [EnabledAtRuntime=ExperimentalContentSecurityPolicyFeatures] readonly attribute SecurityPolicy securityPolicy;
+    [RuntimeEnabled=ExperimentalContentSecurityPolicyFeatures] readonly attribute SecurityPolicy securityPolicy;
 
     readonly attribute HTMLScriptElement currentScript;
 };
 
+Document implements GlobalEventHandlers;
 Document implements ParentNode;
-

@@ -5,5 +5,5 @@ Please do not modify the files here.  They are periodically copied
 using the script: $DART_ROOT/sdk/lib/html/scripts/idlsync.py
 
 The current version corresponds to:
-URL: http://src.chromium.org/multivm/trunk/webkit
-Current revision: 1467
+URL: http://src.chromium.org/blink/branches/dart/1700
+Current revision: 164530
