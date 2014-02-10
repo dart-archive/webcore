@@ -27,16 +27,21 @@
  */
 
 [
-    CheckSecurity
+    CheckSecurity=Frame,
 ] interface Location {
-    [SetterCallWith=ActiveWindow&FirstWindow, DoNotCheckSecurityOnSetter, Unforgeable] attribute DOMString href;
+    // |assign|, |replace|, and *writing* |href| do not require a security
+    // check, as they *change* the page, and thus these do not change any
+    // property of an *existing* document at a different origin.
+    // However, *reading* |href|, or accessing any component, is a security
+    // problem, since that allows tracking navigation.
+    [SetterCallWith=ActiveWindow&FirstWindow, DoNotCheckSecurity=Setter, Unforgeable] attribute DOMString href;
 
-    [CallWith=ActiveWindow&FirstWindow, DoNotCheckSecurity, Unforgeable, ReadOnly, PerWorldBindings, ActivityLogging=AccessForIsolatedWorlds] void assign([Default=Undefined] optional DOMString url);
-    [CallWith=ActiveWindow&FirstWindow, DoNotCheckSecurity, Unforgeable, ReadOnly, PerWorldBindings, ActivityLogging=AccessForIsolatedWorlds] void replace([Default=Undefined] optional DOMString url);
+    [CallWith=ActiveWindow&FirstWindow, DoNotCheckSecurity, Unforgeable, ReadOnly, PerWorldBindings, ActivityLogging=ForIsolatedWorlds] void assign(DOMString url);
+    [CallWith=ActiveWindow&FirstWindow, DoNotCheckSecurity, Unforgeable, ReadOnly, PerWorldBindings, ActivityLogging=ForIsolatedWorlds] void replace(DOMString url);
     [CallWith=ActiveWindow, Unforgeable, ReadOnly] void reload();
 
     // URI decomposition attributes
-    [SetterCallWith=ActiveWindow&FirstWindow, SetterRaisesException] attribute DOMString protocol;
+    [SetterCallWith=ActiveWindow&FirstWindow, RaisesException=Setter] attribute DOMString protocol;
     [SetterCallWith=ActiveWindow&FirstWindow] attribute DOMString host;
     [SetterCallWith=ActiveWindow&FirstWindow] attribute DOMString hostname;
     [SetterCallWith=ActiveWindow&FirstWindow] attribute DOMString port;

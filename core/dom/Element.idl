@@ -26,42 +26,35 @@
 
     [TreatReturnedNullStringAs=Null, PerWorldBindings] readonly attribute DOMString tagName;
 
-    [TreatReturnedNullStringAs=Null] DOMString getAttribute([Default=Undefined] optional DOMString name);
-    [RaisesException, CustomElementCallbacks] void setAttribute([Default=Undefined] optional DOMString name, [Default=Undefined] optional DOMString value);
-    [CustomElementCallbacks] void removeAttribute([Default=Undefined] optional DOMString name);
+    [TreatReturnedNullStringAs=Null] DOMString getAttribute(DOMString name);
+    [RaisesException, CustomElementCallbacks] void setAttribute(DOMString name, DOMString value);
+    [CustomElementCallbacks] void removeAttribute(DOMString name);
     [MeasureAs=ElementGetAttributeNode] Attr getAttributeNode([Default=Undefined] optional DOMString name); // Removed from DOM4.
     [RaisesException, CustomElementCallbacks, MeasureAs=ElementSetAttributeNode] Attr setAttributeNode([Default=Undefined, StrictTypeChecking] optional Attr newAttr); // Removed from DOM4.
     [RaisesException, CustomElementCallbacks, MeasureAs=ElementRemoveAttributeNode] Attr removeAttributeNode([Default=Undefined, StrictTypeChecking] optional Attr oldAttr); // Removed from DOM4.
-    [PerWorldBindings] NodeList getElementsByTagName([Default=Undefined] optional DOMString name);
+    [PerWorldBindings] NodeList getElementsByTagName(DOMString name);
 
     [PerWorldBindings] readonly attribute NamedNodeMap     attributes;
     [MeasureAs=HasAttributes] boolean hasAttributes();
 
     // DOM Level 2 Core
 
-    DOMString getAttributeNS([TreatNullAs=NullString,Default=Undefined] optional DOMString namespaceURI,
-                             [Default=Undefined] optional DOMString localName);
-    [RaisesException, CustomElementCallbacks] void setAttributeNS([TreatNullAs=NullString,Default=Undefined] optional DOMString namespaceURI,
-                                                                  [Default=Undefined] optional DOMString qualifiedName,
-                                                                  [Default=Undefined] optional DOMString value);
+    DOMString getAttributeNS([TreatNullAs=NullString] DOMString namespaceURI, DOMString localName);
+    [RaisesException, CustomElementCallbacks] void setAttributeNS([TreatNullAs=NullString] DOMString namespaceURI, DOMString qualifiedName, DOMString value);
     [CustomElementCallbacks] void removeAttributeNS([TreatNullAs=NullString] DOMString namespaceURI, DOMString localName);
-    NodeList getElementsByTagNameNS([TreatNullAs=NullString,Default=Undefined] optional DOMString namespaceURI,
-                                    [Default=Undefined] optional DOMString localName);
+    NodeList getElementsByTagNameNS([TreatNullAs=NullString] DOMString namespaceURI, DOMString localName);
     [MeasureAs=ElementGetAttributeNodeNS] Attr getAttributeNodeNS([TreatNullAs=NullString,Default=Undefined] optional DOMString namespaceURI,
                                                                   [Default=Undefined] optional DOMString localName); // Removed from DOM4.
-    [RaisesException, CustomElementCallbacks] Attr setAttributeNodeNS([Default=Undefined, StrictTypeChecking] optional Attr newAttr);
+    [RaisesException, CustomElementCallbacks, MeasureAs=ElementSetAttributeNodeNS] Attr setAttributeNodeNS([Default=Undefined, StrictTypeChecking] optional Attr newAttr); // Removed from DOM4.
     boolean hasAttribute(DOMString name);
-    boolean hasAttributeNS([TreatNullAs=NullString,Default=Undefined] optional DOMString namespaceURI,
-                           [Default=Undefined] optional DOMString localName);
+    boolean hasAttributeNS([TreatNullAs=NullString] DOMString namespaceURI, DOMString localName);
 
     [PerWorldBindings] readonly attribute CSSStyleDeclaration style;
 
     // DOM4
-    // iht.com relies on id returning the empty string when no id is present.
-    // Other browsers do this as well. So we don't convert null to JS null.
-    [Reflect, TreatNullAs=NullString] attribute DOMString id;
+    [Reflect] attribute DOMString id;
     [TreatReturnedNullStringAs=Null, PerWorldBindings] readonly attribute DOMString namespaceURI;
-    [TreatReturnedNullStringAs=Null, TreatNullAs=NullString, PerWorldBindings, SetterRaisesException] attribute DOMString prefix;
+    [TreatReturnedNullStringAs=Null, TreatNullAs=NullString, PerWorldBindings, RaisesException=Setter] attribute DOMString prefix;
     [TreatReturnedNullStringAs=Null, PerWorldBindings] readonly attribute DOMString localName;
 
     // Common extensions
@@ -91,11 +84,12 @@
     void scrollByPages([Default=Undefined] optional long pages);
 
     // HTML 5
-    NodeList getElementsByClassName([Default=Undefined] optional DOMString name);
-    [TreatNullAs=NullString, CustomElementCallbacks, PerWorldBindings, ActivityLogging=SetterForIsolatedWorlds, SetterRaisesException] attribute DOMString innerHTML;
-    [TreatNullAs=NullString, CustomElementCallbacks, SetterRaisesException] attribute DOMString outerHTML;
+    NodeList getElementsByClassName(DOMString classNames);
+    [TreatNullAs=NullString, CustomElementCallbacks, PerWorldBindings, ActivityLogging=SetterForIsolatedWorlds, RaisesException=Setter] attribute DOMString innerHTML;
+    [TreatNullAs=NullString, CustomElementCallbacks, RaisesException=Setter] attribute DOMString outerHTML;
+    [CustomElementCallbacks, RaisesException] void insertAdjacentHTML(DOMString where, DOMString html);
 
-    [Reflect=class, TreatNullAs=NullString, PerWorldBindings] attribute DOMString className;
+    [Reflect=class, PerWorldBindings] attribute DOMString className;
     [PerWorldBindings] readonly attribute DOMTokenList classList;
 
     [PerWorldBindings] readonly attribute DOMStringMap dataset;
@@ -104,8 +98,8 @@
     [RaisesException] Element querySelector(DOMString selectors);
     [RaisesException] NodeList querySelectorAll(DOMString selectors);
 
-    // WebKit extension, pending specification.
-    [RaisesException] boolean webkitMatchesSelector([Default=Undefined] optional DOMString selectors);
+    // WebKit extension
+    [RaisesException, MeasureAs=ElementPrefixedMatchesSelector] boolean webkitMatchesSelector([Default=Undefined] optional DOMString selectors);
 
     // Shadow DOM API
     [RuntimeEnabled=ShadowDOM, Reflect, TreatNullAs=NullString, PerWorldBindings] attribute DOMString pseudo;
@@ -124,10 +118,10 @@
 
     // Mozilla version
     const unsigned short ALLOW_KEYBOARD_INPUT = 1;
-    [RuntimeEnabled=Fullscreen, PerWorldBindings, ActivityLogging=AccessForAllWorlds, MeasureAs=PrefixedElementRequestFullScreen] void webkitRequestFullScreen([Default=Undefined] optional unsigned short flags);
+    [RuntimeEnabled=Fullscreen, PerWorldBindings, ActivityLogging=ForAllWorlds, MeasureAs=PrefixedElementRequestFullScreen] void webkitRequestFullScreen([Default=Undefined] optional unsigned short flags);
 
     // W3C version
-    [RuntimeEnabled=Fullscreen, PerWorldBindings, ActivityLogging=AccessForAllWorlds, MeasureAs=PrefixedElementRequestFullscreen] void webkitRequestFullscreen();
+    [RuntimeEnabled=Fullscreen, PerWorldBindings, ActivityLogging=ForAllWorlds, MeasureAs=PrefixedElementRequestFullscreen] void webkitRequestFullscreen();
 
     void webkitRequestPointerLock();
 
@@ -150,7 +144,7 @@
     [RuntimeEnabled=Touch] attribute EventHandler ontouchstart;
     attribute EventHandler onwebkitfullscreenchange;
     attribute EventHandler onwebkitfullscreenerror;
-    [ActivityLogging=SetterForAllWorlds] attribute EventHandler onwheel;
+    [PerWorldBindings, ActivityLogging=SetterForIsolatedWorlds] attribute EventHandler onwheel;
 };
 
 Element implements ParentNode;

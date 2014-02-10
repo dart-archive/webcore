@@ -19,8 +19,8 @@
  */
 
 [
-    CustomToV8,
-    DependentLifetime
+    Custom=Wrap,
+    DependentLifetime,
 ] interface Node : EventTarget {
     // NodeType
     const unsigned short      ELEMENT_NODE                   = 1;
@@ -36,9 +36,8 @@
     const unsigned short      DOCUMENT_FRAGMENT_NODE         = 11;
     const unsigned short      NOTATION_NODE                  = 12;
 
-    [TreatReturnedNullStringAs=Null, PerWorldBindings] readonly attribute DOMString        nodeName;
+    [PerWorldBindings] readonly attribute DOMString nodeName;
 
-             // FIXME: the spec says this can also raise on retrieval.
     [TreatReturnedNullStringAs=Null, TreatNullAs=NullString, PerWorldBindings, CustomElementCallbacks] attribute DOMString nodeValue;
 
     [PerWorldBindings] readonly attribute unsigned short   nodeType;
@@ -50,10 +49,10 @@
     [PerWorldBindings] readonly attribute Node             nextSibling;
     [PerWorldBindings] readonly attribute Document         ownerDocument;
 
-    [Custom, CustomElementCallbacks, PerWorldBindings, ActivityLogging=AccessForIsolatedWorlds, RaisesException] Node insertBefore(Node newChild, Node refChild);
-    [Custom, CustomElementCallbacks, PerWorldBindings, ActivityLogging=AccessForIsolatedWorlds, RaisesException] Node replaceChild(Node newChild, Node oldChild);
+    [Custom, CustomElementCallbacks, PerWorldBindings, ActivityLogging=ForIsolatedWorlds, RaisesException] Node insertBefore(Node newChild, Node refChild);
+    [Custom, CustomElementCallbacks, PerWorldBindings, ActivityLogging=ForIsolatedWorlds, RaisesException] Node replaceChild(Node newChild, Node oldChild);
     [Custom, CustomElementCallbacks, PerWorldBindings, RaisesException] Node removeChild(Node oldChild);
-    [Custom, CustomElementCallbacks, PerWorldBindings, ActivityLogging=AccessForIsolatedWorlds, RaisesException] Node appendChild(Node newChild);
+    [Custom, CustomElementCallbacks, PerWorldBindings, ActivityLogging=ForIsolatedWorlds, RaisesException] Node appendChild(Node newChild);
 
     boolean            hasChildNodes();
     [CustomElementCallbacks, PerWorldBindings]
@@ -65,20 +64,19 @@
                                                     [TreatNullAs=NullString,Default=Undefined] optional DOMString version); // Removed in DOM4.
 
     [TreatReturnedNullStringAs=Null, PerWorldBindings, MeasureAs=NodeNamespaceURI] readonly attribute DOMString namespaceURI; // Moved to Element and Attr in DOM4.
-    [TreatReturnedNullStringAs=Null, TreatNullAs=NullString, PerWorldBindings, SetterRaisesException, MeasureAs=NodePrefix] attribute DOMString prefix; // Moved to Element and Attr in DOM4.
+    [TreatReturnedNullStringAs=Null, TreatNullAs=NullString, PerWorldBindings, RaisesException=Setter, MeasureAs=NodePrefix] attribute DOMString prefix; // Moved to Element and Attr in DOM4.
     [TreatReturnedNullStringAs=Null, PerWorldBindings, MeasureAs=NodeLocalName] readonly attribute DOMString localName; // Moved to Element and Attr in DOM4.
 
     // Introduced in DOM Level 3:
-    [TreatReturnedNullStringAs=Null, PerWorldBindings] readonly attribute DOMString       baseURI;
+    [TreatReturnedNullStringAs=Null, PerWorldBindings] readonly attribute DOMString baseURI;
 
-             // FIXME: the spec says this can also raise on retrieval.
-             [TreatReturnedNullStringAs=Null, TreatNullAs=NullString, PerWorldBindings, SetterRaisesException, CustomElementCallbacks] attribute DOMString       textContent;
+    [TreatReturnedNullStringAs=Null, TreatNullAs=NullString, PerWorldBindings, CustomElementCallbacks] attribute DOMString textContent;
 
     [MeasureAs=NodeIsSameNode] boolean isSameNode([Default=Undefined] optional Node other); // Removed in DOM4.
-    boolean            isEqualNode([Default=Undefined] optional Node other);
-    [TreatReturnedNullStringAs=Null] DOMString          lookupPrefix([TreatNullAs=NullString,Default=Undefined] optional DOMString namespaceURI);
-    boolean            isDefaultNamespace([TreatNullAs=NullString,Default=Undefined] optional DOMString namespaceURI);
-    [TreatReturnedNullStringAs=Null] DOMString          lookupNamespaceURI([TreatNullAs=NullString,Default=Undefined] optional DOMString prefix);
+    boolean isEqualNode(Node other);
+    [TreatReturnedNullStringAs=Null] DOMString lookupPrefix([TreatNullAs=NullString] DOMString namespaceURI);
+    boolean isDefaultNamespace([TreatNullAs=NullString] DOMString namespaceURI);
+    [TreatReturnedNullStringAs=Null] DOMString lookupNamespaceURI([TreatNullAs=NullString] DOMString prefix);
 
     // DocumentPosition
     const unsigned short      DOCUMENT_POSITION_DISCONNECTED = 0x01;
@@ -88,11 +86,11 @@
     const unsigned short      DOCUMENT_POSITION_CONTAINED_BY = 0x10;
     const unsigned short      DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC = 0x20;
 
-    unsigned short     compareDocumentPosition([Default=Undefined] optional Node other);
+    unsigned short compareDocumentPosition(Node other);
 
     // Introduced in DOM4
-    [ImplementedAs=bindingsContains] boolean contains([Default=Undefined] optional Node other);
+    [ImplementedAs=bindingsContains] boolean contains(Node other);
 
     // IE extensions
-    [PerWorldBindings] readonly attribute Element          parentElement;
+    [PerWorldBindings] readonly attribute Element parentElement;
 };

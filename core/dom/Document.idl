@@ -29,60 +29,52 @@ callback CustomElementConstructor = Element ();
     readonly attribute DOMImplementation implementation;
     readonly attribute Element documentElement;
 
-    [CustomElementCallbacks, PerWorldBindings, ActivityLogging=AccessForIsolatedWorlds, RaisesException] Element createElement([TreatNullAs=NullString,Default=Undefined] optional DOMString tagName);
-    DocumentFragment   createDocumentFragment();
-    [PerWorldBindings] Text createTextNode([Default=Undefined] optional DOMString data);
-    Comment createComment([Default=Undefined] optional DOMString data);
+    [CustomElementCallbacks, PerWorldBindings, ActivityLogging=ForIsolatedWorlds, RaisesException] Element createElement(DOMString tagName);
+    DocumentFragment createDocumentFragment();
+    [PerWorldBindings] Text createTextNode(DOMString data);
+    Comment createComment(DOMString data);
     [RaisesException, MeasureAs=DocumentCreateCDATASection] CDATASection createCDATASection([Default=Undefined] optional DOMString data); // Removed from DOM4.
-    [RaisesException] ProcessingInstruction createProcessingInstruction([Default=Undefined] optional DOMString target,
-                                                                                 [Default=Undefined] optional DOMString data);
+    [RaisesException] ProcessingInstruction createProcessingInstruction(DOMString target, DOMString data);
     [RaisesException, MeasureAs=DocumentCreateAttribute] Attr createAttribute([Default=Undefined] optional DOMString name); // Removed from DOM4.
-    [PerWorldBindings] NodeList           getElementsByTagName([Default=Undefined] optional DOMString tagname);
+    [PerWorldBindings] NodeList getElementsByTagName(DOMString localName);
 
     // Introduced in DOM Level 2:
 
-    [CustomElementCallbacks, PerWorldBindings, ActivityLogging=AccessForIsolatedWorlds, RaisesException] Node importNode([Default=Undefined] optional Node importedNode,
-                    optional boolean deep);
-    [CustomElementCallbacks, PerWorldBindings, ActivityLogging=AccessForIsolatedWorlds, RaisesException] Element createElementNS([TreatNullAs=NullString,Default=Undefined] optional DOMString namespaceURI,
-                            [TreatNullAs=NullString,Default=Undefined] optional DOMString qualifiedName);
+    [CustomElementCallbacks, PerWorldBindings, ActivityLogging=ForIsolatedWorlds, RaisesException] Node importNode(Node node, optional boolean deep);
+    [CustomElementCallbacks, PerWorldBindings, ActivityLogging=ForIsolatedWorlds, RaisesException] Element createElementNS([TreatNullAs=NullString] DOMString namespaceURI, DOMString qualifiedName);
     [RaisesException, MeasureAs=DocumentCreateAttributeNS] Attr createAttributeNS([TreatNullAs=NullString,Default=Undefined] optional DOMString namespaceURI,
                                                                                   [TreatNullAs=NullString,Default=Undefined] optional DOMString qualifiedName); // Removed from DOM4.
-     NodeList getElementsByTagNameNS([TreatNullAs=NullString,Default=Undefined] optional DOMString namespaceURI,
-                                                   [Default=Undefined] optional DOMString localName);
-    [PerWorldBindings] Element            getElementById([Default=Undefined] optional DOMString elementId);
+    NodeList getElementsByTagNameNS([TreatNullAs=NullString] DOMString namespaceURI, DOMString localName);
+    [PerWorldBindings] Element getElementById(DOMString elementId);
 
     // DOM Level 3 Core
 
     [TreatReturnedNullStringAs=Null, MeasureAs=DocumentInputEncoding] readonly attribute DOMString inputEncoding; // Removed from DOM4.
 
     [TreatReturnedNullStringAs=Null, MeasureAs=DocumentXMLEncoding] readonly attribute DOMString xmlEncoding; // Removed from DOM4.
-    [TreatReturnedNullStringAs=Null, TreatNullAs=NullString, SetterRaisesException, MeasureAs=DocumentXMLVersion] attribute DOMString xmlVersion; // Removed from DOM4.
-    [SetterRaisesException, MeasureAs=DocumentXMLStandalone] attribute boolean xmlStandalone; // Removed from DOM4.
+    [TreatReturnedNullStringAs=Null, TreatNullAs=NullString, RaisesException=Setter, MeasureAs=DocumentXMLVersion] attribute DOMString xmlVersion; // Removed from DOM4.
+    [RaisesException=Setter, MeasureAs=DocumentXMLStandalone] attribute boolean xmlStandalone; // Removed from DOM4.
 
-    [RaisesException, CustomElementCallbacks] Node               adoptNode([Default=Undefined] optional Node source);
+    [RaisesException, CustomElementCallbacks] Node adoptNode(Node node);
 
     [TreatReturnedNullStringAs=Null] readonly attribute DOMString documentURI;
 
     // DOM Level 2 Events (DocumentEvents interface)
 
-    [RaisesException] Event              createEvent([Default=Undefined] optional DOMString eventType);
+    [RaisesException] Event createEvent(DOMString eventType);
 
     // DOM Level 2 Traversal and Range (DocumentRange interface)
 
-    Range              createRange();
+    Range createRange();
 
     // DOM Level 2 Traversal and Range (DocumentTraversal interface)
-    // In DOM4, the fourth argument |expandEntityReferences| is removed.
-    // Historically, this argument was never implemented and has been ignored.
-    // We still receive the argument to keep compatibility, but don't do anything if it's specified.
+
     [RaisesException] NodeIterator createNodeIterator(Node root,
                                                       optional unsigned long whatToShow,
-                                                      optional NodeFilter filter,
-                                                      optional boolean expandEntityReferences);
+                                                      optional NodeFilter filter);
     [RaisesException] TreeWalker createTreeWalker(Node root,
                                                   optional unsigned long whatToShow,
-                                                  optional NodeFilter filter,
-                                                  optional boolean expandEntityReferences);
+                                                  optional NodeFilter filter);
 
     // DOM Level 2 Abstract Views (DocumentView interface)
 
@@ -113,12 +105,12 @@ callback CustomElementConstructor = Element ();
 
              [TreatNullAs=NullString, CustomElementCallbacks] attribute DOMString title;
     readonly attribute DOMString referrer;
-             [TreatNullAs=NullString, SetterRaisesException] attribute DOMString domain;
+             [TreatNullAs=NullString, RaisesException=Setter] attribute DOMString domain;
     readonly attribute DOMString URL;
 
-             [TreatNullAs=NullString, GetterRaisesException, SetterRaisesException] attribute DOMString cookie;
+             [TreatNullAs=NullString, RaisesException] attribute DOMString cookie;
 
-             [SetterRaisesException, CustomElementCallbacks] attribute HTMLElement body;
+             [RaisesException=Setter, CustomElementCallbacks] attribute HTMLElement body;
 
     readonly attribute HTMLHeadElement head;
     readonly attribute HTMLCollection images;
@@ -130,7 +122,7 @@ callback CustomElementConstructor = Element ();
 
     [PerWorldBindings] NodeList getElementsByName([Default=Undefined] optional DOMString elementName);
 
-    [PerWorldBindings, ActivityLogging=AccessForIsolatedWorlds, PutForwards=href] readonly attribute Location location;
+    [PerWorldBindings, ActivityLogging=ForIsolatedWorlds, PutForwards=href] readonly attribute Location location;
 
     // IE extensions
     [MeasureAs=DocumentCharset, TreatReturnedNullStringAs=Undefined, TreatNullAs=NullString] attribute DOMString charset;
@@ -154,7 +146,7 @@ callback CustomElementConstructor = Element ();
     CanvasRenderingContext getCSSCanvasContext(DOMString contextId, DOMString name, long width, long height);
 
     // HTML 5
-    NodeList getElementsByClassName([Default=Undefined] optional DOMString tagname);
+    NodeList getElementsByClassName(DOMString classNames);
 
     readonly attribute DOMString compatMode;
 
@@ -187,7 +179,7 @@ callback CustomElementConstructor = Element ();
     attribute EventHandler onwebkitfullscreenerror;
     attribute EventHandler onwebkitpointerlockchange;
     attribute EventHandler onwebkitpointerlockerror;
-    [ActivityLogging=SetterForAllWorlds] attribute EventHandler onwheel;
+    [PerWorldBindings, ActivityLogging=SetterForIsolatedWorlds] attribute EventHandler onwheel;
 
     [RuntimeEnabled=Touch] Touch createTouch([Default=Undefined] optional Window window,
                                                [Default=Undefined] optional EventTarget target,
@@ -204,13 +196,19 @@ callback CustomElementConstructor = Element ();
 
     [DeprecateAs=PrefixedDocumentRegister, RuntimeEnabled=CustomElements, ImplementedAs=registerElement, CallWith=ScriptState, CustomElementCallbacks, RaisesException] CustomElementConstructor webkitRegister(DOMString name, optional Dictionary options);
     [RuntimeEnabled=CustomElements, ImplementedAs=registerElement, CallWith=ScriptState, CustomElementCallbacks, RaisesException] CustomElementConstructor register(DOMString name, optional Dictionary options);
-    [CustomElementCallbacks, PerWorldBindings, ActivityLogging=AccessForIsolatedWorlds, RaisesException] Element createElement(DOMString localName, [TreatNullAs=NullString] DOMString typeExtension);
-    [CustomElementCallbacks, PerWorldBindings, ActivityLogging=AccessForIsolatedWorlds, RaisesException] Element createElementNS([TreatNullAs=NullString] DOMString namespaceURI, DOMString qualifiedName,
+    [CustomElementCallbacks, PerWorldBindings, ActivityLogging=ForIsolatedWorlds, RaisesException] Element createElement(DOMString localName, [TreatNullAs=NullString] DOMString typeExtension);
+    [CustomElementCallbacks, PerWorldBindings, ActivityLogging=ForIsolatedWorlds, RaisesException] Element createElementNS([TreatNullAs=NullString] DOMString namespaceURI, DOMString qualifiedName,
                             [TreatNullAs=NullString] DOMString typeExtension);
 
     // Page visibility API.
-    readonly attribute DOMString webkitVisibilityState;
-    readonly attribute boolean webkitHidden;
+    readonly attribute DOMString visibilityState;
+    readonly attribute boolean hidden;
+
+    // Deprecated prefixed page visibility API.
+    // TODO(davidben): This is a property so attaching a deprecation warning results in false positives when outputting
+    // document in the console. It's possible http://crbug.com/43394 will resolve this.
+    [MeasureAs=PrefixedPageVisibility, ImplementedAs=visibilityState] readonly attribute DOMString webkitVisibilityState;
+    [MeasureAs=PrefixedPageVisibility, ImplementedAs=hidden] readonly attribute boolean webkitHidden;
 
     // Security Policy API: http://dvcs.w3.org/hg/content-security-policy/raw-file/tip/csp-specification.dev.html#script-interfaces
     [RuntimeEnabled=ExperimentalContentSecurityPolicyFeatures] readonly attribute SecurityPolicy securityPolicy;

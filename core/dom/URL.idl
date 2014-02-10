@@ -26,7 +26,7 @@
 
 [
     GlobalContext=Window&WorkerGlobalScope,
-    ConstructorRaisesException,
+    RaisesException=Constructor,
     Constructor(DOMString url),
     Constructor(DOMString url, URL base),
     Constructor(DOMString url, DOMString base),
@@ -36,5 +36,5 @@
     [CallWith=ExecutionContext] static void revokeObjectURL(DOMString url);
 };
 
-// Force rebuild: crbug.com/307023
+// force rebuild: crbug.com/307023
 URL implements URLUtils;

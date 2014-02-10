@@ -20,9 +20,8 @@
 
 // Introduced in DOM Level 2:
 [
-    CustomToV8,
-    ConstructorTemplate=Event
-
+    Custom=Wrap,
+    EventConstructor,
 ] interface Event {
 
     // DOM PhaseType
@@ -74,5 +73,5 @@
 
     [RuntimeEnabled=ShadowDOM] readonly attribute NodeList path;
 
-    [CustomGetter] readonly attribute Clipboard clipboardData;
+    [Custom=Getter] readonly attribute Clipboard clipboardData;
 };

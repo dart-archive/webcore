@@ -26,11 +26,11 @@
 
 // HTML 5 draft spec:
 // http://www.w3.org/html/wg/drafts/html/master/browsers.html#window
+// FIXME: explain all uses of [DoNotCheckSecurity]
 [
-    CheckSecurity,
-    CustomToV8,
-    DoNotGenerateWrap,
-    ImplementedAs=DOMWindow
+    CheckSecurity=Frame,
+    Custom=ToV8,
+    ImplementedAs=DOMWindow,
 ] interface Window : EventTarget {
     // DOM Level 0
     [Replaceable] readonly attribute Screen screen;
@@ -43,12 +43,12 @@
     [Replaceable] readonly attribute BarProp toolbar;
     [Replaceable, PerWorldBindings, ActivityLogging=GetterForIsolatedWorlds] readonly attribute Navigator navigator;
     [Replaceable] readonly attribute Navigator clientInformation;
-    [DoNotCheckSecurity, Unforgeable, Replaceable, PerWorldBindings, ActivityLogging=AccessForIsolatedWorlds, PutForwards=href] readonly attribute Location location;
+    [DoNotCheckSecurity, Unforgeable, Replaceable, PerWorldBindings, ActivityLogging=ForIsolatedWorlds, PutForwards=href] readonly attribute Location location;
     [Custom, MeasureAs=WindowEvent, NotEnumerable] attribute Event event;
 
     Selection getSelection();
 
-    [CheckSecurityForNode] readonly attribute Element frameElement;
+    [CheckSecurity=Node, Custom=Getter] readonly attribute Element frameElement;
 
     [DoNotCheckSecurity, CallWith=ExecutionContext] void focus();
     [DoNotCheckSecurity] void blur();
@@ -93,9 +93,9 @@
     readonly attribute long pageXOffset;
     readonly attribute long pageYOffset;
 
-    void scrollBy([Default=Undefined] optional long x, [Default=Undefined] optional long y);
-    void scrollTo([Default=Undefined] optional long x, [Default=Undefined] optional long y);
-    void scroll([Default=Undefined] optional long x, [Default=Undefined] optional long y);
+    void scrollBy(long x, long y);
+    void scrollTo(long x, long y);
+    void scroll(long x, long y);
     void moveBy([Default=Undefined] optional float x, [Default=Undefined] optional float y); // FIXME: this should take longs not floats.
     void moveTo([Default=Undefined] optional float x, [Default=Undefined] optional float y); // FIXME: this should take longs not floats.
     void resizeBy([Default=Undefined] optional float x, [Default=Undefined] optional float y); // FIXME: this should take longs not floats.
@@ -103,23 +103,23 @@
 
     [DoNotCheckSecurity] readonly attribute boolean closed;
 
-    [Replaceable, DoNotCheckSecurityOnGetter] readonly attribute unsigned long length;
+    [Replaceable, DoNotCheckSecurity] readonly attribute unsigned long length;
 
     attribute DOMString name;
 
     attribute DOMString status;
     attribute DOMString defaultStatus;
     // This attribute is an alias of defaultStatus and is necessary for legacy uses.
-    attribute DOMString defaultstatus;
+    [ImplementedAs=defaultStatus] attribute DOMString defaultstatus;
 
     // Self referential attributes
-    [Replaceable, DoNotCheckSecurityOnGetter] readonly attribute Window self;
+    [Replaceable, DoNotCheckSecurity] readonly attribute Window self;
     [DoNotCheckSecurity, Unforgeable] readonly attribute Window window;
-    [Replaceable, DoNotCheckSecurityOnGetter] readonly attribute  Window frames;
+    [Replaceable, DoNotCheckSecurity] readonly attribute  Window frames;
 
-    [DoNotCheckSecurityOnGetter, CustomSetter] attribute Window opener;
-    [Replaceable, DoNotCheckSecurityOnGetter] readonly attribute Window parent;
-    [DoNotCheckSecurityOnGetter, Unforgeable] readonly attribute Window top;
+    [DoNotCheckSecurity, Custom=Setter] attribute Window opener;
+    [Replaceable, DoNotCheckSecurity] readonly attribute Window parent;
+    [DoNotCheckSecurity, Unforgeable] readonly attribute Window top;
 
     // DOM Level 2 AbstractView Interface
     readonly attribute Document document;
@@ -147,8 +147,8 @@
 
     [RuntimeEnabled=ApplicationCache, PerWorldBindings, ActivityLogging=GetterForIsolatedWorlds] readonly attribute ApplicationCache applicationCache;
 
-    [RuntimeEnabled=SessionStorage, PerWorldBindings, ActivityLogging=GetterForIsolatedWorlds, GetterRaisesException] readonly attribute Storage sessionStorage;
-    [RuntimeEnabled=LocalStorage, PerWorldBindings, ActivityLogging=GetterForIsolatedWorlds, GetterRaisesException] readonly attribute Storage localStorage;
+    [RuntimeEnabled=SessionStorage, PerWorldBindings, ActivityLogging=GetterForIsolatedWorlds, RaisesException=Getter] readonly attribute Storage sessionStorage;
+    [RuntimeEnabled=LocalStorage, PerWorldBindings, ActivityLogging=GetterForIsolatedWorlds, RaisesException=Getter] readonly attribute Storage localStorage;
 
     // This is the interface orientation in degrees. Some examples are:
     //  0 is straight up; -90 is when the device is rotated 90 clockwise;
@@ -187,7 +187,7 @@
     attribute EventHandler onwebkitanimationiteration;
     attribute EventHandler onwebkitanimationstart;
     attribute EventHandler onwebkittransitionend;
-    [ActivityLogging=SetterForAllWorlds] attribute EventHandler onwheel;
+    [PerWorldBindings, ActivityLogging=SetterForIsolatedWorlds] attribute EventHandler onwheel;
 
     [DeprecateAs=CaptureEvents] void captureEvents();
     [DeprecateAs=ReleaseEvents] void releaseEvents();

@@ -33,7 +33,6 @@
 [
     NoInterfaceObject
 ] interface InspectorFrontendHost {
-    void closeWindow();
     void setZoomFactor(float zoom);
     void inspectedURLChanged(DOMString newURL);
 
@@ -55,6 +54,7 @@
     DOMString getSelectionForegroundColor();
 
     DOMFileSystem isolatedFileSystem(DOMString fileSystemId, DOMString registeredName);
+    void upgradeDraggedFileSystemPermissions(DOMFileSystem domFileSystem);
 
     boolean isUnderTest();
 };
