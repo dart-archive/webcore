@@ -29,8 +29,18 @@
  */
 
 [
-    NoInterfaceObject,
-] interface RsaKeyGenParams : Algorithm {
-    readonly attribute unsigned long modulusLength;
-    readonly attribute Uint8Array publicExponent;
+    RuntimeEnabled=WebAnimationsAPI,
+] interface Player {
+             attribute TimedItem? source;
+             attribute double     startTime;
+             attribute double     currentTime;
+    readonly attribute double     timeLag;
+             attribute double     playbackRate;
+    readonly attribute boolean    paused;
+    readonly attribute boolean    finished;
+    void cancel();
+    [RaisesException] void finish();
+    void play();
+    void pause();
+    void reverse();
 };

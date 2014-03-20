@@ -25,7 +25,8 @@
  */
 
 [
-    DoNotCheckConstants
+    DoNotCheckConstants,
+    NoInterfaceObject,  // testing interfaces do not appear on global objects
 ] interface Internals {
     DOMString address(Node node);
 
@@ -41,15 +42,15 @@
     [RaisesException] DOMString styleResolverStatsReport();
     [RaisesException] DOMString styleResolverStatsTotalsReport();
 
+    [RaisesException] boolean isSharingStyle(Element element1, Element element2);
+
     [RaisesException] unsigned long numberOfScopedHTMLStyleChildren(Node scope);
     [RaisesException] CSSStyleDeclaration computedStyleIncludingVisitedInfo(Node node);
 
-    [RaisesException] ShadowRoot ensureShadowRoot(Element host);
     [RaisesException] ShadowRoot shadowRoot(Element host);
     [RaisesException] ShadowRoot youngestShadowRoot(Element host);
     [RaisesException] ShadowRoot oldestShadowRoot(Element host);
     [RaisesException] ShadowRoot youngerShadowRoot(Node root);
-    [RaisesException] ShadowRoot olderShadowRoot(Node root);
 
     [RaisesException] DOMString shadowRootType(Node root);
     [RaisesException] boolean hasShadowInsertionPoint(Node root);
@@ -57,7 +58,6 @@
     [RaisesException] unsigned long countElementShadow(Node Root);
     [RaisesException] DOMString shadowPseudoId(Element element);
     [RaisesException] void setShadowPseudoId(Element element, DOMString id);
-    [RaisesException] Element createContentElement();
     [RaisesException] boolean isValidContentSelect(Element contentElement);
     [RaisesException] Node treeScopeRootNode(Node node);
     [RaisesException] Node parentTreeScope(Node node);
@@ -67,6 +67,7 @@
     [RaisesException] boolean hasSelectorForPseudoClassInShadow(Element host, DOMString pseudoClass);
     [RaisesException] unsigned short compareTreeScopePosition(Node treeScope1, Node treeScope2);
     [RaisesException] unsigned long updateStyleAndReturnAffectedElementCount();
+    [RaisesException] unsigned long needsLayoutCount();
 
     // CSS Animation and Transition testing.
     unsigned long numberOfActiveAnimations();
@@ -82,6 +83,8 @@
 
     void selectColorInColorChooser(Element element, DOMString colorValue);
 
+    // If the argument is omitted, the top-level document is used.
+    boolean hasAutofocusRequest(optional Document document);
     [RaisesException] DOMString[] formControlStateOfHistoryItem();
     [RaisesException] void setFormControlStateOfHistoryItem(sequence<DOMString> values);
     [RaisesException] void setEnableMockPagePopup(boolean enabled);
@@ -101,10 +104,9 @@
     [RaisesException] DOMString markerDescriptionForNode(Node node, DOMString markerType, unsigned long index);
     void addTextMatchMarker(Range range, boolean isActive);
     [RaisesException] void setMarkersActive(Node node, unsigned long startOffset, unsigned long endOffset, boolean active);
+    [RaisesException] void setMarkedTextMatchesAreHighlighted(Document document, boolean highlight);
 
     [RaisesException] void setScrollViewPosition(Document document, long x, long y);
-
-    [RaisesException] void setPagination(Document document, DOMString mode, long gap, optional long pageLength);
 
     [RaisesException] DOMString viewportAsText(Document document,
                                                float devicePixelRatio,
@@ -117,8 +119,6 @@
     [RaisesException] void setSuggestedValue(Element inputElement, DOMString value);
     [RaisesException] void setEditingValue(Element inputElement, DOMString value);
     [RaisesException] void setAutofilled(Element inputElement, boolean enabled);
-
-    [RaisesException] void paintControlTints(Document document);
 
     [RaisesException] void scrollElementToRect(Element element, long x, long y, long w, long h);
 
@@ -270,6 +270,11 @@
     boolean loseSharedGraphicsContext3D();
 
     [RaisesException] void forceCompositingUpdate(Document document);
+    [RaisesException] boolean isCompositorFramePending(Document document);
 
     void setZoomFactor(float factor);
+
+    [RaisesException] void setShouldRevealPassword(Element element, boolean reveal);
+
+    [CallWith=ExecutionContext] Promise addOneToPromise(Promise promise);
 };

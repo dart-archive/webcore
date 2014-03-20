@@ -24,21 +24,13 @@ interface Attr : Node {
 
     [TreatReturnedNullStringAs=Null] readonly attribute DOMString name;
 
-    [MeasureAs=AttributeSpecified] readonly attribute boolean specified;
+    [DeprecateAs=AttributeSpecified] readonly attribute boolean specified;
 
     [TreatReturnedNullStringAs=Null, TreatNullAs=NullString, RaisesException=Setter, CustomElementCallbacks] attribute DOMString value;
 
-    // DOM Level 2
-
-    [MeasureAs=AttributeOwnerElement] readonly attribute Element ownerElement;
-
-    // DOM Level 3
-
-    [MeasureAs=AttributeIsId] readonly attribute boolean isId;
-
     // DOM 4
 
-    [TreatReturnedNullStringAs=Null, TreatNullAs=NullString, PerWorldBindings, RaisesException=Setter] attribute DOMString prefix;
+    [TreatReturnedNullStringAs=Null, PerWorldBindings] readonly attribute DOMString prefix;
     [TreatReturnedNullStringAs=Null, PerWorldBindings] readonly attribute DOMString namespaceURI;
     [TreatReturnedNullStringAs=Null, PerWorldBindings] readonly attribute DOMString localName;
 };

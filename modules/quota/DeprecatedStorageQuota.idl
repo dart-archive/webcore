@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 Apple Inc. All rights reserved.
+ * Copyright (C) 2013 Google Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,22 +23,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-interface SVGPaint : SVGColor {
-    const unsigned short SVG_PAINTTYPE_UNKNOWN = 0;
-    const unsigned short SVG_PAINTTYPE_RGBCOLOR = 1;
-    const unsigned short SVG_PAINTTYPE_RGBCOLOR_ICCCOLOR = 2;
-    const unsigned short SVG_PAINTTYPE_NONE = 101;
-    const unsigned short SVG_PAINTTYPE_CURRENTCOLOR = 102;
-    const unsigned short SVG_PAINTTYPE_URI_NONE = 103;
-    const unsigned short SVG_PAINTTYPE_URI_CURRENTCOLOR = 104;
-    const unsigned short SVG_PAINTTYPE_URI_RGBCOLOR = 105;
-    const unsigned short SVG_PAINTTYPE_URI_RGBCOLOR_ICCCOLOR = 106;
-    const unsigned short SVG_PAINTTYPE_URI = 107;
-
-    readonly attribute unsigned short paintType;
-    readonly attribute DOMString uri;
-
-    [StrictTypeChecking] void setUri(DOMString uri);
-    [StrictTypeChecking, RaisesException] void setPaint(unsigned short paintType, DOMString uri, DOMString rgbColor, DOMString iccColor);
+[
+    WillBeGarbageCollected,
+    NoInterfaceObject
+] interface DeprecatedStorageQuota {
+    [CallWith=ExecutionContext] void queryUsageAndQuota(StorageUsageCallback usageCallback, optional StorageErrorCallback errorCallback);
+    [CallWith=ExecutionContext] void requestQuota(unsigned long long newQuotaInBytes, optional StorageQuotaCallback quotaCallback, optional StorageErrorCallback errorCallback);
 };
-

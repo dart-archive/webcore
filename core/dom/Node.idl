@@ -60,11 +60,7 @@
     [CustomElementCallbacks] void normalize();
 
     // Introduced in DOM Level 2:
-    [MeasureAs=NodeIsSupported] boolean isSupported([Default=Undefined] optional DOMString feature,
-                                                    [TreatNullAs=NullString,Default=Undefined] optional DOMString version); // Removed in DOM4.
-
     [TreatReturnedNullStringAs=Null, PerWorldBindings, MeasureAs=NodeNamespaceURI] readonly attribute DOMString namespaceURI; // Moved to Element and Attr in DOM4.
-    [TreatReturnedNullStringAs=Null, TreatNullAs=NullString, PerWorldBindings, RaisesException=Setter, MeasureAs=NodePrefix] attribute DOMString prefix; // Moved to Element and Attr in DOM4.
     [TreatReturnedNullStringAs=Null, PerWorldBindings, MeasureAs=NodeLocalName] readonly attribute DOMString localName; // Moved to Element and Attr in DOM4.
 
     // Introduced in DOM Level 3:
@@ -89,7 +85,7 @@
     unsigned short compareDocumentPosition(Node other);
 
     // Introduced in DOM4
-    [ImplementedAs=bindingsContains] boolean contains(Node other);
+    [ImplementedAs=containsIncludingShadowDOM] boolean contains(Node other);
 
     // IE extensions
     [PerWorldBindings] readonly attribute Element parentElement;

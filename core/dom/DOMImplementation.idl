@@ -19,11 +19,12 @@
  */
 
 [
-    GenerateVisitDOMWrapper=document,
+    SetWrapperReferenceFrom=document,
 ] interface DOMImplementation {
 
     // DOM Level 1
 
+    [ImplementedAs=hasFeatureForBindings, MeasureAs=DOMImplementationHasFeature]
     boolean hasFeature(DOMString feature, [TreatNullAs=NullString] DOMString version);
 
     // DOM Level 2
@@ -31,13 +32,13 @@
     [RaisesException] DocumentType createDocumentType(DOMString qualifiedName,
                                                       DOMString publicId,
                                                       DOMString systemId);
-    [RaisesException] Document createDocument([TreatNullAs=NullString] DOMString namespaceURI,
-                                              [TreatNullAs=NullString] DOMString qualifiedName,
-                                              [Default=Undefined] optional DocumentType doctype);
+    [RaisesException] XMLDocument createDocument([TreatNullAs=NullString] DOMString namespaceURI,
+                                                 [TreatNullAs=NullString] DOMString qualifiedName,
+                                                 [Default=Undefined] optional DocumentType doctype);
 
     // DOMImplementationCSS interface from DOM Level 2 CSS
 
-    [MeasureAs=DOMImplementationCreateCSSStyleSheet]
+    [DeprecateAs=DOMImplementationCreateCSSStyleSheet]
     CSSStyleSheet createCSSStyleSheet([Default=Undefined] optional DOMString title,
                                       [Default=Undefined] optional DOMString media);
 

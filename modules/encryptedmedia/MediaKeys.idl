@@ -26,9 +26,10 @@
 [
     RuntimeEnabled=EncryptedMedia,
     Constructor(DOMString keySystem),
-    RaisesException=Constructor
+    RaisesException=Constructor,
+    WillBeGarbageCollected
 ] interface MediaKeys {
-    [CallWith=ExecutionContext, RaisesException] MediaKeySession createSession([Default=Undefined] optional DOMString type, [Default=Undefined] optional Uint8Array initData);
+    [CallWith=ExecutionContext, RaisesException] MediaKeySession createSession(DOMString type, Uint8Array initData);
 
     readonly attribute DOMString keySystem;
 };

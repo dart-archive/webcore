@@ -65,10 +65,10 @@
                                        optional any dialogArgs,
                                        optional DOMString featureArgs);
 
-    void alert([Default=Undefined] optional DOMString message);
-    boolean confirm([Default=Undefined] optional DOMString message);
-    [TreatReturnedNullStringAs=Null] DOMString prompt([Default=Undefined] optional DOMString message,
-                                                [TreatNullAs=NullString, TreatUndefinedAs=NullString,Default=Undefined] optional DOMString defaultValue);
+    void alert([Default=NullString] optional DOMString message);
+    boolean confirm([Default=NullString] optional DOMString message);
+    [TreatReturnedNullStringAs=Null] DOMString prompt([Default=NullString] optional DOMString message,
+                                                      [Default=NullString] optional DOMString defaultValue);
 
     boolean find([Default=Undefined] optional DOMString string,
                  [Default=Undefined] optional boolean caseSensitive,
@@ -93,9 +93,17 @@
     readonly attribute long pageXOffset;
     readonly attribute long pageYOffset;
 
-    void scrollBy(long x, long y);
-    void scrollTo(long x, long y);
-    void scroll(long x, long y);
+    // FIXME: should be:
+    // void scrollBy(long x, long y);
+    // [RuntimeEnabled=CSSOMSmoothScroll, RaisesException] void scrollBy(long x, long y, optional Dictionary scrollOptions);
+    // void scrollTo(long x, long y);
+    // [RuntimeEnabled=CSSOMSmoothScroll, RaisesException] void scrollTo(long x, long y, optional Dictionary scrollOptions);
+    // void scroll(long x, long y);
+    // [RuntimeEnabled=CSSOMSmoothScroll, RaisesException] void scroll(long x, long y, optional Dictionary scrollOptions);
+    // http://crbug.com/339000
+    [RaisesException] void scrollBy(long x, long y, optional Dictionary scrollOptions);
+    [RaisesException] void scrollTo(long x, long y, optional Dictionary scrollOptions);
+    [RaisesException] void scroll(long x, long y, optional Dictionary scrollOptions);
     void moveBy([Default=Undefined] optional float x, [Default=Undefined] optional float y); // FIXME: this should take longs not floats.
     void moveTo([Default=Undefined] optional float x, [Default=Undefined] optional float y); // FIXME: this should take longs not floats.
     void resizeBy([Default=Undefined] optional float x, [Default=Undefined] optional float y); // FIXME: this should take longs not floats.
@@ -153,12 +161,12 @@
     // This is the interface orientation in degrees. Some examples are:
     //  0 is straight up; -90 is when the device is rotated 90 clockwise;
     //  90 is when rotated counter clockwise.
-    [Conditional=ORIENTATION_EVENTS] readonly attribute long orientation;
+    [RuntimeEnabled=OrientationEvent] readonly attribute long orientation;
 
     [Replaceable] readonly attribute Console console;
 
     // cross-document messaging
-    [DoNotCheckSecurity, Custom, RaisesException] void postMessage(SerializedScriptValue message, DOMString targetOrigin, optional Array messagePorts);
+    [DoNotCheckSecurity, Custom, RaisesException] void postMessage(SerializedScriptValue message, DOMString targetOrigin, optional MessagePort[] messagePorts);
 
     [Replaceable] readonly attribute Performance performance;
 
@@ -176,7 +184,7 @@
     [RuntimeEnabled=CSSAnimationUnprefixed] attribute EventHandler onanimationstart;
     [RuntimeEnabled=DeviceMotion] attribute EventHandler ondevicemotion;
     [RuntimeEnabled=DeviceOrientation] attribute EventHandler ondeviceorientation;
-    [Conditional=ORIENTATION_EVENTS] attribute EventHandler onorientationchange;
+    [RuntimeEnabled=OrientationEvent] attribute EventHandler onorientationchange;
     attribute EventHandler onsearch;
     [RuntimeEnabled=Touch] attribute EventHandler ontouchcancel;
     [RuntimeEnabled=Touch] attribute EventHandler ontouchend;
@@ -195,9 +203,6 @@
     // Additional constructors.
     attribute TransitionEventConstructor WebKitTransitionEvent;
     [RuntimeEnabled=CSSAnimationUnprefixed] attribute WebKitAnimationEventConstructor AnimationEvent;
-    // Mozilla has a separate XMLDocument object for XML documents.
-    // We just use Document for this.
-    attribute DocumentConstructor XMLDocument;
     attribute URLConstructor webkitURL; // FIXME: deprecate this.
     attribute MutationObserverConstructor WebKitMutationObserver; // FIXME: Add metrics to determine when we can remove this.
     attribute IDBCursorConstructor webkitIDBCursor;
@@ -232,7 +237,7 @@
     // window.toString() requires special handling in V8
     [DoNotCheckSignature, DoNotCheckSecurity, Custom, NotEnumerable] DOMString toString();
 
-    [ImplementedAs=anonymousIndexedGetter, NotEnumerable] getter Window(unsigned long index);
+    [NotEnumerable] getter Window (unsigned long index);
     [Custom, NotEnumerable] getter Window (DOMString name);
 };
 

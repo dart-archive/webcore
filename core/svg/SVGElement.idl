@@ -23,7 +23,7 @@
 [
     Custom=Wrap,
 ] interface SVGElement : Element {
-    [TreatNullAs=NullString] attribute DOMString xmlbase;
+    attribute DOMString xmlbase;
     readonly attribute SVGSVGElement ownerSVGElement;
     readonly attribute SVGElement viewportElement;
 
@@ -33,7 +33,10 @@
     readonly attribute SVGAnimatedString className;
     readonly attribute CSSStyleDeclaration style;
 
-    CSSValue getPresentationAttribute([Default=Undefined] optional DOMString name);
+    // CSSValue was deprecated in 2003:
+    // http://lists.w3.org/Archives/Public/www-style/2003Oct/0347.html
+    [DeprecateAs=SVGElementGetPresentationAttribute] CSSValue getPresentationAttribute([Default=Undefined] optional DOMString name);
 };
 
 SVGElement implements GlobalEventHandlers;
+

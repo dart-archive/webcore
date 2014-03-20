@@ -21,14 +21,13 @@
 // FIXME: NamedConstructor does not support optional without Default. Fortunately using Undefined makes
 // us use 0 which happens to be the default width and height anyway.
 [
- // FIXME(MERGE_DARTIUM): Breaks Dart code gen for Chrome 32 / 1700 roll.
- //    NamedConstructor=Image([Default=Undefined] optional long width, [Default=Undefined] optional long height)
+    NamedConstructor=Image([Default=Undefined] optional long width, [Default=Undefined] optional long height)
 ] interface HTMLImageElement : HTMLElement {
     [Reflect] attribute DOMString align;
     [Reflect] attribute DOMString alt;
     [Reflect, TreatNullAs=NullString] attribute DOMString border;
     readonly attribute boolean complete;
-    [Reflect] attribute DOMString crossOrigin;
+    [Reflect, ReflectOnly="anonymous"|"use-credentials", ReflectEmpty="anonymous", ReflectInvalid="anonymous"] attribute DOMString crossOrigin;
     attribute long height;
     [Reflect] attribute long hspace;
     [Reflect] attribute boolean isMap;

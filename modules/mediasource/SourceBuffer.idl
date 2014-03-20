@@ -28,11 +28,20 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+enum AppendMode {
+    "segments",
+    "sequence"
+};
+
 [
     NoInterfaceObject,
     ActiveDOMObject,
     RuntimeEnabled=MediaSource
 ] interface SourceBuffer : EventTarget {
+
+    // Gets or sets the AppendMode.
+    // FIXME: Remove MediaSourceExperimental once mode attribute is implemented and stabilized. See http://crbug.com/249422.
+    [RaisesException=Setter, RuntimeEnabled=MediaSourceExperimental] attribute AppendMode mode;
 
     readonly attribute boolean updating;
 

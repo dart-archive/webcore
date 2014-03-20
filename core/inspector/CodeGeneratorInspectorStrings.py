@@ -136,7 +136,6 @@ backend_h = (
 
 namespace WebCore {
 
-class InspectorAgent;
 class JSONObject;
 class JSONArray;
 class InspectorFrontendChannel;
@@ -215,7 +214,6 @@ backend_cpp = (
 #include "config.h"
 #include "InspectorBackendDispatcher.h"
 
-#include "core/inspector/InspectorAgent.h"
 #include "core/inspector/InspectorFrontendChannel.h"
 #include "core/inspector/JSONParser.h"
 #include "platform/JSONValues.h"
@@ -290,7 +288,7 @@ void InspectorBackendDispatcherImpl::dispatch(const String& message)
     long callId = 0;
 
     if (dispatchMap.isEmpty()) {
-        static CallHandler handlers[] = {
+        static const CallHandler handlers[] = {
 $messageHandlers
         };
         for (size_t i = 0; i < kMethodNamesEnumSize; ++i)

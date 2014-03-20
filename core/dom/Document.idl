@@ -21,7 +21,7 @@
 callback CustomElementConstructor = Element ();
 
 [
-    SpecialWrapFor=HTMLDocument|SVGDocument
+    SpecialWrapFor=HTMLDocument|XMLDocument
 ] interface Document : Node {
 
     // DOM Level 1 Core
@@ -36,15 +36,13 @@ callback CustomElementConstructor = Element ();
     [RaisesException, MeasureAs=DocumentCreateCDATASection] CDATASection createCDATASection([Default=Undefined] optional DOMString data); // Removed from DOM4.
     [RaisesException] ProcessingInstruction createProcessingInstruction(DOMString target, DOMString data);
     [RaisesException, MeasureAs=DocumentCreateAttribute] Attr createAttribute([Default=Undefined] optional DOMString name); // Removed from DOM4.
-    [PerWorldBindings] NodeList getElementsByTagName(DOMString localName);
+    [PerWorldBindings] HTMLCollection getElementsByTagName(DOMString localName);
 
     // Introduced in DOM Level 2:
 
     [CustomElementCallbacks, PerWorldBindings, ActivityLogging=ForIsolatedWorlds, RaisesException] Node importNode(Node node, optional boolean deep);
     [CustomElementCallbacks, PerWorldBindings, ActivityLogging=ForIsolatedWorlds, RaisesException] Element createElementNS([TreatNullAs=NullString] DOMString namespaceURI, DOMString qualifiedName);
-    [RaisesException, MeasureAs=DocumentCreateAttributeNS] Attr createAttributeNS([TreatNullAs=NullString,Default=Undefined] optional DOMString namespaceURI,
-                                                                                  [TreatNullAs=NullString,Default=Undefined] optional DOMString qualifiedName); // Removed from DOM4.
-    NodeList getElementsByTagNameNS([TreatNullAs=NullString] DOMString namespaceURI, DOMString localName);
+    HTMLCollection getElementsByTagNameNS([TreatNullAs=NullString] DOMString namespaceURI, DOMString localName);
     [PerWorldBindings] Element getElementById(DOMString elementId);
 
     // DOM Level 3 Core
@@ -57,11 +55,11 @@ callback CustomElementConstructor = Element ();
 
     [RaisesException, CustomElementCallbacks] Node adoptNode(Node node);
 
-    [TreatReturnedNullStringAs=Null] readonly attribute DOMString documentURI;
+    [TreatReturnedNullStringAs=Null, ImplementedAs=url] readonly attribute DOMString documentURI;
 
     // DOM Level 2 Events (DocumentEvents interface)
 
-    [RaisesException] Event createEvent(DOMString eventType);
+    [RaisesException] Event createEvent(optional DOMString eventType);
 
     // DOM Level 2 Traversal and Range (DocumentRange interface)
 
@@ -78,7 +76,7 @@ callback CustomElementConstructor = Element ();
 
     // DOM Level 2 Abstract Views (DocumentView interface)
 
-    [ImplementedAs=domWindow] readonly attribute Window defaultView;
+    [ImplementedAs=executingWindow] readonly attribute Window defaultView;
 
     // DOM Level 2 Style (DocumentStyle interface)
 
@@ -110,7 +108,7 @@ callback CustomElementConstructor = Element ();
 
              [TreatNullAs=NullString, RaisesException] attribute DOMString cookie;
 
-             [RaisesException=Setter, CustomElementCallbacks] attribute HTMLElement body;
+             [RaisesException=Setter, CustomElementCallbacks, PerWorldBindings] attribute HTMLElement body;
 
     readonly attribute HTMLHeadElement head;
     readonly attribute HTMLCollection images;
@@ -146,7 +144,9 @@ callback CustomElementConstructor = Element ();
     CanvasRenderingContext getCSSCanvasContext(DOMString contextId, DOMString name, long width, long height);
 
     // HTML 5
-    NodeList getElementsByClassName(DOMString classNames);
+    HTMLCollection getElementsByClassName(DOMString classNames);
+    readonly attribute Element activeElement;
+    boolean hasFocus();
 
     readonly attribute DOMString compatMode;
 
@@ -156,8 +156,6 @@ callback CustomElementConstructor = Element ();
 
     void webkitExitPointerLock();
     readonly attribute Element webkitPointerLockElement;
-
-    [RuntimeEnabled=CSSRegions] WebKitNamedFlowCollection webkitGetNamedFlows();
 
     // Event handler attributes
     attribute EventHandler onbeforecopy;
@@ -194,8 +192,7 @@ callback CustomElementConstructor = Element ();
                                                [Default=Undefined] optional float webkitForce);
     [RuntimeEnabled=Touch] TouchList createTouchList(Touch... touches);
 
-    [DeprecateAs=PrefixedDocumentRegister, RuntimeEnabled=CustomElements, ImplementedAs=registerElement, CallWith=ScriptState, CustomElementCallbacks, RaisesException] CustomElementConstructor webkitRegister(DOMString name, optional Dictionary options);
-    [RuntimeEnabled=CustomElements, ImplementedAs=registerElement, CallWith=ScriptState, CustomElementCallbacks, RaisesException] CustomElementConstructor register(DOMString name, optional Dictionary options);
+    [CallWith=ScriptState, CustomElementCallbacks, RaisesException] CustomElementConstructor registerElement(DOMString name, optional Dictionary options);
     [CustomElementCallbacks, PerWorldBindings, ActivityLogging=ForIsolatedWorlds, RaisesException] Element createElement(DOMString localName, [TreatNullAs=NullString] DOMString typeExtension);
     [CustomElementCallbacks, PerWorldBindings, ActivityLogging=ForIsolatedWorlds, RaisesException] Element createElementNS([TreatNullAs=NullString] DOMString namespaceURI, DOMString qualifiedName,
                             [TreatNullAs=NullString] DOMString typeExtension);
@@ -210,11 +207,9 @@ callback CustomElementConstructor = Element ();
     [MeasureAs=PrefixedPageVisibility, ImplementedAs=visibilityState] readonly attribute DOMString webkitVisibilityState;
     [MeasureAs=PrefixedPageVisibility, ImplementedAs=hidden] readonly attribute boolean webkitHidden;
 
-    // Security Policy API: http://dvcs.w3.org/hg/content-security-policy/raw-file/tip/csp-specification.dev.html#script-interfaces
-    [RuntimeEnabled=ExperimentalContentSecurityPolicyFeatures] readonly attribute SecurityPolicy securityPolicy;
-
     readonly attribute HTMLScriptElement currentScript;
 };
 
 Document implements GlobalEventHandlers;
 Document implements ParentNode;
+

@@ -65,7 +65,7 @@ interface InspectorInstrumentation {
 #include "core/dom/PseudoElement.h"
 
     [Page, Inspector, PageDebugger, PageRuntime]
-    void didClearWindowObjectInWorld([Keep] Frame*, DOMWrapperWorld*);
+    void didClearWindowObjectInMainWorld([Keep] Frame*);
 
     [DOMDebugger, Inline=FastReturn]
     void willInsertDOMNode([Keep] Node* parent);
@@ -91,9 +91,6 @@ interface InspectorInstrumentation {
     [DOM, DOMDebugger, Inline=FastReturn]
     void didInvalidateStyleAttr([Keep] Node*);
 
-    [DOM, Inline=FastReturn]
-    void pseudoStateChanged([Keep] Node*);
-
     [CSS, Inline=FastReturn]
     void willMutateRules(CSSStyleSheet*);
 
@@ -107,7 +104,7 @@ interface InspectorInstrumentation {
     void didMutateStyle([Keep] CSSStyleDeclaration*, bool);
 
     [CSS, Inline=FastReturn]
-    void activeStyleSheetsUpdated([Keep] Document*, const Vector<RefPtr<StyleSheet> >& newSheets);
+    void activeStyleSheetsUpdated([Keep] Document*);
 
     [Console]
     void frameWindowDiscarded(Frame*, DOMWindow* domWindow);
@@ -120,18 +117,6 @@ interface InspectorInstrumentation {
 
     [DOM, Inline=FastReturn]
     void willPopShadowRoot([Keep] Element* host, ShadowRoot*);
-
-    [CSS, Inline=FastReturn]
-    void didCreateNamedFlow([Keep] Document*, NamedFlow*);
-
-    [CSS, Inline=FastReturn]
-    void willRemoveNamedFlow([Keep] Document*, NamedFlow*);
-
-    [CSS, Inline=FastReturn]
-    void didUpdateRegionLayout([Keep] Document*, NamedFlow*);
-
-    [CSS, Inline=FastReturn]
-    void didChangeRegionOverset([Keep] Document*, NamedFlow*);
 
     [DOMDebugger, Inline=FastReturn]
     void willSendXMLHttpRequest(ExecutionContext*, const String& url);
@@ -172,8 +157,17 @@ interface InspectorInstrumentation {
     [Timeline, Inline=FastReturn]
     void didDispatchEvent(const InspectorInstrumentationCookie&);
 
-    [DOMDebugger, Inline=FastReturn]
-    InspectorInstrumentationCookie willHandleEvent(ExecutionContext*, Event*);
+    [Debugger, Inline=FastReturn]
+    void didAddEventListener([Keep] EventTarget*, const AtomicString& eventType, EventListener* listener, bool useCapture);
+
+    [Debugger, Inline=FastReturn]
+    void didRemoveEventListener([Keep] EventTarget*, const AtomicString& eventType, EventListener* listener, bool useCapture);
+
+    [Debugger, Inline=FastReturn]
+    void didRemoveAllEventListeners([Keep] EventTarget*);
+
+    [Debugger, DOMDebugger, Inline=FastReturn]
+    InspectorInstrumentationCookie willHandleEvent([Keep] EventTarget*, const AtomicString& eventType, EventListener* listener, bool useCapture);
 
     [Debugger, Inline=FastReturn]
     void didHandleEvent(const InspectorInstrumentationCookie&);
@@ -184,14 +178,32 @@ interface InspectorInstrumentation {
     [Timeline, Inline=FastReturn]
     void didDispatchEventOnWindow(const InspectorInstrumentationCookie&);
 
+    [Debugger, Inline=FastReturn]
+    void didEnqueueMutationRecord([Keep] ExecutionContext*, MutationObserver*);
+
+    [Debugger, Inline=FastReturn]
+    void didClearAllMutationRecords([Keep] ExecutionContext*, MutationObserver*);
+
+    [Debugger, Inline=FastReturn]
+    void willDeliverMutationRecords([Keep] ExecutionContext*, MutationObserver*);
+
+    [Debugger, Inline=FastReturn]
+    void didDeliverMutationRecords(ExecutionContext*);
+
+    [Debugger, Inline=FastReturn]
+    void didPostPromiseTask([Keep] ExecutionContext*, ExecutionContextTask*, bool isResolved);
+
+    [Debugger, Inline=FastReturn]
+    InspectorInstrumentationCookie willPerformPromiseTask([Keep] ExecutionContext*, ExecutionContextTask*);
+
+    [Debugger, Inline=FastReturn]
+    void didPerformPromiseTask(const InspectorInstrumentationCookie&);
+
     [Timeline, Inline=FastReturn]
     InspectorInstrumentationCookie willEvaluateScript([Keep] Frame*, const String& url, int lineNumber);
 
     [Timeline, Inline=FastReturn]
     void didEvaluateScript(const InspectorInstrumentationCookie&);
-
-    [Page, Inline=FastReturn]
-    void scriptsEnabled(Page*, bool isEnabled);
 
     [PageRuntime, Inline=FastReturn]
     void didCreateIsolatedContext([Keep] Frame*, ScriptState*, SecurityOrigin*);
@@ -271,8 +283,6 @@ interface InspectorInstrumentation {
     [Timeline, Resource]
     void willSendRequest(Frame*, unsigned long identifier, DocumentLoader*, ResourceRequest&, const ResourceResponse& redirectResponse, const FetchInitiatorInfo&);
 
-    void continueAfterPingLoader(Frame*, unsigned long identifier, DocumentLoader*, ResourceRequest&, const ResourceResponse&);
-
     [Resource]
     void markResourceAsCached(Page*, unsigned long identifier);
 
@@ -298,25 +308,25 @@ interface InspectorInstrumentation {
     void didReceiveData(Frame*, unsigned long identifier, const char* data, int dataLength, int encodedDataLength);
 
     [Timeline, Resource]
-    void didFinishLoading(Frame* frame, unsigned long identifier, DocumentLoader*, double finishTime);
+    void didFinishLoading(Frame* frame, unsigned long identifier, DocumentLoader*, double finishTime, int64_t encodedDataLength);
 
     [Resource]
     void didReceiveCORSRedirectResponse([Keep] Frame*, unsigned long identifier, DocumentLoader*, const ResourceResponse&, ResourceLoader*);
 
     [Timeline, Resource, Console] // Console should come AFTER Resource notification, front-end relies on this.
-    void didFailLoading(Frame* frame, unsigned long identifier, DocumentLoader*, const ResourceError&);
+    void didFailLoading(Frame* frame, unsigned long identifier, const ResourceError&);
 
     [Resource]
     void documentThreadableLoaderStartedLoadingForClient(ExecutionContext*, unsigned long identifier, ThreadableLoaderClient* client);
 
-    [Resource]
+    [Debugger, Resource]
     void willLoadXHR(ExecutionContext*, XMLHttpRequest* xhr, ThreadableLoaderClient* client, const AtomicString& method, const KURL& url, bool async, PassRefPtr<FormData>, const HTTPHeaderMap& headers, bool includeCredentials);
 
     [Resource]
     void didFailXHRLoading(ExecutionContext*, XMLHttpRequest* xhr, ThreadableLoaderClient* client);
 
     [Console, Resource]
-    void didFinishXHRLoading(ExecutionContext*, XMLHttpRequest* xhr, ThreadableLoaderClient* client, unsigned long identifier, ScriptString sourceString, const String& url, const String& sendURL, unsigned sendLineNumber);
+    void didFinishXHRLoading(ExecutionContext*, XMLHttpRequest* xhr, ThreadableLoaderClient* client, unsigned long identifier, ScriptString sourceString, const AtomicString& method, const String& url, const String& sendURL, unsigned sendLineNumber);
 
     [Resource]
     void scriptImported(ExecutionContext*, unsigned long identifier, const String& sourceString);
@@ -339,7 +349,7 @@ interface InspectorInstrumentation {
     [Canvas, Page, CSS]
     void frameDetachedFromParent([Keep] Frame*);
 
-    [Console, Resource, CSS, Database, DOM, Inspector, Canvas, Page, PageDebugger]
+    [Console, Resource, CSS, DOM, Inspector, Canvas, Page, PageDebugger]
     void didCommitLoad([Keep] Frame*, DocumentLoader*);
 
     [DOM, Inline=FastReturn]
@@ -424,10 +434,10 @@ interface InspectorInstrumentation {
     void didCloseWebSocket([Keep] Document*, unsigned long identifier);
 
     [Resource]
-    void didReceiveWebSocketFrame(Document*, unsigned long identifier, const WebSocketFrame& frame);
+    void didReceiveWebSocketFrame(Document*, unsigned long identifier, int opCode, bool masked, const char* payload, size_t payloadLength);
 
     [Resource]
-    void didSendWebSocketFrame(Document*, unsigned long identifier, const WebSocketFrame& frame);
+    void didSendWebSocketFrame(Document*, unsigned long identifier, int opCode, bool masked, const char* payload, size_t payloadLength);
 
     [Resource]
     void didReceiveWebSocketFrameError(Document*, unsigned long identifier, const String& errorMessage);
@@ -446,6 +456,9 @@ interface InspectorInstrumentation {
 
     [DOM, Inline=FastReturn]
     void pseudoElementDestroyed([Keep] PseudoElement*);
+
+    [DOMDebugger, Inline=FastReturn]
+    void willExecuteCustomElementCallback([Keep] Element*);
 }
 
 interface InspectorConsoleInstrumentation {
@@ -490,29 +503,12 @@ interface InspectorConsoleInstrumentation {
     void consoleProfileEnd(ExecutionContext* context, const String& title);
 }
 
-interface InspectorDatabaseInstrumentation {
-
-#include "modules/webdatabase/Database.h"
-
-    [Database]
-    void didOpenDatabase(ExecutionContext* context, PassRefPtr<Database> database, const String& domain, const String& name, const String& version);
-}
-
 interface InspectorOverrides {
     [CSS, Inline=FastReturn]
     bool forcePseudoState([Keep] Element* element, CSSSelector::PseudoType pseudoState);
 
     [Worker, Inline=FastReturn]
     bool shouldPauseDedicatedWorkerOnStart(ExecutionContext* context);
-
-    [Page, Inline=FastReturn]
-    GeolocationPosition* overrideGeolocationPosition(Page* page, [DefaultReturn] GeolocationPosition* position);
-
-    [Page, Inline=FastReturn]
-    float overrideFontScaleFactor(Page* page, [DefaultReturn] float fontScaleFactor);
-
-    [Page, Inline=FastReturn]
-    bool overrideTextAutosizing(Page* page, [DefaultReturn] bool textAutosizing);
 }
 
 

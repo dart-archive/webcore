@@ -29,7 +29,10 @@
  */
 
 [
-    NoInterfaceObject,
-] interface AesCbcParams : Algorithm {
-    readonly attribute Uint8Array iv;
+    RuntimeEnabled=ServiceWorker,
+    NoInterfaceObject
+] interface ServiceWorkerContainer {
+  [CallWith=ExecutionContext, ImplementedAs=registerServiceWorker] Promise
+  register(DOMString url, optional Dictionary options);
+  [CallWith=ExecutionContext, ImplementedAs=unregisterServiceWorker] Promise unregister(optional DOMString scope);
 };
