@@ -28,10 +28,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+// https://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html#install-event-interface
 [
     RuntimeEnabled=ServiceWorker,
-    GlobalContext=ServiceWorkerGlobalScope,
+    Exposed=ServiceWorker,
 ] interface InstallEvent : InstallPhaseEvent {
     void replace();
-    [CallWith=ExecutionContext] Promise reloadAll();
+    [CallWith=ScriptState] Promise reloadAll();
 };

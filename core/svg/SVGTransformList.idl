@@ -25,13 +25,17 @@
  */
 
 [
-    StrictTypeChecking,
+    ImplementedAs=SVGTransformListTearOff,
+    SetWrapperReferenceTo(SVGElement contextElement),
+    TypeChecking=Interface|Nullable,
 ] interface SVGTransformList {
-    readonly attribute unsigned long numberOfItems;
+    readonly attribute unsigned long length;
+    [ImplementedAs=length] readonly attribute unsigned long numberOfItems;
 
     [RaisesException] void clear();
     [RaisesException] SVGTransform initialize(SVGTransform item);
-    [RaisesException] SVGTransform getItem(unsigned long index);
+    [RaisesException] getter SVGTransform getItem(unsigned long index);
+    [RaisesException] setter SVGTransform (unsigned long index, SVGTransform value);
     [RaisesException] SVGTransform insertItemBefore(SVGTransform item, unsigned long index);
     [RaisesException] SVGTransform replaceItem(SVGTransform item, unsigned long index);
     [RaisesException] SVGTransform removeItem(unsigned long index);
@@ -41,4 +45,3 @@
 
     [RaisesException] SVGTransform consolidate();
 };
-

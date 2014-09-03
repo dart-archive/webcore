@@ -21,7 +21,8 @@
 [
     DependentLifetime,
     SetWrapperReferenceFrom=virtualOwnerNode,
+    WillBeGarbageCollected,
 ] interface NodeList {
-    getter Node item(unsigned long index);
-    readonly attribute unsigned long length;
+    [DartNoAutoScope] getter Node item(unsigned long index);
+    [DartNoAutoScope] readonly attribute unsigned long length;
 };

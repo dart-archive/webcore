@@ -29,11 +29,10 @@
  */
 
 [
-    NoInterfaceObject,  // testing interfaces do not appear on global objects
+    WillBeGarbageCollected,
 ] interface GCObservation {
     // Technically, this is true if the object was "near death"; the
     // object may have been kept alive through a weak handle. Having
     // been collected is the common case, though.
     readonly attribute boolean wasCollected;
 };
-

@@ -28,7 +28,7 @@ interface HTMLIFrameElement : HTMLElement {
     [Reflect] attribute DOMString name;
     [Reflect, TreatNullAs=NullString] attribute DOMString sandbox;
     [Reflect] attribute DOMString scrolling;
-    [Reflect, URL, PerWorldBindings, ActivityLogging=SetterForIsolatedWorlds] attribute DOMString src;
+    [Reflect, URL, LogActivity=SetterOnly, LogPreviousValue] attribute DOMString src;
     [Reflect] attribute DOMString srcdoc;
     [Reflect] attribute DOMString width;
 
@@ -39,4 +39,6 @@ interface HTMLIFrameElement : HTMLElement {
     readonly attribute Window contentWindow;
 
     [CheckSecurity=Node, RaisesException] Document getSVGDocument();
+
+    [Reflect, RuntimeEnabled=SubresourceIntegrity] attribute DOMString integrity;
 };

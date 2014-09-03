@@ -22,9 +22,17 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+enum OverSampleType {
+    "none",
+    "2x",
+    "4x"
+};
+
 [
     Conditional=WEB_AUDIO
 ] interface WaveShaperNode : AudioNode {
-    attribute Float32Array curve;
-    [RaisesException=Setter] attribute DOMString oversample;
+    // FIXMEDART(ager): Auto-generate this custom method when the info about
+    // retaining typed arrays is in the IDL.
+    [DartCustom=Setter] attribute Float32Array curve;
+    [RaisesException=Setter] attribute OverSampleType oversample;
 };

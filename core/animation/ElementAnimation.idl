@@ -28,10 +28,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-[
-    RuntimeEnabled=WebAnimationsAPI,
-] partial interface Element {
-    Animation animate(sequence<Dictionary> keyframes, Dictionary timingInput);
-    Animation animate(sequence<Dictionary> keyframes, double timingInput);
-    Animation animate(sequence<Dictionary> keyframes);
+// http://www.w3.org/TR/web-animations/#idl-def-Element
+// FIXME: move to Animatable
+// http://dev.w3.org/fxtf/web-animations/#idl-def-Animatable
+
+partial interface Element {
+    // FIXME: needs support for union types http://crbug.com/240176
+    // AnimationPlayer animate((AnimationEffect or sequence<Dictionary>)? effect, optional (double or Dictionary) timing);
+    [Custom, RaisesException] AnimationPlayer animate(object effect, optional object timing);
 };

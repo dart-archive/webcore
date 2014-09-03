@@ -24,14 +24,16 @@
  */
 
 [
+    GarbageCollected
 ] interface IDBKeyRange {
-    [ImplementedAs=lowerValue,CallWith=ExecutionContext] readonly attribute any lower;
-    [ImplementedAs=upperValue,CallWith=ExecutionContext] readonly attribute any upper;
+    [ImplementedAs=lowerValue, CallWith=ScriptState] readonly attribute any lower;
+    [ImplementedAs=upperValue, CallWith=ScriptState] readonly attribute any upper;
     readonly attribute boolean lowerOpen;
     readonly attribute boolean upperOpen;
 
-    [CallWith=ExecutionContext, RaisesException] static IDBKeyRange only(any value);
-    [CallWith=ExecutionContext, RaisesException] static IDBKeyRange lowerBound(any bound, [Default=Undefined] optional boolean open);
-    [CallWith=ExecutionContext, RaisesException] static IDBKeyRange upperBound(any bound, [Default=Undefined] optional boolean open);
-    [CallWith=ExecutionContext, RaisesException] static IDBKeyRange bound(any lower, any upper, [Default=Undefined] optional boolean lowerOpen, [Default=Undefined] optional boolean upperOpen);
+    // FIXMEDART: Define new names for these (see b/4436830).
+    [CallWith=ExecutionContext, RaisesException, DartName=only_] static IDBKeyRange only(any value);
+    [CallWith=ExecutionContext, RaisesException, DartName=lowerBound_] static IDBKeyRange lowerBound(any bound, [Default=Undefined] optional boolean open);
+    [CallWith=ExecutionContext, RaisesException, DartName=upperBound_] static IDBKeyRange upperBound(any bound, [Default=Undefined] optional boolean open);
+    [CallWith=ExecutionContext, RaisesException, DartName=bound_] static IDBKeyRange bound(any lower, any upper, [Default=Undefined] optional boolean lowerOpen, [Default=Undefined] optional boolean upperOpen);
 };

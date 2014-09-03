@@ -28,7 +28,7 @@
     [Reflect, TreatNullAs=NullString] attribute DOMString border;
     [Reflect, URL] attribute DOMString codeBase;
     [Reflect] attribute DOMString codeType;
-    [Reflect, URL, PerWorldBindings, ActivityLogging=SetterForIsolatedWorlds] attribute DOMString data;
+    [Reflect, URL, LogActivity=SetterOnly] attribute DOMString data;
     [Reflect] attribute boolean declare;
     [Reflect] attribute DOMString height;
     [Reflect] attribute long hspace;
@@ -52,4 +52,6 @@
     [Custom] setter Node (DOMString name, Node value);
 
     [CheckSecurity=Node, RaisesException] Document getSVGDocument();
+
+    [Reflect, RuntimeEnabled=SubresourceIntegrity] attribute DOMString integrity;
 };

@@ -25,11 +25,10 @@
  */
 
 [
-    StrictTypeChecking,
+    TypeChecking=Interface|Nullable,
 ] interface SVGPathSegCurvetoCubicSmoothRel : SVGPathSeg {
     attribute float x;
     attribute float y;
     attribute float x2;
     attribute float y2;
 };
-

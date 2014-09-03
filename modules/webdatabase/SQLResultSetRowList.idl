@@ -28,7 +28,12 @@
 
 [
     NoInterfaceObject,
+    WillBeGarbageCollected,
 ] interface SQLResultSetRowList {
     readonly attribute unsigned long length;
-    [Custom] object item(unsigned long index);
+    // FIXMEDART: Upstream this?
+    // - [Custom, DartSuppress] object item(unsigned long index);
+    // - Changed the return type to Dictionary so that rows are exposed in the Dart
+    // API as a Maps, with the appropriate conversion in JavaScript.
+    [Custom] Dictionary item(unsigned long index);
 };

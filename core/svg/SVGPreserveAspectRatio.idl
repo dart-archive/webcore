@@ -24,7 +24,7 @@
  */
 
 [
-    StrictTypeChecking,
+    TypeChecking=Interface|Nullable,
     ImplementedAs=SVGPreserveAspectRatioTearOff,
     SetWrapperReferenceTo(SVGElement contextElement)
 ] interface SVGPreserveAspectRatio {

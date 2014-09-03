@@ -24,9 +24,9 @@
  */
 
 [
-    StrictTypeChecking,
+    SetWrapperReferenceTo(SVGElement contextElement),
+    TypeChecking=Interface|Nullable,
 ] interface SVGAnimatedBoolean {
     [RaisesException=Setter] attribute boolean baseVal;
     readonly attribute boolean animVal;
 };
-

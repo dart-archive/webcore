@@ -29,7 +29,7 @@
  */
 
 [
-    StrictTypeChecking,
+    TypeChecking=Interface|Nullable,
 ] interface SVGGeometryElement : SVGGraphicsElement {
     boolean isPointInFill(SVGPoint point);
     boolean isPointInStroke(SVGPoint point);

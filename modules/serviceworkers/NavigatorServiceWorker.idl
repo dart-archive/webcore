@@ -2,8 +2,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+// https://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html#navigator-service-worker
 [
     RuntimeEnabled=ServiceWorker,
 ] partial interface Navigator {
-  readonly attribute ServiceWorkerContainer serviceWorker;
+    readonly attribute ServiceWorkerContainer serviceWorker;
 };

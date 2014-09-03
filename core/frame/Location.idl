@@ -28,26 +28,27 @@
 
 [
     CheckSecurity=Frame,
+    WillBeGarbageCollected,
 ] interface Location {
     // |assign|, |replace|, and *writing* |href| do not require a security
     // check, as they *change* the page, and thus these do not change any
     // property of an *existing* document at a different origin.
     // However, *reading* |href|, or accessing any component, is a security
     // problem, since that allows tracking navigation.
-    [SetterCallWith=ActiveWindow&FirstWindow, DoNotCheckSecurity=Setter, Unforgeable] attribute DOMString href;
+    [SetterCallWith=ActiveWindow&FirstWindow, DoNotCheckSecurity=Setter, Unforgeable, DartCustom=Setter] attribute DOMString href;
 
-    [CallWith=ActiveWindow&FirstWindow, DoNotCheckSecurity, Unforgeable, ReadOnly, PerWorldBindings, ActivityLogging=ForIsolatedWorlds] void assign(DOMString url);
-    [CallWith=ActiveWindow&FirstWindow, DoNotCheckSecurity, Unforgeable, ReadOnly, PerWorldBindings, ActivityLogging=ForIsolatedWorlds] void replace(DOMString url);
-    [CallWith=ActiveWindow, Unforgeable, ReadOnly] void reload();
+    [CallWith=ActiveWindow&FirstWindow, DoNotCheckSecurity, Unforgeable, ReadOnly, LogActivity, DartCustom] void assign(DOMString url);
+    [CallWith=ActiveWindow&FirstWindow, DoNotCheckSecurity, Unforgeable, ReadOnly, LogActivity, DartCustom] void replace(DOMString url);
+    [CallWith=ActiveWindow, Unforgeable, ReadOnly, DartCustom] void reload();
 
     // URI decomposition attributes
-    [SetterCallWith=ActiveWindow&FirstWindow, RaisesException=Setter] attribute DOMString protocol;
-    [SetterCallWith=ActiveWindow&FirstWindow] attribute DOMString host;
-    [SetterCallWith=ActiveWindow&FirstWindow] attribute DOMString hostname;
-    [SetterCallWith=ActiveWindow&FirstWindow] attribute DOMString port;
-    [SetterCallWith=ActiveWindow&FirstWindow] attribute DOMString pathname;
-    [SetterCallWith=ActiveWindow&FirstWindow] attribute DOMString search;
-    [SetterCallWith=ActiveWindow&FirstWindow] attribute DOMString hash;
+    [SetterCallWith=ActiveWindow&FirstWindow, RaisesException=Setter, DartCustom=Setter] attribute DOMString protocol;
+    [SetterCallWith=ActiveWindow&FirstWindow, DartCustom=Setter] attribute DOMString host;
+    [SetterCallWith=ActiveWindow&FirstWindow, DartCustom=Setter] attribute DOMString hostname;
+    [SetterCallWith=ActiveWindow&FirstWindow, DartCustom=Setter] attribute DOMString port;
+    [SetterCallWith=ActiveWindow&FirstWindow, DartCustom=Setter] attribute DOMString pathname;
+    [SetterCallWith=ActiveWindow&FirstWindow, DartCustom=Setter] attribute DOMString search;
+    [SetterCallWith=ActiveWindow&FirstWindow, DartCustom=Setter] attribute DOMString hash;
 
     readonly attribute DOMString origin;
 

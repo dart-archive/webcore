@@ -25,11 +25,10 @@
  */
 
 [
-    StrictTypeChecking,
+    TypeChecking=Interface|Nullable,
 ] interface SVGPathSegCurvetoQuadraticRel : SVGPathSeg {
     attribute float x;
     attribute float y;
     attribute float x1;
     attribute float y1;
 };
-

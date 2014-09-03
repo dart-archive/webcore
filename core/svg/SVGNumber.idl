@@ -23,8 +23,10 @@
 [
     ImplementedAs=SVGNumberTearOff,
     SetWrapperReferenceTo(SVGElement contextElement),
-    StrictTypeChecking,
+    TypeChecking=Interface|Nullable,
 ] interface SVGNumber {
-    [RaisesException=Setter] attribute float value;
+    // FIXMEDART: this attribute probably does not need to be DartCustom
+    // anymore.
+    [RaisesException=Setter, DartCustom] attribute float value;
 };
 

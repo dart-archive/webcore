@@ -24,18 +24,17 @@
     Custom=Wrap,
 ] interface SVGElement : Element {
     attribute DOMString xmlbase;
-    readonly attribute SVGSVGElement ownerSVGElement;
-    readonly attribute SVGElement viewportElement;
+    [TypeChecking=Interface|Nullable] readonly attribute SVGSVGElement? ownerSVGElement;
+    [TypeChecking=Interface|Nullable] readonly attribute SVGElement? viewportElement;
 
     attribute DOMString xmllang;
     attribute DOMString xmlspace;
 
-    readonly attribute SVGAnimatedString className;
+    [MeasureAs=SVGClassName] readonly attribute SVGAnimatedString className;
+
     readonly attribute CSSStyleDeclaration style;
 
-    // CSSValue was deprecated in 2003:
-    // http://lists.w3.org/Archives/Public/www-style/2003Oct/0347.html
-    [DeprecateAs=SVGElementGetPresentationAttribute] CSSValue getPresentationAttribute([Default=Undefined] optional DOMString name);
+    [CustomElementCallbacks] attribute long tabIndex;
 };
 
 SVGElement implements GlobalEventHandlers;
