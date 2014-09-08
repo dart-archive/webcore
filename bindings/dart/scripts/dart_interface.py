@@ -395,6 +395,20 @@ def _suppress_extended_attributes(extended_attributes):
     return False
 
 
+def add_native_entries(interface, constructors, is_custom):
+    for constructor in constructors:
+        types = None
+        if not is_custom:
+            types = [arg['preprocessed_type']
+                     for arg in constructor['arguments']]
+        argument_names = [arg['name'] for arg in constructor['arguments']]
+        native_entry = \
+            DartUtilities.generate_native_entry(interface.name, constructor,
+                                                None, 'Constructor', None,
+                                                argument_names, types)
+        constructor.update({'native_entry': native_entry})
+
+
 def generate_interface(interface):
     includes.clear()
     includes.update(INTERFACE_CPP_INCLUDES)
@@ -540,6 +554,11 @@ def generate_interface(interface):
     # [NamedConstructor]
     named_constructor = generate_named_constructor(interface)
 
+    add_native_entries(interface, constructors, bool(custom_constructors))
+    add_native_entries(interface, custom_constructors, bool(custom_constructors))
+    if named_constructor:
+        add_native_entries(interface, [named_constructor], bool(custom_constructors))
+
     if (constructors or custom_constructors or has_event_constructor or
         named_constructor):
         includes.add('core/frame/LocalDOMWindow.h')
@@ -609,6 +628,8 @@ def generate_interface(interface):
             # For overloaded methods, only generate one accessor
             ('overload_index' not in method or method['overload_index'] == 1))
 
+    generate_method_native_entries(interface, methods)
+
     template_contents.update({
         'has_origin_safe_method_setter': any(
             method['is_check_security_for_frame'] and not method['is_read_only']
@@ -618,6 +639,10 @@ def generate_interface(interface):
         'methods': methods,
     })
 
+    native_entries = generate_native_entries(interface, constructors,
+                                             custom_constructors, attributes,
+                                             methods, named_constructor)
+
     template_contents.update({
         'indexed_property_getter': indexed_property_getter(interface),
         'indexed_property_setter': indexed_property_setter(interface),
@@ -626,9 +651,27 @@ def generate_interface(interface):
         'named_property_getter': named_property_getter(interface),
         'named_property_setter': named_property_setter(interface),
         'named_property_deleter': named_property_deleter(interface),
+        'native_entries': native_entries,
     })
 
     return template_contents
+
+
+def generate_native_entries(interface, constructors, custom_constructors,
+                            attributes, methods, named_constructor):
+    entries = []
+    for constructor in constructors:
+        entries.append(constructor['native_entry'])
+    for constructor in custom_constructors:
+        entries.append(constructor['native_entry'])
+    if named_constructor:
+        entries.append(named_constructor['native_entry'])
+    for method in methods:
+        entries.extend(method['native_entries'])
+    for attribute in attributes:
+        entries.append(attribute['native_entry_getter'])
+        entries.append(attribute['native_entry_setter'])
+    return entries
 
 
 # [DeprecateAs], [Reflect], [RuntimeEnabled]
@@ -654,6 +697,46 @@ def generate_constant(constant):
 ################################################################################
 # Overloads
 ################################################################################
+
+def generate_method_native_entry(interface, method, count, optional_index):
+    types = None
+    if not method['is_custom']:
+        types = [arg['preprocessed_type'] for arg in method['arguments'][0:count]]
+    if method['is_call_with_script_arguments']:
+        types.append("object")
+    argument_names = [arg['name'] for arg in method['arguments'][0:count]]
+    name = method['name']
+    native_entry = \
+        DartUtilities.generate_native_entry(interface.name, method,
+                                            name, 'Method',
+                                            optional_index,
+                                            argument_names, types)
+    return native_entry
+
+
+def generate_method_native_entries(interface, methods):
+    for method in methods:
+        native_entries = []
+        required_arg_count = method['number_of_required_arguments']
+        arg_count = method['number_of_arguments']
+        if required_arg_count != arg_count:
+            for x in range(required_arg_count, arg_count + 1):
+                # This is really silly, but is here for now just to match up
+                # the existing name generation in the old dart:html scripts
+                index = arg_count - x + 1
+                native_entry = \
+                    generate_method_native_entry(interface, method, x, index)
+                native_entries.append(native_entry)
+        else:
+            # Eventually, we should probably always generate an unindexed
+            # native entry, to handle cases like
+            # addEventListener in which we suppress the optionality,
+            # and in general to make us more robust against optional changes
+            native_entry = \
+                generate_method_native_entry(interface, method, arg_count, None)
+            native_entries.append(native_entry)
+
+        method.update({'native_entries': native_entries})
 
 def generate_overloads(methods):
     generate_overloads_by_type(methods, is_static=False)  # Regular methods
@@ -830,7 +913,8 @@ def generate_custom_constructor(interface, constructor):
 def custom_constructor_argument(argument, index):
     return {
         'idl_type_object': argument.idl_type,
-        'preprocessed_type': argument.idl_type.preprocessed_type,
+        'name': argument.name,
+        'preprocessed_type': str(argument.idl_type.preprocessed_type),
     }
 
 
@@ -899,7 +983,7 @@ def constructor_argument(interface, argument, index):
         # FIXME: remove once [Default] removed and just use argument.default_value
         'has_default': 'Default' in argument.extended_attributes or default_value,
         'idl_type_object': idl_type,
-        'preprocessed_type': idl_type.preprocessed_type,
+        'preprocessed_type': str(idl_type.preprocessed_type),
         # Dictionary is special-cased, but arrays and sequences shouldn't be
         'idl_type': not idl_type.array_or_sequence_type and idl_type.base_type,
         'index': index,

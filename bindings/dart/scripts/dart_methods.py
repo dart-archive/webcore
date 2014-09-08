@@ -86,10 +86,23 @@ def generate_method(interface, method):
         this_cpp_type = idl_type.cpp_type
 
     is_auto_scope = not 'DartNoAutoScope' in extended_attributes
+
+    number_of_arguments = len(arguments)
+
+    number_of_required_arguments = \
+        len([
+            argument for argument in arguments
+            if not ((argument.is_optional and not ('Default' in argument.extended_attributes or argument.default_value)) or
+                    argument.is_variadic)])
+
+    arguments_data = [generate_argument(interface, method, argument, index)
+                      for index, argument in enumerate(arguments)]
+
+    is_custom = 'Custom' in extended_attributes or 'DartCustom' in extended_attributes
+
     method_data = {
         'activity_logging_world_list': DartUtilities.activity_logging_world_list(method),  # [ActivityLogging]
-        'arguments': [generate_argument(interface, method, argument, index)
-                      for index, argument in enumerate(arguments)],
+        'arguments': arguments_data,
         'conditional_string': DartUtilities.conditional_string(method),
         'cpp_type': this_cpp_type,
         'cpp_value': this_cpp_value,
@@ -116,7 +129,7 @@ def generate_method(interface, method):
         'is_call_with_script_state': is_call_with_script_state,
         'is_check_security_for_frame': is_check_security_for_frame,
         'is_check_security_for_node': is_check_security_for_node,
-        'is_custom': 'Custom' in extended_attributes or 'DartCustom' in extended_attributes,
+        'is_custom': is_custom,
         'is_custom_dart': 'DartCustom' in extended_attributes,
         'is_custom_dart_new': DartUtilities.has_extended_attribute_value(method, 'DartCustom', 'New'),
         'is_custom_element_callbacks': is_custom_element_callbacks,
@@ -135,11 +148,8 @@ def generate_method(interface, method):
         'is_variadic': arguments and arguments[-1].is_variadic,
         'measure_as': DartUtilities.measure_as(method),  # [MeasureAs]
         'name': name,
-        'number_of_arguments': len(arguments),
-        'number_of_required_arguments': len([
-            argument for argument in arguments
-            if not ((argument.is_optional and not ('Default' in argument.extended_attributes or argument.default_value)) or
-                    argument.is_variadic)]),
+        'number_of_arguments': number_of_arguments,
+        'number_of_required_arguments': number_of_required_arguments,
         'number_of_required_or_variadic_arguments': len([
             argument for argument in arguments
             if not argument.is_optional]),

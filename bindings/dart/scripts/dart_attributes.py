@@ -160,6 +160,19 @@ def generate_attribute(interface, attribute):
     if (not attribute.is_read_only):
         generate_setter(interface, attribute, contents)
 
+    native_entry_getter = \
+        DartUtilities.generate_native_entry(interface.name, contents,
+                                            attribute.name, 'Getter',
+                                            None, [], None)
+    native_entry_setter = \
+        DartUtilities.generate_native_entry(interface.name, contents,
+                                            attribute.name, 'Setter',
+                                            None, ["value"], None)
+    contents.update({
+        'native_entry_getter': native_entry_getter,
+        'native_entry_setter': native_entry_setter,
+    })
+
     return contents
 
 

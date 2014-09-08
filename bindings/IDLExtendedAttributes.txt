@@ -56,6 +56,14 @@ DartName=*
 DartSuppress=|Getter|Setter
 # No need to setup Dart API scope when a native function is invoked. 
 DartNoAutoScope
+# TODO(terry): Used in dart.idl - look at removing or using 
+DartSupplemental
+# TODO(terry): Used in dart.idl (look at eliminating).
+DartForceOptional
+# TODO(terry): Used in dart.idl (look at eliminating).
+DartCallback
+# TODO(terry): Used in dart.idl (look at eliminating).
+DartStrictTypeChecking
 # End of Dartium attributes.
 Default=Undefined
 DependentLifetime

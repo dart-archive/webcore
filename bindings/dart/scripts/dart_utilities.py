@@ -132,6 +132,39 @@ def _measure_as(definition_or_member):
     return extended_attributes['MeasureAs']
 
 
+def _generate_native_entry(interface_name, thing, name, kind,
+                           optional_index, args, types):
+    index = thing.get('overload_index') or optional_index
+    is_static = bool(thing.get('is_static'))
+    tag = ""
+    if kind == 'Getter':
+        tag = "%s_Getter" % name
+        blink_entry = tag
+    elif kind == 'Setter':
+        tag = "%s_Setter" % name
+        blink_entry = tag
+    elif kind == 'Constructor':
+        tag = "constructorCallback"
+        blink_entry = tag
+        if index is not None:
+            blink_entry = "_create_%s%s" % (index, blink_entry)
+    elif kind == 'Method':
+        tag = "%s_Callback" % name
+        if index is None:
+            blink_entry = tag
+        else:
+            blink_entry = "_%s_%d_Callback" % (name, index)
+    native_entry = "%s_%s" % (interface_name, tag)
+    if types is not None:
+        count = len(types)
+        types = "_".join(types)
+        native_entry = "%s_RESOLVER_STRING_%d_%s" % (native_entry, count, types)
+    if not is_static and kind != 'Constructor':
+        args.insert(0, "mthis")
+    return {'blink_entry': "$" + blink_entry,
+            'argument_names': args,
+            'resolver_string': native_entry}
+
 ################################################################################
 # This is the monkey patched methods most delegate to v8_utilities but some are
 # overridden in dart_utilities.
@@ -153,6 +186,7 @@ DartUtilities.cpp_name = v8_utilities.cpp_name
 DartUtilities.deprecate_as = _deprecate_as
 DartUtilities.extended_attribute_value_contains = v8_utilities.extended_attribute_value_contains
 DartUtilities.gc_type = v8_utilities.gc_type
+DartUtilities.generate_native_entry = _generate_native_entry
 DartUtilities.has_extended_attribute = v8_utilities.has_extended_attribute
 DartUtilities.has_extended_attribute_value = v8_utilities.has_extended_attribute_value
 DartUtilities.measure_as = _measure_as
