@@ -371,8 +371,8 @@ def suppress_setter(interface_name, name):
 
 
 # To suppress an IDL method or attribute with a particular Extended Attribute
-# w/o a value e.g, StrictTypeChecking would be an empty set
-#   'StrictTypeChecking': frozenset([]),
+# w/o a value e.g, DartStrictTypeChecking would be an empty set
+#   'DartStrictTypeChecking': frozenset([]),
 IGNORE_EXTENDED_ATTRIBUTES = {
 #    'RuntimeEnabled': frozenset(['ExperimentalCanvasFeatures']),
 }
@@ -861,7 +861,7 @@ def overload_check_argument(index, argument):
     idl_type = argument['idl_type_object']
     # FIXME(vsm): We need Dart specific checks for the rest of this method.
     # FIXME: proper type checking, sharing code with attributes and methods
-    # FIXME(terry): StrictTypeChecking no longer supported; TypeChecking is
+    # FIXME(terry): DartStrictTypeChecking no longer supported; TypeChecking is
     #               new extended attribute.
     if idl_type.name == 'String' and argument['is_strict_type_checking']:
         return ' || '.join(['isUndefinedOrNull(%s)' % cpp_value,
@@ -1099,7 +1099,7 @@ def property_setter(interface, setter):
     is_raises_exception = 'RaisesException' in extended_attributes
     return {
         'has_strict_type_checking':
-            'StrictTypeChecking' in extended_attributes and
+            'DartStrictTypeChecking' in extended_attributes and
             idl_type.is_wrapper_type,
         'idl_type': idl_type.base_type,
         'is_custom': 'Custom' in extended_attributes,

@@ -61,7 +61,7 @@ DartSupplemental
 # TODO(terry): Used in dart.idl (look at eliminating).
 DartForceOptional
 # TODO(terry): Used in dart.idl (look at eliminating).
-DartCallback
+Callback
 # TODO(terry): Used in dart.idl (look at eliminating).
 DartStrictTypeChecking
 # End of Dartium attributes.

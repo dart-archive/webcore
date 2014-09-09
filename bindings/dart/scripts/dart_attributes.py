@@ -74,10 +74,10 @@ def generate_attribute(interface, attribute):
     is_setter_raises_exception = (
         'RaisesException' in extended_attributes and
         extended_attributes['RaisesException'] in [None, 'Setter'])
-    # [StrictTypeChecking]
+    # [DartStrictTypeChecking]
     has_strict_type_checking = (
-        ('StrictTypeChecking' in extended_attributes or
-         'StrictTypeChecking' in interface.extended_attributes) and
+        ('DartStrictTypeChecking' in extended_attributes or
+         'DartStrictTypeChecking' in interface.extended_attributes) and
         idl_type.is_wrapper_type)
 
     if (base_idl_type == 'EventHandler' and

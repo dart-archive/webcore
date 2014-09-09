@@ -154,11 +154,10 @@ def _generate_native_entry(interface_name, thing, name, kind,
             blink_entry = tag
         else:
             blink_entry = "_%s_%d_Callback" % (name, index)
-    native_entry = "%s_%s" % (interface_name, tag)
+    components = [interface_name, tag]
     if types is not None:
-        count = len(types)
-        types = "_".join(types)
-        native_entry = "%s_RESOLVER_STRING_%d_%s" % (native_entry, count, types)
+        components.extend(types)
+    native_entry = "_".join(components)
     if not is_static and kind != 'Constructor':
         args.insert(0, "mthis")
     return {'blink_entry': "$" + blink_entry,

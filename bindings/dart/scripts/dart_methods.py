@@ -140,11 +140,11 @@ def generate_method(interface, method):
         'is_raises_exception': is_raises_exception,
         'is_read_only': 'ReadOnly' in extended_attributes,
         'is_static': is_static,
-        # FIXME(terry): StrictTypeChecking no longer supported; TypeChecking is
+        # FIXME(terry): DartStrictTypeChecking no longer supported; TypeChecking is
         #               new extended attribute.
         'is_strict_type_checking':
-            'StrictTypeChecking' in extended_attributes or
-            'StrictTypeChecking' in interface.extended_attributes,
+            'DartStrictTypeChecking' in extended_attributes or
+            'DartStrictTypeChecking' in interface.extended_attributes,
         'is_variadic': arguments and arguments[-1].is_variadic,
         'measure_as': DartUtilities.measure_as(method),  # [MeasureAs]
         'name': name,
@@ -204,7 +204,7 @@ def generate_argument(interface, method, argument, index):
         'is_nullable': idl_type.is_nullable,
         # Only expose as optional if no default value.
         'is_optional': argument.is_optional and not (this_has_default or argument.default_value),
-        'is_strict_type_checking': 'StrictTypeChecking' in extended_attributes,
+        'is_strict_type_checking': 'DartStrictTypeChecking' in extended_attributes,
         'is_variadic_wrapper_type': is_variadic_wrapper_type,
         'vector_type': 'WillBeHeapVector' if use_heap_vector_type else 'Vector',
         'is_wrapper_type': idl_type.is_wrapper_type,
