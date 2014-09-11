@@ -39,5 +39,5 @@
     readonly attribute long width;
     readonly attribute long height;
 
-    [DartCustom=New] readonly attribute ArrayBufferView data;
+    [DartCustom=New] readonly attribute Uint8ClampedArray data;
 };
