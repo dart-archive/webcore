@@ -38,7 +38,8 @@ Design doc: http://www.chromium.org/developers/design-documents/idl-compiler
 """
 
 import posixpath
-from idl_types import IdlType, IdlUnionType, TYPE_NAMES
+from idl_types import IdlTypeBase, IdlType, IdlUnionType, TYPE_NAMES, IdlArrayOrSequenceType
+
 import dart_attributes  # for IdlType.constructor_type_name
 from dart_utilities import DartUtilities
 from v8_globals import includes
@@ -72,7 +73,8 @@ TYPED_ARRAYS = {
     'Uint32Array': ('unsigned int', 'Uint32List'),
 }
 
-IdlType.is_typed_array_type = property(
+
+IdlTypeBase.is_typed_array_type = property(
     lambda self: self.base_type in TYPED_ARRAYS)
 
 
@@ -118,7 +120,7 @@ CPP_SPECIAL_CONVERSION_RULES = {
 }
 
 
-def cpp_type(idl_type, extended_attributes=None, used_as_argument=False, used_in_cpp_sequence=False):
+def cpp_type(idl_type, extended_attributes=None, raw_type=False, used_as_rvalue_type=False, used_in_cpp_sequence=False):
     """Returns C++ type corresponding to IDL type.
 
     |idl_type| argument is of type IdlType, while return value is a string
@@ -126,21 +128,25 @@ def cpp_type(idl_type, extended_attributes=None, used_as_argument=False, used_in
     Args:
         idl_type:
             IdlType
-        used_as_argument:
+        raw_type:
             bool, True if idl_type's raw/primitive C++ type should be returned.
-        will_be_in_heap_object:
-            bool, True if idl_type will be part of a possibly heap allocated
-            object (e.g., appears as an element of a C++ heap vector type.)
-            The C++ type of an interface type changes, if so.
+        used_as_rvalue_type:
+            bool, True if the C++ type is used as an argument or the return
+            type of a method.
+        used_as_variadic_argument:
+            bool, True if the C++ type is used as a variadic argument of a method.
+        used_in_cpp_sequence:
+            bool, True if the C++ type is used as an element of a container.
+            Containers can be an array, a sequence or a dictionary.
     """
     extended_attributes = extended_attributes or {}
     idl_type = idl_type.preprocessed_type
 
     # Composite types
-    array_or_sequence_type = idl_type.array_or_sequence_type
-    if array_or_sequence_type:
-        vector_type = cpp_ptr_type('Vector', 'HeapVector', array_or_sequence_type.gc_type)
-        return cpp_template_type(vector_type, array_or_sequence_type.cpp_type_args(used_in_cpp_sequence=True))
+    native_array_element_type = idl_type.native_array_element_type
+    if native_array_element_type:
+        vector_type = cpp_ptr_type('Vector', 'HeapVector', native_array_element_type.gc_type)
+        return cpp_template_type(vector_type, native_array_element_type.cpp_type_args(used_in_cpp_sequence=True))
 
     # Simple types
     base_idl_type = idl_type.base_type
@@ -155,36 +161,42 @@ def cpp_type(idl_type, extended_attributes=None, used_as_argument=False, used_in
         return CPP_SPECIAL_CONVERSION_RULES[base_idl_type]
 
     if base_idl_type in NON_WRAPPER_TYPES:
-        return 'RefPtr<%s>' % base_idl_type
+        return ('PassRefPtr<%s>' if used_as_rvalue_type else 'RefPtr<%s>') % base_idl_type
     if base_idl_type in ('DOMString', 'ByteString', 'ScalarValueString'):
-        if not used_as_argument:
+        if not raw_type:
             return 'String'
         return 'DartStringAdapter'
 
-    if idl_type.is_typed_array_type and used_as_argument:
+    if idl_type.is_typed_array_type and raw_type:
         return 'RefPtr<%s>' % base_idl_type
     if idl_type.is_callback_interface:
         return 'OwnPtr<%s>' % base_idl_type
     if idl_type.is_interface_type:
         implemented_as_class = idl_type.implemented_as
-        if used_as_argument:
+        if raw_type:
             return implemented_as_class + '*'
         new_type = 'Member' if used_in_cpp_sequence else 'RawPtr'
-        ptr_type = cpp_ptr_type('RefPtr', new_type, idl_type.gc_type)
+        ptr_type = cpp_ptr_type(('PassRefPtr' if used_as_rvalue_type else 'RefPtr'), new_type, idl_type.gc_type)
         return cpp_template_type(ptr_type, implemented_as_class)
 
     # Default, assume native type is a pointer with same type name as idl type
     return base_idl_type + '*'
 
 
-def cpp_type_union(idl_type, extended_attributes=None, used_as_argument=False, will_be_in_heap_object=False):
+def cpp_type_union(idl_type, extended_attributes=None, used_as_rvalue_type=False, will_be_in_heap_object=False):
     return (member_type.cpp_type for member_type in idl_type.member_types)
 
+
 # Allow access as idl_type.cpp_type if no arguments
-IdlType.cpp_type = property(cpp_type)
+IdlTypeBase.cpp_type = property(cpp_type)
+IdlTypeBase.cpp_type_args = cpp_type
 IdlUnionType.cpp_type = property(cpp_type_union)
-IdlType.cpp_type_args = cpp_type
 IdlUnionType.cpp_type_args = cpp_type_union
+
+
+IdlTypeBase.native_array_element_type = None
+IdlArrayOrSequenceType.native_array_element_type = property(
+    lambda self: self.element_type)
 
 
 def cpp_template_type(template, inner_type):
@@ -238,9 +250,11 @@ IdlType.set_implemented_as_interfaces = classmethod(
     lambda cls, new_implemented_as_interfaces:
         cls.implemented_as_interfaces.update(new_implemented_as_interfaces))
 
+
 # [GarbageCollected]
 IdlType.garbage_collected_types = set()
 
+IdlTypeBase.is_garbage_collected = False
 IdlType.is_garbage_collected = property(
     lambda self: self.base_type in IdlType.garbage_collected_types)
 
@@ -252,6 +266,7 @@ IdlType.set_garbage_collected_types = classmethod(
 # [WillBeGarbageCollected]
 IdlType.will_be_garbage_collected_types = set()
 
+IdlTypeBase.is_will_be_garbage_collected = False
 IdlType.is_will_be_garbage_collected = property(
     lambda self: self.base_type in IdlType.will_be_garbage_collected_types)
 
@@ -267,7 +282,7 @@ def gc_type(idl_type):
         return 'WillBeGarbageCollectedObject'
     return 'RefCountedObject'
 
-IdlType.gc_type = property(gc_type)
+IdlTypeBase.gc_type = property(gc_type)
 
 
 ################################################################################
@@ -281,7 +296,7 @@ def includes_for_cpp_class(class_name, relative_dir_posix):
 INCLUDES_FOR_TYPE = {
     'object': set(),
     'CompareHow': set(),
-    'Dictionary': set(['bindings/common/Dictionary.h']),
+    'Dictionary': set(['bindings/core/v8/Dictionary.h']),
     'EventHandler': set(),
     'EventListener': set(),
     'HTMLCollection': set(['bindings/core/dart/DartHTMLCollection.h',
@@ -298,7 +313,7 @@ INCLUDES_FOR_TYPE = {
                      'core/html/LabelsNodeList.h']),
     'Promise': set(),
     'SerializedScriptValue': set(),
-    'ScriptValue': set(['bindings/dart/DartScriptValue.h']),
+    'ScriptValue': set(['bindings/core/dart/DartScriptValue.h']),
 }
 
 
@@ -306,9 +321,8 @@ def includes_for_type(idl_type):
     idl_type = idl_type.preprocessed_type
 
     # Composite types
-    array_or_sequence_type = idl_type.array_or_sequence_type
-    if array_or_sequence_type:
-        return includes_for_type(array_or_sequence_type)
+    if idl_type.native_array_element_type:
+        return includes_for_type(idl_type)
 
     # Simple types
     base_idl_type = idl_type.base_type
@@ -329,7 +343,10 @@ def includes_for_type(idl_type):
     if base_idl_type.endswith('Constructor'):
         # FIXME: replace with a [ConstructorAttribute] extended attribute
         base_idl_type = idl_type.constructor_type_name
-    return set(['Dart%s.h' % base_idl_type])
+    if base_idl_type not in component_dir:
+        return set()
+    return set(['bindings/%s/dart/Dart%s.h' % (component_dir[base_idl_type],
+                                               base_idl_type)])
 
 IdlType.includes_for_type = property(includes_for_type)
 IdlUnionType.includes_for_type = property(
@@ -340,7 +357,7 @@ IdlUnionType.includes_for_type = property(
 def add_includes_for_type(idl_type):
     includes.update(idl_type.includes_for_type)
 
-IdlType.add_includes_for_type = add_includes_for_type
+IdlTypeBase.add_includes_for_type = add_includes_for_type
 IdlUnionType.add_includes_for_type = add_includes_for_type
 
 
@@ -350,6 +367,13 @@ def includes_for_interface(interface_name):
 
 def add_includes_for_interface(interface_name):
     includes.update(includes_for_interface(interface_name))
+
+
+component_dir = {}
+
+
+def set_component_dirs(new_component_dirs):
+    component_dir.update(new_component_dirs)
 
 
 ################################################################################
@@ -402,9 +426,9 @@ DART_TO_CPP_VALUE = {
 def dart_value_to_cpp_value(idl_type, interface_extended_attributes, extended_attributes, variable_name,
                             null_check, index, auto_scope=True):
     # Composite types
-    array_or_sequence_type = idl_type.array_or_sequence_type
-    if array_or_sequence_type:
-        return dart_value_to_cpp_value_array_or_sequence(array_or_sequence_type, variable_name, index)
+    native_array_element_type = idl_type.native_array_element_type
+    if native_array_element_type:
+        return dart_value_to_cpp_value_array_or_sequence(native_array_element_type, variable_name, index)
 
     # Simple types
     idl_type = idl_type.preprocessed_type
@@ -444,30 +468,29 @@ def dart_value_to_cpp_value(idl_type, interface_extended_attributes, extended_at
                                         auto_scope=DartUtilities.bool_to_cpp(auto_scope))
 
 
-def dart_value_to_cpp_value_array_or_sequence(array_or_sequence_type, variable_name, index):
+def dart_value_to_cpp_value_array_or_sequence(native_array_element_type, variable_name, index):
     # Index is None for setters, index (starting at 0) for method arguments,
     # and is used to provide a human-readable exception message
-
     if index is None:
         index = 0  # special case, meaning "setter"
 #    else:
 #        index += 1  # human-readable index
-    if (array_or_sequence_type.is_interface_type and
-        array_or_sequence_type.name != 'Dictionary'):
-        this_cpp_type = array_or_sequence_type.cpp_type
-        ref_ptr_type = 'Member' if array_or_sequence_type.is_will_be_garbage_collected else 'RefPtr'
+    if (native_array_element_type.is_interface_type and
+        native_array_element_type.name != 'Dictionary'):
+        this_cpp_type = None
+        ref_ptr_type = cpp_ptr_type('RefPtr', 'Member', native_array_element_type.gc_type)
         # FIXME(vsm): We're not using ref_ptr_type....
         expression_format = 'DartUtilities::toNativeVector<{cpp_type} >(args, {index}, {variable_name}, exception)'
-        add_includes_for_type(array_or_sequence_type)
+        add_includes_for_type(native_array_element_type)
     else:
         ref_ptr_type = None
-        this_cpp_type = array_or_sequence_type.cpp_type
+        this_cpp_type = native_array_element_type.cpp_type
         expression_format = 'DartUtilities::toNativeVector<{cpp_type}>(args, {index}, {variable_name}, exception)'
-    expression = expression_format.format(array_or_sequence_type=array_or_sequence_type.name,
+
+    expression = expression_format.format(native_array_element_type=native_array_element_type.name,
                                           cpp_type=this_cpp_type, index=index, ref_ptr_type=ref_ptr_type,
                                           variable_name=variable_name)
     return expression
-
 
 def dart_value_to_local_cpp_value(idl_type, interface_extended_attributes, extended_attributes,
                                   variable_name, null_check, index=None, auto_scope=True):
@@ -480,8 +503,8 @@ def dart_value_to_local_cpp_value(idl_type, interface_extended_attributes, exten
 
     return cpp_value
 
-IdlType.dart_value_to_local_cpp_value = dart_value_to_local_cpp_value
-IdlUnionType.dart_value_to_local_cpp_value = dart_value_to_local_cpp_value
+IdlTypeBase.dart_value_to_local_cpp_value = dart_value_to_local_cpp_value
+#IdlUnionType.dart_value_to_local_cpp_value = dart_value_to_local_cpp_value
 
 
 # Insure that we don't use C++ reserved names.  Today on default is a problem.
@@ -501,7 +524,7 @@ def preprocess_idl_type(idl_type):
         return IdlType('ScriptValue')
     return idl_type
 
-IdlType.preprocessed_type = property(preprocess_idl_type)
+IdlTypeBase.preprocessed_type = property(preprocess_idl_type)
 IdlUnionType.preprocessed_type = property(preprocess_idl_type)
 
 
@@ -535,10 +558,10 @@ def dart_conversion_type(idl_type, extended_attributes):
     extended_attributes = extended_attributes or {}
 
     # Composite types
-    array_or_sequence_type = idl_type.array_or_sequence_type
-    if array_or_sequence_type:
-        if array_or_sequence_type.is_interface_type:
-            add_includes_for_type(array_or_sequence_type)
+    native_array_element_type = idl_type.native_array_element_type
+    if native_array_element_type:
+        if native_array_element_type.is_interface_type:
+            add_includes_for_type(native_array_element_type)
         return 'array'
 
     # Simple types
@@ -575,7 +598,7 @@ def dart_conversion_type(idl_type, extended_attributes):
     # Pointer type
     return 'DOMWrapper'
 
-IdlType.dart_conversion_type = dart_conversion_type
+IdlTypeBase.dart_conversion_type = dart_conversion_type
 
 
 DART_SET_RETURN_VALUE = {
@@ -642,8 +665,13 @@ def dart_set_return_value(idl_type, cpp_value,
         if this_dart_conversion_type == 'array':
             # FIXME: This is not right if the base type is a primitive, DOMString, etc.
             # What is the right check for base type?
-            if idl_type.base_type not in DART_TO_CPP_VALUE:
-                creation_context = '<Dart%s>' % idl_type.base_type
+            base_type = str(idl_type.element_type)
+            if base_type not in DART_TO_CPP_VALUE:
+                if base_type == 'None':
+                    raise Exception('Unknown base type for ' + str(idl_type))
+                creation_context = '<Dart%s>' % base_type
+            if idl_type.is_nullable:
+                creation_context = 'Nullable' + creation_context
 
         cpp_value = idl_type.cpp_value_to_dart_value(cpp_value, creation_context=creation_context,
                                                      extended_attributes=extended_attributes)
@@ -680,7 +708,7 @@ def dart_set_return_value_union(idl_type, cpp_value, extended_attributes=None,
             for i, member_type in
             enumerate(idl_type.member_types)]
 
-IdlType.dart_set_return_value = dart_set_return_value
+IdlTypeBase.dart_set_return_value = dart_set_return_value
 IdlUnionType.dart_set_return_value = dart_set_return_value_union
 
 IdlType.release = property(lambda self: self.is_interface_type)
@@ -725,7 +753,7 @@ def cpp_value_to_dart_value(idl_type, cpp_value, creation_context='', extended_a
         idl_type=idl_type.base_type)
     return statement
 
-IdlType.cpp_value_to_dart_value = cpp_value_to_dart_value
+IdlTypeBase.cpp_value_to_dart_value = cpp_value_to_dart_value
 
 
 # Override idl_type.name to not suffix orNull to the name, in Dart we always
@@ -743,10 +771,8 @@ def dart_name(idl_type):
     """
     base_type = idl_type.base_type
     base_type_name = TYPE_NAMES.get(base_type, base_type)
-    if idl_type.is_array:
-        return base_type_name + 'Array'
-    if idl_type.is_sequence:
-        return base_type_name + 'Sequence'
+    if idl_type.native_array_element_type:
+        return idl_type.inner_name()
     return base_type_name
 
 IdlType.name = property(dart_name)

@@ -79,6 +79,7 @@ GarbageCollected
 Global=|*
 Immutable
 ImplementedAs=*
+ImplementedInPrivateScript
 InitializedByEventConstructor
 LegacyTreatAsPartialInterface
 LogActivity=|GetterOnly|SetterOnly
@@ -88,6 +89,7 @@ MeasureAs=*
 NamedConstructor=*
 NoInterfaceObject
 NotEnumerable
+OnlyExposedToPrivateScript
 OverrideBuiltins
 PartialInterfaceImplementedAs=*
 # Valid values for [PerContextEnabled] are Context Features, in
@@ -97,7 +99,6 @@ PerWorldBindings
 PrimaryGlobal=|*
 PutForwards=*
 RaisesException=|Getter|Setter|Constructor
-ReadOnly
 Reflect=|*
 ReflectEmpty=*
 ReflectInvalid=*
@@ -111,10 +112,10 @@ SetWrapperReferenceFrom=*
 SetWrapperReferenceTo=*
 SetterCallWith=ExecutionContext|ScriptArguments|ActiveWindow|FirstWindow
 SpecialWrapFor=*
-TreatNullAs=NullString
+TreatNullAs=NullString|EmptyString
 TreatReturnedNullStringAs=Null|Undefined
 TreatUndefinedAs=NullString
-TypeChecking=Interface|Nullable|Unrestricted
+TypeChecking=Interface|Unrestricted
 URL
 Unforgeable
 WillBeGarbageCollected

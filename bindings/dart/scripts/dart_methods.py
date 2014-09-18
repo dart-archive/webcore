@@ -33,8 +33,9 @@ Extends IdlType and IdlUnionType with property |union_arguments|.
 Design doc: http://www.chromium.org/developers/design-documents/idl-compiler
 """
 
-from idl_types import IdlType, IdlUnionType, inherits_interface
+from idl_types import IdlTypeBase, IdlType, IdlUnionType, inherits_interface, IdlArrayOrSequenceType, IdlArrayType
 import dart_types
+from idl_definitions import IdlArgument
 from dart_utilities import DartUtilities
 from v8_globals import includes
 
@@ -58,11 +59,11 @@ def generate_method(interface, method):
 
     is_call_with_script_arguments = DartUtilities.has_extended_attribute_value(method, 'CallWith', 'ScriptArguments')
     if is_call_with_script_arguments:
-        includes.update(['bindings/v8/ScriptCallStackFactory.h',
+        includes.update(['bindings/core/v8/ScriptCallStackFactory.h',
                          'core/inspector/ScriptArguments.h'])
     is_call_with_script_state = DartUtilities.has_extended_attribute_value(method, 'CallWith', 'ScriptState')
     if is_call_with_script_state:
-        includes.add('bindings/dart/DartScriptState.h')
+        includes.add('bindings/core/dart/DartScriptState.h')
     is_check_security_for_node = 'CheckSecurity' in extended_attributes
     if is_check_security_for_node:
         includes.add('bindings/common/BindingSecurity.h')
@@ -81,6 +82,8 @@ def generate_method(interface, method):
     if idl_type.union_arguments and len(idl_type.union_arguments) > 0:
         this_cpp_type = []
         for cpp_type in idl_type.member_types:
+            # FIXMEDART: we shouldn't just assume RefPtr. We should append
+            # WillBeGC as appropriate.
             this_cpp_type.append("RefPtr<%s>" % cpp_type)
     else:
         this_cpp_type = idl_type.cpp_type
@@ -182,9 +185,11 @@ def generate_argument(interface, method, argument, index):
     if preprocessed_type == 'unrestricted double':
         preprocessed_type = 'double'
     argument_data = {
-        'cpp_type': idl_type.cpp_type_args(used_in_cpp_sequence=use_heap_vector_type),
+        'cpp_type': idl_type.cpp_type_args(extended_attributes=extended_attributes,
+                                           raw_type=True,
+                                           used_in_cpp_sequence=use_heap_vector_type),
         'cpp_value': this_cpp_value,
-        'local_cpp_type': idl_type.cpp_type_args(argument.extended_attributes, used_as_argument=True),
+        'local_cpp_type': idl_type.cpp_type_args(argument.extended_attributes, raw_type=True),
         # FIXME: check that the default value's type is compatible with the argument's
         'default_value': str(argument.default_value) if argument.default_value else None,
         'enum_validation_expression': idl_type.enum_validation_expression,
@@ -196,9 +201,9 @@ def generate_argument(interface, method, argument, index):
         'idl_type_object': idl_type,
         'preprocessed_type': preprocessed_type,
         # Dictionary is special-cased, but arrays and sequences shouldn't be
-        'idl_type': not idl_type.array_or_sequence_type and idl_type.base_type,
+        'idl_type': idl_type.base_type,
         'index': index,
-        'is_array_or_sequence_type': not not idl_type.array_or_sequence_type,
+        'is_array_or_sequence_type': not not idl_type.native_array_element_type,
         'is_clamp': 'Clamp' in extended_attributes,
         'is_callback_interface': idl_type.is_callback_interface,
         'is_nullable': idl_type.is_nullable,
@@ -338,11 +343,25 @@ def property_attributes(method):
     return property_attributes_list
 
 
-def union_arguments(idl_type):
-    """Return list of ['result0Enabled', 'result0', 'result1Enabled', ...] for union types, for use in setting return value"""
-    return [arg
-            for i in range(len(idl_type.member_types))
-            for arg in ['result%sEnabled' % i, 'result%s' % i]]
+# FIXMEDART: better align this method with the v8 version.
+def union_member_argument_context(idl_type, index):
+    """Returns a context of union member for argument."""
+    return 'result%d' % index
 
-IdlType.union_arguments = property(lambda self: None)
+def union_arguments(idl_type):
+    return [union_member_argument_context(member_idl_type, index)
+            for index, member_idl_type
+            in enumerate(idl_type.member_types)]
+
+
+def argument_default_cpp_value(argument):
+    if not argument.default_value:
+        return None
+    return argument.idl_type.literal_cpp_value(argument.default_value)
+
+
+IdlTypeBase.union_arguments = None
 IdlUnionType.union_arguments = property(union_arguments)
+IdlArgument.default_cpp_value = property(argument_default_cpp_value)
+#IdlType.union_arguments = property(lambda self: None)
+#IdlUnionType.union_arguments = property(union_arguments)

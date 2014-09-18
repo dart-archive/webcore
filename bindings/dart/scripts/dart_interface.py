@@ -34,7 +34,7 @@ Design doc: http://www.chromium.org/developers/design-documents/idl-compiler
 from collections import defaultdict
 
 import idl_types
-from idl_types import IdlType, inherits_interface
+from idl_types import IdlType, inherits_interface, IdlArrayOrSequenceType, IdlArrayType
 import dart_attributes
 import dart_methods
 import dart_types
@@ -43,12 +43,13 @@ from v8_globals import includes
 
 
 INTERFACE_H_INCLUDES = frozenset([
-    'bindings/dart/DartDOMWrapper.h',
+    'bindings/core/dart/DartDOMWrapper.h',
     'platform/heap/Handle.h',
 ])
 
 INTERFACE_CPP_INCLUDES = frozenset([
-    'DartUtilities.h',
+
+    'bindings/core/dart/DartUtilities.h',
     'wtf/GetPtr.h',
     'wtf/RefPtr.h',
 ])
@@ -435,7 +436,7 @@ def generate_interface(interface):
 
 
     if inherits_interface(interface.name, 'EventTarget'):
-        includes.update(['DartEventListener.h'])
+        includes.update(['bindings/core/dart/DartEventListener.h'])
 
     # [ActiveDOMObject]
     is_active_dom_object = 'ActiveDOMObject' in extended_attributes
@@ -458,14 +459,14 @@ def generate_interface(interface):
     reachable_node_function = extended_attributes.get('SetWrapperReferenceFrom')
     if reachable_node_function:
         # FIXME(vsm): We may need bindings/dart/DartGCController.h instead.
-        includes.update(['bindings/v8/V8GCController.h',
+        includes.update(['bindings/core/v8/V8GCController.h',
                          'core/dom/Element.h'])
 
     # [SetWrapperReferenceTo]
     set_wrapper_reference_to_list = [{
         'name': argument.name,
         # FIXME: properly should be:
-        # 'cpp_type': argument.idl_type.cpp_type_args(used_as_argument=True),
+        # 'cpp_type': argument.idl_type.cpp_type_args(used_as_rvalue_type=True),
         # (if type is non-wrapper type like NodeFilter, normally RefPtr)
         # Raw pointers faster though, and NodeFilter hacky anyway.
         'cpp_type': argument.idl_type.implemented_as + '*',
@@ -547,9 +548,9 @@ def generate_interface(interface):
     any_type_attributes = [attribute for attribute in interface.attributes
                            if attribute.idl_type.name == 'Any']
     if has_event_constructor:
-        includes.add('bindings/common/Dictionary.h')
+        includes.add('bindings/core/v8/Dictionary.h')
         if any_type_attributes:
-            includes.add('bindings/v8/SerializedScriptValue.h')
+            includes.add('bindings/core/v8/SerializedScriptValue.h')
 
     # [NamedConstructor]
     named_constructor = generate_named_constructor(interface)
@@ -867,7 +868,7 @@ def overload_check_argument(index, argument):
         return ' || '.join(['isUndefinedOrNull(%s)' % cpp_value,
                             '%s->IsString()' % cpp_value,
                             '%s->IsObject()' % cpp_value])
-    if idl_type.array_or_sequence_type:
+    if idl_type.native_array_element_type:
         return '%s->IsArray()' % cpp_value
     if idl_type.is_callback_interface:
         return ' || '.join(['%s->IsNull()' % cpp_value,
@@ -947,7 +948,9 @@ def constructor_argument_list(interface, constructor):
     def cpp_argument(argument):
         argument_name = dart_types.check_reserved_name(argument.name)
         idl_type = argument.idl_type
-        if idl_type.is_typed_array_type:
+        # FIXMEDART: there has to be a cleaner way to check for arraylike
+        # types such as Uint8ClampedArray.
+        if isinstance(idl_type, IdlArrayType) or idl_type.preprocessed_type.is_typed_array_type:
             return '%s.get()' % argument_name
 
         return argument_name
@@ -977,7 +980,7 @@ def constructor_argument(interface, argument, index):
 
     argument_content = {
         'cpp_type': idl_type.cpp_type_args(),
-        'local_cpp_type': idl_type.cpp_type_args(argument.extended_attributes, used_as_argument=True),
+        'local_cpp_type': idl_type.cpp_type_args(argument.extended_attributes, raw_type=True),
         # FIXME: check that the default value's type is compatible with the argument's
         'default_value': default_value,
         # FIXME: remove once [Default] removed and just use argument.default_value
@@ -985,9 +988,9 @@ def constructor_argument(interface, argument, index):
         'idl_type_object': idl_type,
         'preprocessed_type': str(idl_type.preprocessed_type),
         # Dictionary is special-cased, but arrays and sequences shouldn't be
-        'idl_type': not idl_type.array_or_sequence_type and idl_type.base_type,
+        'idl_type': idl_type.native_array_element_type,
         'index': index,
-        'is_array_or_sequence_type': not not idl_type.array_or_sequence_type,
+        'is_array_or_sequence_type': not not idl_type.native_array_element_type,
         'is_optional': argument.is_optional,
         'is_strict_type_checking': False,  # Required for overload resolution
         'name': argument.name,

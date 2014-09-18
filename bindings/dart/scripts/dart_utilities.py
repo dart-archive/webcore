@@ -77,7 +77,7 @@ def _activity_logging_world_list(member, access_type=None):
     if not has_logging:
         return set()
 # TODO(terry): Remove Me?
-#    includes.add('bindings/v8/V8DOMActivityLogger.h')
+#    includes.add('bindings/core/v8/V8DOMActivityLogger.h')
     if activity_logging.endswith('ForIsolatedWorlds'):
         return set([''])
     return set(['', 'ForMainWorld'])  # endswith('ForAllWorlds')
@@ -85,7 +85,7 @@ def _activity_logging_world_list(member, access_type=None):
 
 # [CallWith]
 _CALL_WITH_ARGUMENTS = {
-    'ScriptState': '&state',
+    'ScriptState': 'state',
     'ExecutionContext': 'context',
     'ScriptArguments': 'scriptArguments.release()',
     'ActiveWindow': 'DartUtilities::callingDomWindowForCurrentIsolate()',

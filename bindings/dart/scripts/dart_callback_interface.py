@@ -33,18 +33,18 @@ Extends IdlType with property |callback_cpp_type|.
 Design doc: http://www.chromium.org/developers/design-documents/idl-compiler
 """
 
-from idl_types import IdlType
+from idl_types import IdlType, IdlTypeBase
 import dart_types
 from dart_utilities import DartUtilities
 from v8_globals import includes
 
 CALLBACK_INTERFACE_H_INCLUDES = frozenset([
-    'bindings/dart/DartCallback.h',
-    'bindings/dart/DartDOMWrapper.h',
-    'bindings/v8/ActiveDOMCallback.h',
+    'bindings/core/dart/DartCallback.h',
+    'bindings/core/dart/DartDOMWrapper.h',
+    'bindings/core/v8/ActiveDOMCallback.h',
 ])
 CALLBACK_INTERFACE_CPP_INCLUDES = frozenset([
-    'bindings/dart/DartBindingsCommonIncludes.h',
+    'bindings/core/dart/DartBindingsCommonIncludes.h',
     'wtf/GetPtr.h',
     'wtf/RefPtr.h',
 ])
@@ -57,13 +57,13 @@ def cpp_type(idl_type):
         return 'const String&'
     if idl_type_name == 'void':
         return 'void'
-    # Callbacks use raw pointers, so used_as_argument=True
-    usual_cpp_type = idl_type.cpp_type_args(used_as_argument=True)
+    # Callbacks use raw pointers, so raw_type=True
+    usual_cpp_type = idl_type.cpp_type_args(raw_type=True)
     if usual_cpp_type.startswith(('Vector', 'HeapVector', 'WillBeHeapVector')):
         return 'const %s&' % usual_cpp_type
     return usual_cpp_type
 
-IdlType.callback_cpp_type = property(cpp_type)
+IdlTypeBase.callback_cpp_type = property(cpp_type)
 
 
 def generate_callback_interface(callback_interface):

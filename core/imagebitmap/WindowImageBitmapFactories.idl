@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 Google Inc. All rights reserved.
+ * Copyright (c) 2013, Google Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -29,8 +29,16 @@
  */
 
 [
-    NoInterfaceObject
-] interface RsaKeyAlgorithm : KeyAlgorithm {
-  readonly attribute unsigned long modulusLength;
-  readonly attribute Uint8Array publicExponent;
+    ImplementedAs=ImageBitmapFactories,
+    RuntimeEnabled=ExperimentalCanvasFeatures,
+    TypeChecking=Interface,
+] partial interface Window {
+    [CallWith=ScriptState, RaisesException] Promise createImageBitmap(HTMLImageElement image);
+    [CallWith=ScriptState, RaisesException] Promise createImageBitmap(HTMLImageElement image, long sx, long sy, long sw, long sh);
+    [CallWith=ScriptState, RaisesException] Promise createImageBitmap(HTMLVideoElement video);
+    [CallWith=ScriptState, RaisesException] Promise createImageBitmap(HTMLVideoElement video, long sx, long sy, long sw, long sh);
+    [CallWith=ScriptState, RaisesException] Promise createImageBitmap(CanvasRenderingContext2D context);
+    [CallWith=ScriptState, RaisesException] Promise createImageBitmap(CanvasRenderingContext2D context, long sx, long sy, long sw, long sh);
+    [CallWith=ScriptState, RaisesException] Promise createImageBitmap(HTMLCanvasElement canvas);
+    [CallWith=ScriptState, RaisesException] Promise createImageBitmap(HTMLCanvasElement canvas, long sx, long sy, long sw, long sh);
 };

@@ -23,7 +23,7 @@
 [
     ImplementedAs=SVGNumberTearOff,
     SetWrapperReferenceTo(SVGElement contextElement),
-    TypeChecking=Interface|Nullable,
+    TypeChecking=Interface,
 ] interface SVGNumber {
     // FIXMEDART: this attribute probably does not need to be DartCustom
     // anymore.

@@ -44,6 +44,10 @@ from v8_globals import includes, interfaces
 def generate_attribute(interface, attribute):
     idl_type = attribute.idl_type
     base_idl_type = idl_type.base_type
+    # TODO(terry): Work around for DOMString[] base should be IDLTypeArray
+    if base_idl_type == None:
+        # Returns Array or Sequence.
+        base_idl_type = idl_type.inner_name
     extended_attributes = attribute.extended_attributes
 
     idl_type.add_includes_for_type()
@@ -83,7 +87,7 @@ def generate_attribute(interface, attribute):
     if (base_idl_type == 'EventHandler' and
         interface.name in ['Window', 'WorkerGlobalScope'] and
         attribute.name == 'onerror'):
-        includes.add('bindings/v8/V8ErrorHandler.h')
+        includes.add('bindings/core/v8/V8ErrorHandler.h')
 
     is_auto_scope = not 'DartNoAutoScope' in extended_attributes
     contents = {
@@ -243,7 +247,7 @@ def getter_expression(interface, attribute, contents):
          DartUtilities.has_extended_attribute_value(attribute, 'TypeChecking', 'Nullable')) and
          idl_type.is_wrapper_type)
 
-    if attribute.idl_type.is_nullable and not has_type_checking_nullable:
+    if attribute.idl_type.is_explicit_nullable:
         arguments.append('isNull')
     if contents['is_getter_raises_exception']:
         arguments.append('es')
@@ -274,7 +278,7 @@ def getter_base_name(interface, attribute, arguments):
         return CONTENT_ATTRIBUTE_GETTER_NAMES[base_idl_type]
     if 'URL' in attribute.extended_attributes:
         return 'getURLAttribute'
-    return 'getAttribute'
+    return 'fastGetAttribute'
 
 
 def is_keep_alive_for_gc(interface, attribute):
@@ -337,7 +341,7 @@ def generate_setter(interface, attribute, contents):
         'is_setter_suppressed':  suppress,
         'setter_lvalue': dart_types.check_reserved_name(attribute.name),
         'cpp_type': this_cpp_type,
-        'local_cpp_type': idl_type.cpp_type_args(attribute.extended_attributes, used_as_argument=True),
+        'local_cpp_type': idl_type.cpp_type_args(attribute.extended_attributes, raw_type=True),
         'cpp_setter': setter_expression(interface, attribute, contents),
         'dart_value_to_local_cpp_value':
             attribute.idl_type.dart_value_to_local_cpp_value(
@@ -366,7 +370,7 @@ def setter_expression(interface, attribute, contents):
         arguments.append('nullptr')
         # if (interface.name in ['Window', 'WorkerGlobalScope'] and
         #    attribute.name == 'onerror'):
-        #    includes.add('bindings/v8/V8ErrorHandler.h')
+        #    includes.add('bindings/core/v8/V8ErrorHandler.h')
         #    arguments.append('V8EventListenerList::findOrCreateWrapper<V8ErrorHandler>(jsValue, true, info.GetIsolate())')
         # else:
         #    arguments.append('V8EventListenerList::getEventListener(jsValue, true, ListenerFindOrCreate)')
@@ -399,9 +403,18 @@ def setter_base_name(interface, attribute, arguments):
 
 def scoped_content_attribute_name(interface, attribute):
     content_attribute_name = attribute.extended_attributes['Reflect'] or attribute.name.lower()
-    namespace = 'SVGNames' if interface.name.startswith('SVG') else 'HTMLNames'
-    includes.add('%s.h' % namespace)
-    return 'WebCore::%s::%sAttr' % (namespace, content_attribute_name)
+    if interface.name.startswith('SVG'):
+        # SVG's xmlbase/xmlspace/xmllang need special behavior, i.e.
+        # it is in XMLNames namespace and the generated attribute has no xml prefix.
+        if attribute.name.startswith('xml'):
+            namespace = 'XMLNames'
+            content_attribute_name = content_attribute_name[3:]
+        else:
+            namespace = 'SVGNames'
+    else:
+        namespace = 'HTMLNames'
+    includes.add('core/%s.h' % namespace)
+    return '%s::%sAttr' % (namespace, content_attribute_name)
 
 
 ################################################################################
@@ -465,7 +478,7 @@ idl_types.IdlType.constructor_type_name = property(
 
 def is_constructor_attribute(attribute):
     # FIXME: replace this with [ConstructorAttribute] extended attribute
-    return attribute.idl_type.base_type.endswith('Constructor')
+    return attribute.idl_type.name.endswith('Constructor')
 
 
 def generate_constructor_getter(interface, attribute, contents):

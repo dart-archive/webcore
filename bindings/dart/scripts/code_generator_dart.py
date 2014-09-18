@@ -128,6 +128,9 @@ class CodeGeneratorDart(object):
             interface_name
             for interface_name, interface_info in interfaces_info.iteritems()
             if 'WillBeGarbageCollected' in interface_info['inherited_extended_attributes']))
+        dart_types.set_component_dirs(dict(
+            (interface_name, interface_info['component_dir'])
+            for interface_name, interface_info in interfaces_info.iteritems()))
 
     def generate_code(self, definitions, interface_name, idl_pickle_filename,
                       only_if_changed):
@@ -187,7 +190,8 @@ class CodeGeneratorDart(object):
             idl_world['callback'] = idl_global_data['callback']
 
         if 'interface_name' in template_contents:
-            interface_global = {'name': template_contents['interface_name'],
+            interface_global = {'component_dir': interface_info['component_dir'],
+                                'name': template_contents['interface_name'],
                                 'parent_interface': template_contents['parent_interface'],
                                 'is_active_dom_object': template_contents['is_active_dom_object'],
                                 'is_event_target': template_contents['is_event_target'],

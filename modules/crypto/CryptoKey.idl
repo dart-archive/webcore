@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 Google Inc. All rights reserved.
+ * Copyright (C) 2013 Google Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -29,7 +29,11 @@
  */
 
 [
+    GarbageCollected,
     NoInterfaceObject
-] interface AesKeyAlgorithm : KeyAlgorithm {
-  readonly attribute unsigned short length;
+] interface CryptoKey {
+    readonly attribute DOMString type;
+    readonly attribute boolean extractable;
+    [Custom] readonly attribute object algorithm;
+    readonly attribute DOMString[] usages;
 };
