@@ -91,10 +91,10 @@
     [Replaceable] readonly attribute long screenY;
     [Replaceable] readonly attribute long screenLeft;
     [Replaceable] readonly attribute long screenTop;
-    [Replaceable] readonly attribute long scrollX;
-    [Replaceable] readonly attribute long scrollY;
-    readonly attribute long pageXOffset;
-    readonly attribute long pageYOffset;
+    [Replaceable] readonly attribute double scrollX;
+    [Replaceable] readonly attribute double scrollY;
+    readonly attribute double pageXOffset;
+    readonly attribute double pageYOffset;
 
     // Overloading can be replaced by optional if RuntimeEnabled is removed, by
     // changing the third argument to *optional* Dictionary scrollOptions
