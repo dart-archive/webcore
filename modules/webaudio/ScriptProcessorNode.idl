@@ -27,7 +27,7 @@
     Conditional=WEB_AUDIO
 ] interface ScriptProcessorNode : AudioNode {
     // Rendering callback
-    [DartSuppress] attribute EventHandler onaudioprocess;
+    attribute EventHandler onaudioprocess;
 
     readonly attribute long bufferSize;
 
