@@ -33,51 +33,26 @@ Extends IdlType and IdlUnionType with property |union_arguments|.
 Design doc: http://www.chromium.org/developers/design-documents/idl-compiler
 """
 
-from idl_types import IdlTypeBase, IdlType, IdlUnionType, inherits_interface, IdlArrayOrSequenceType, IdlArrayType
+from idl_types import inherits_interface
 import dart_types
-from idl_definitions import IdlArgument
 from dart_utilities import DartUtilities
 from v8_globals import includes
 
+import v8_methods
 
-def generate_method(interface, method):
+
+def method_context(interface, method):
+    context = v8_methods.method_context(interface, method)
+
     arguments = method.arguments
     extended_attributes = method.extended_attributes
     idl_type = method.idl_type
-    is_static = method.is_static
-    name = method.name
 
-    idl_type.add_includes_for_type()
+#    idl_type.add_includes_for_type()
     this_cpp_value = cpp_value(interface, method, len(arguments))
 
-    def function_template():
-        if is_static:
-            return 'functionTemplate'
-        if 'Unforgeable' in extended_attributes:
-            return 'instanceTemplate'
-        return 'prototypeTemplate'
-
-    is_call_with_script_arguments = DartUtilities.has_extended_attribute_value(method, 'CallWith', 'ScriptArguments')
-    if is_call_with_script_arguments:
-        includes.update(['bindings/core/v8/ScriptCallStackFactory.h',
-                         'core/inspector/ScriptArguments.h'])
-    is_call_with_script_state = DartUtilities.has_extended_attribute_value(method, 'CallWith', 'ScriptState')
-    if is_call_with_script_state:
+    if context['is_call_with_script_state']:
         includes.add('bindings/core/dart/DartScriptState.h')
-    is_check_security_for_node = 'CheckSecurity' in extended_attributes
-    if is_check_security_for_node:
-        includes.add('bindings/common/BindingSecurity.h')
-    is_custom_element_callbacks = 'CustomElementCallbacks' in extended_attributes
-    if is_custom_element_callbacks:
-        includes.add('core/dom/custom/CustomElementCallbackDispatcher.h')
-
-    has_event_listener_argument = any(
-        argument for argument in arguments
-        if argument.idl_type.name == 'EventListener')
-    is_check_security_for_frame = (
-        'CheckSecurity' in interface.extended_attributes and
-        'DoNotCheckSecurity' not in extended_attributes)
-    is_raises_exception = 'RaisesException' in extended_attributes
 
     if idl_type.union_arguments and len(idl_type.union_arguments) > 0:
         this_cpp_type = []
@@ -90,136 +65,99 @@ def generate_method(interface, method):
 
     is_auto_scope = not 'DartNoAutoScope' in extended_attributes
 
-    number_of_arguments = len(arguments)
-
-    number_of_required_arguments = \
-        len([
-            argument for argument in arguments
-            if not ((argument.is_optional and not ('Default' in argument.extended_attributes or argument.default_value)) or
-                    argument.is_variadic)])
-
-    arguments_data = [generate_argument(interface, method, argument, index)
+    arguments_data = [argument_context(interface, method, argument, index)
                       for index, argument in enumerate(arguments)]
+
+    union_arguments = []
+    if idl_type.union_arguments:
+        union_arguments.extend([union_arg['cpp_value']
+                                for union_arg in idl_type.union_arguments])
 
     is_custom = 'Custom' in extended_attributes or 'DartCustom' in extended_attributes
 
-    method_data = {
+    context.update({
         'activity_logging_world_list': DartUtilities.activity_logging_world_list(method),  # [ActivityLogging]
         'arguments': arguments_data,
-        'conditional_string': DartUtilities.conditional_string(method),
         'cpp_type': this_cpp_type,
         'cpp_value': this_cpp_value,
         'dart_name': extended_attributes.get('DartName'),
         'deprecate_as': DartUtilities.deprecate_as(method),  # [DeprecateAs]
-        'do_not_check_signature': not(is_static or
+        'do_not_check_signature': not(context['is_static'] or
             DartUtilities.has_extended_attribute(method,
                 ['DoNotCheckSecurity', 'DoNotCheckSignature', 'NotEnumerable',
                  'ReadOnly', 'RuntimeEnabled', 'Unforgeable'])),
-        'function_template': function_template(),
-        'idl_type': idl_type.base_type,
-        'has_event_listener_argument': has_event_listener_argument,
         'has_exception_state':
-            has_event_listener_argument or
-            is_raises_exception or
-            is_check_security_for_frame or
+            context['is_raises_exception'] or
+            context['is_check_security_for_frame'] or
             any(argument for argument in arguments
                 if argument.idl_type.name == 'SerializedScriptValue' or
                    argument.idl_type.is_integer_type),
         'is_auto_scope': is_auto_scope,
         'auto_scope': DartUtilities.bool_to_cpp(is_auto_scope),
-        'is_call_with_execution_context': DartUtilities.has_extended_attribute_value(method, 'CallWith', 'ExecutionContext'),
-        'is_call_with_script_arguments': is_call_with_script_arguments,
-        'is_call_with_script_state': is_call_with_script_state,
-        'is_check_security_for_frame': is_check_security_for_frame,
-        'is_check_security_for_node': is_check_security_for_node,
         'is_custom': is_custom,
         'is_custom_dart': 'DartCustom' in extended_attributes,
         'is_custom_dart_new': DartUtilities.has_extended_attribute_value(method, 'DartCustom', 'New'),
-        'is_custom_element_callbacks': is_custom_element_callbacks,
-        'is_do_not_check_security': 'DoNotCheckSecurity' in extended_attributes,
-        'is_do_not_check_signature': 'DoNotCheckSignature' in extended_attributes,
-        'is_partial_interface_member': 'PartialInterfaceImplementedAs' in extended_attributes,
-        'is_per_world_bindings': 'PerWorldBindings' in extended_attributes,
-        'is_raises_exception': is_raises_exception,
-        'is_read_only': 'ReadOnly' in extended_attributes,
-        'is_static': is_static,
         # FIXME(terry): DartStrictTypeChecking no longer supported; TypeChecking is
         #               new extended attribute.
         'is_strict_type_checking':
             'DartStrictTypeChecking' in extended_attributes or
             'DartStrictTypeChecking' in interface.extended_attributes,
-        'is_variadic': arguments and arguments[-1].is_variadic,
         'measure_as': DartUtilities.measure_as(method),  # [MeasureAs]
-        'name': name,
-        'number_of_arguments': number_of_arguments,
-        'number_of_required_arguments': number_of_required_arguments,
-        'number_of_required_or_variadic_arguments': len([
-            argument for argument in arguments
-            if not argument.is_optional]),
-        'per_context_enabled_function': DartUtilities.per_context_enabled_function_name(method),  # [PerContextEnabled]
-        'property_attributes': property_attributes(method),
-        'runtime_enabled_function': DartUtilities.runtime_enabled_function_name(method),  # [RuntimeEnabled]
-        'signature': 'v8::Local<v8::Signature>()' if is_static or 'DoNotCheckSignature' in extended_attributes else 'defaultSignature',
         'suppressed': (arguments and arguments[-1].is_variadic),  # FIXME: implement variadic
-        'union_arguments': idl_type.union_arguments,
+        'union_arguments': union_arguments,
         'dart_set_return_value': dart_set_return_value(interface.name, method, this_cpp_value),
-        'world_suffixes': ['', 'ForMainWorld'] if 'PerWorldBindings' in extended_attributes else [''],  # [PerWorldBindings]
-    }
-    return method_data
+    })
+    return context
 
+def argument_context(interface, method, argument, index):
+    context = v8_methods.argument_context(interface, method, argument, index)
 
-def generate_argument(interface, method, argument, index):
     extended_attributes = argument.extended_attributes
     idl_type = argument.idl_type
     this_cpp_value = cpp_value(interface, method, index)
-    is_variadic_wrapper_type = argument.is_variadic and idl_type.is_wrapper_type
-    use_heap_vector_type = is_variadic_wrapper_type and idl_type.is_will_be_garbage_collected
+    use_heap_vector_type = context['is_variadic_wrapper_type'] and idl_type.is_will_be_garbage_collected
     auto_scope = not 'DartNoAutoScope' in extended_attributes
-    this_has_default = 'Default' in extended_attributes
-    arg_index = index + 1 if not method.is_static else index
+    arg_index = index + 1 if not (method.is_static or method.is_constructor) else index
     preprocessed_type = str(idl_type.preprocessed_type)
+    local_cpp_type = idl_type.cpp_type_args(argument.extended_attributes, raw_type=True)
+    default_value = argument.default_cpp_value
+    if context['has_default']:
+        default_value = (argument.default_cpp_value or
+            dart_types.default_cpp_value_for_cpp_type(idl_type))
     # FIXMEDART: handle the drift between preprocessed type names in 1847 and
     # 1985 dartium builds in a more generic way.
     if preprocessed_type == 'unrestricted float':
         preprocessed_type = 'float'
     if preprocessed_type == 'unrestricted double':
         preprocessed_type = 'double'
-    argument_data = {
+
+    dart_enum_expression = idl_type.enum_validation_expression
+    if dart_enum_expression:
+        dart_enum_expression = dart_enum_expression.format(param_name=argument.name)
+    context.update({
         'cpp_type': idl_type.cpp_type_args(extended_attributes=extended_attributes,
                                            raw_type=True,
                                            used_in_cpp_sequence=use_heap_vector_type),
         'cpp_value': this_cpp_value,
-        'local_cpp_type': idl_type.cpp_type_args(argument.extended_attributes, raw_type=True),
+        'local_cpp_type': local_cpp_type,
         # FIXME: check that the default value's type is compatible with the argument's
-        'default_value': str(argument.default_value) if argument.default_value else None,
-        'enum_validation_expression': idl_type.enum_validation_expression,
-        # Ignore 'Default' in extended_attributes not exposed in dart:html.
-        'has_default': False,
-        'has_event_listener_argument': any(
-            argument_so_far for argument_so_far in method.arguments[:index]
-            if argument_so_far.idl_type.name == 'EventListener'),
-        'idl_type_object': idl_type,
+        'default_value': default_value,
+        'enum_validation_expression': dart_enum_expression,
         'preprocessed_type': preprocessed_type,
-        # Dictionary is special-cased, but arrays and sequences shouldn't be
-        'idl_type': idl_type.base_type,
-        'index': index,
         'is_array_or_sequence_type': not not idl_type.native_array_element_type,
-        'is_clamp': 'Clamp' in extended_attributes,
-        'is_callback_interface': idl_type.is_callback_interface,
-        'is_nullable': idl_type.is_nullable,
-        # Only expose as optional if no default value.
-        'is_optional': argument.is_optional and not (this_has_default or argument.default_value),
         'is_strict_type_checking': 'DartStrictTypeChecking' in extended_attributes,
-        'is_variadic_wrapper_type': is_variadic_wrapper_type,
+        'is_dictionary': idl_type.is_dictionary or idl_type.base_type == 'Dictionary',
         'vector_type': 'WillBeHeapVector' if use_heap_vector_type else 'Vector',
-        'is_wrapper_type': idl_type.is_wrapper_type,
-        'name': argument.name,
-        'dart_set_return_value_for_main_world': dart_set_return_value(interface.name, method, this_cpp_value, for_main_world=True),
+        'dart_set_return_value_for_main_world': dart_set_return_value(interface.name, method,
+                                                                      this_cpp_value, for_main_world=True),
         'dart_set_return_value': dart_set_return_value(interface.name, method, this_cpp_value),
         'arg_index': arg_index,
-        'dart_value_to_local_cpp_value': dart_value_to_local_cpp_value(interface, argument, arg_index, auto_scope),
-    }
-    return argument_data
+        'dart_value_dictionary_cpp_value': dart_dictionary_value_argument(argument, arg_index),
+        'dart_value_to_local_cpp_value': dart_value_to_local_cpp_value(interface,
+                                                                       context['has_type_checking_interface'],
+                                                                       argument, arg_index, auto_scope),
+    })
+    return context
 
 
 ################################################################################
@@ -241,27 +179,43 @@ def cpp_value(interface, method, number_of_arguments):
                 # EventTarget::removeEventListener
                 return '%s.get()' % argument_name
             return argument.name
-        if (idl_type.is_callback_interface or
-            idl_type.name in ['NodeFilter', 'XPathNSResolver']):
+        if (idl_type.name in ['NodeFilter', 'NodeFilterOrNull',
+                              'XPathNSResolver', 'XPathNSResolverOrNull']):
             # FIXME: remove this special case
             return '%s.release()' % argument_name
+        # Need to de-ref the generated dictionary class for create call.
+        if (idl_type.is_dictionary):
+            return '*%s' % argument_name
         return argument_name
 
     # Truncate omitted optional arguments
     arguments = method.arguments[:number_of_arguments]
-    cpp_arguments = DartUtilities.call_with_arguments(method)
+    if method.is_constructor:
+        call_with_values = interface.extended_attributes.get('ConstructorCallWith')
+    else:
+        call_with_values = method.extended_attributes.get('CallWith')
+    cpp_arguments = DartUtilities.call_with_arguments(call_with_values)
     if ('PartialInterfaceImplementedAs' in method.extended_attributes and not method.is_static):
         cpp_arguments.append('*receiver')
 
     cpp_arguments.extend(cpp_argument(argument) for argument in arguments)
-    this_union_arguments = method.idl_type.union_arguments
+    this_union_arguments = method.idl_type and method.idl_type.union_arguments
     if this_union_arguments:
-        cpp_arguments.extend(this_union_arguments)
+        cpp_arguments.extend([member_argument['cpp_value']
+                              for member_argument in this_union_arguments])
 
-    if 'RaisesException' in method.extended_attributes:
+    if ('RaisesException' in method.extended_attributes or
+        (method.is_constructor and
+         DartUtilities.has_extended_attribute_value(interface, 'RaisesException', 'Constructor'))):
         cpp_arguments.append('es')
 
-    cpp_method_name = DartUtilities.scoped_name(interface, method, DartUtilities.cpp_name(method))
+    if method.name == 'Constructor':
+        base_name = 'create'
+    elif method.name == 'NamedConstructor':
+        base_name = 'createForJSConstructor'
+    else:
+        base_name = DartUtilities.cpp_name(method)
+    cpp_method_name = DartUtilities.scoped_name(interface, method, base_name)
     return '%s(%s)' % (cpp_method_name, ', '.join(cpp_arguments))
 
 
@@ -276,7 +230,8 @@ def dart_arg_type(argument_type):
 def dart_set_return_value(interface_name, method, cpp_value, for_main_world=False):
     idl_type = method.idl_type
     extended_attributes = method.extended_attributes
-    if idl_type.name == 'void':
+    if not idl_type or idl_type.name == 'void':
+        # Constructors and void methods don't have a return type
         return None
 
     release = False
@@ -301,9 +256,14 @@ def dart_set_return_value(interface_name, method, cpp_value, for_main_world=Fals
                                           auto_scope=auto_scope)
 
 
-def dart_value_to_local_cpp_value(interface, argument, index, auto_scope=True):
+def dart_dictionary_value_argument(argument, index):
+    idl_type = argument.idl_type
+    return idl_type.dart_dictionary_to_local_cpp_value(index=index)
+
+
+def dart_value_to_local_cpp_value(interface, has_type_checking_interface,
+                                  argument, index, auto_scope=True):
     extended_attributes = argument.extended_attributes
-    interface_extended_attributes = interface.extended_attributes
     idl_type = argument.idl_type
     name = argument.name
     # TODO(terry): Variadic arguments are not handled but treated as one argument.
@@ -317,51 +277,10 @@ def dart_value_to_local_cpp_value(interface, argument, index, auto_scope=True):
     # There is also some logic in systemnative.py to force a null check
     # for the useCapture argument of those same methods that we may need to
     # pull over.
-    null_check = (argument.is_optional and \
-                  (idl_type.is_callback_interface or idl_type == 'Dictionary')) or \
-                 (argument.default_value and argument.default_value.is_null)
+    null_check = ((argument.is_optional and idl_type.is_callback_interface) or
+                  (idl_type.name == 'Dictionary') or
+                  (argument.default_value and argument.default_value.is_null))
 
     return idl_type.dart_value_to_local_cpp_value(
-        interface_extended_attributes, extended_attributes, name, null_check,
+        extended_attributes, name, null_check, has_type_checking_interface,
         index=index, auto_scope=auto_scope)
-
-
-################################################################################
-# Auxiliary functions
-################################################################################
-
-# [NotEnumerable]
-def property_attributes(method):
-    extended_attributes = method.extended_attributes
-    property_attributes_list = []
-    if 'NotEnumerable' in extended_attributes:
-        property_attributes_list.append('v8::DontEnum')
-    if 'ReadOnly' in extended_attributes:
-        property_attributes_list.append('v8::ReadOnly')
-    if property_attributes_list:
-        property_attributes_list.insert(0, 'v8::DontDelete')
-    return property_attributes_list
-
-
-# FIXMEDART: better align this method with the v8 version.
-def union_member_argument_context(idl_type, index):
-    """Returns a context of union member for argument."""
-    return 'result%d' % index
-
-def union_arguments(idl_type):
-    return [union_member_argument_context(member_idl_type, index)
-            for index, member_idl_type
-            in enumerate(idl_type.member_types)]
-
-
-def argument_default_cpp_value(argument):
-    if not argument.default_value:
-        return None
-    return argument.idl_type.literal_cpp_value(argument.default_value)
-
-
-IdlTypeBase.union_arguments = None
-IdlUnionType.union_arguments = property(union_arguments)
-IdlArgument.default_cpp_value = property(argument_default_cpp_value)
-#IdlType.union_arguments = property(lambda self: None)
-#IdlUnionType.union_arguments = property(union_arguments)

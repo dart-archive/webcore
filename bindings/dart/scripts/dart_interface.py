@@ -1,4 +1,5 @@
 # Copyright (C) 2013 Google Inc. All rights reserved.
+# coding=utf-8
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -32,6 +33,8 @@ Design doc: http://www.chromium.org/developers/design-documents/idl-compiler
 """
 
 from collections import defaultdict
+import itertools
+from operator import itemgetter
 
 import idl_types
 from idl_types import IdlType, inherits_interface, IdlArrayOrSequenceType, IdlArrayType
@@ -40,6 +43,8 @@ import dart_methods
 import dart_types
 from dart_utilities import DartUtilities
 from v8_globals import includes
+import v8_attributes
+import v8_interface
 
 
 INTERFACE_H_INCLUDES = frozenset([
@@ -396,22 +401,12 @@ def _suppress_extended_attributes(extended_attributes):
     return False
 
 
-def add_native_entries(interface, constructors, is_custom):
-    for constructor in constructors:
-        types = None
-        if not is_custom:
-            types = [arg['preprocessed_type']
-                     for arg in constructor['arguments']]
-        argument_names = [arg['name'] for arg in constructor['arguments']]
-        native_entry = \
-            DartUtilities.generate_native_entry(interface.name, constructor,
-                                                None, 'Constructor', None,
-                                                argument_names, types)
-        constructor.update({'native_entry': native_entry})
+# TODO(terry): Rename genenerate_interface to interface_context.
+def interface_context(interface):
+    context = v8_interface.interface_context(interface)
 
-
-def generate_interface(interface):
     includes.clear()
+
     includes.update(INTERFACE_CPP_INCLUDES)
     header_includes = set(INTERFACE_H_INCLUDES)
 
@@ -419,10 +414,6 @@ def generate_interface(interface):
     if parent_interface:
         header_includes.update(dart_types.includes_for_interface(parent_interface))
     extended_attributes = interface.extended_attributes
-
-    is_audio_buffer = inherits_interface(interface.name, 'AudioBuffer')
-    if is_audio_buffer:
-        includes.add('modules/webaudio/AudioBuffer.h')
 
     is_document = inherits_interface(interface.name, 'Document')
     if is_document:
@@ -438,30 +429,6 @@ def generate_interface(interface):
     if inherits_interface(interface.name, 'EventTarget'):
         includes.update(['bindings/core/dart/DartEventListener.h'])
 
-    # [ActiveDOMObject]
-    is_active_dom_object = 'ActiveDOMObject' in extended_attributes
-
-    # [CheckSecurity]
-    is_check_security = 'CheckSecurity' in extended_attributes
-    if is_check_security:
-        includes.add('bindings/common/BindingSecurity.h')
-
-    # [DependentLifetime]
-    is_dependent_lifetime = 'DependentLifetime' in extended_attributes
-
-    # [MeasureAs]
-# TODO(terry): Remove Me?
-#    is_measure_as = 'MeasureAs' in extended_attributes
-#    if is_measure_as:
-#        includes.add('core/frame/UseCounter.h')
-
-    # [SetWrapperReferenceFrom]
-    reachable_node_function = extended_attributes.get('SetWrapperReferenceFrom')
-    if reachable_node_function:
-        # FIXME(vsm): We may need bindings/dart/DartGCController.h instead.
-        includes.update(['bindings/core/v8/V8GCController.h',
-                         'core/dom/Element.h'])
-
     # [SetWrapperReferenceTo]
     set_wrapper_reference_to_list = [{
         'name': argument.name,
@@ -476,127 +443,81 @@ def generate_interface(interface):
     for set_wrapper_reference_to in set_wrapper_reference_to_list:
         set_wrapper_reference_to['idl_type'].add_includes_for_type()
 
-    # [SpecialWrapFor]
-    if 'SpecialWrapFor' in extended_attributes:
-        special_wrap_for = extended_attributes['SpecialWrapFor'].split('|')
-    else:
-        special_wrap_for = []
-    for special_wrap_interface in special_wrap_for:
-        dart_types.add_includes_for_interface(special_wrap_interface)
-
-    # [Custom=Wrap], [SetWrapperReferenceFrom]
-    has_visit_dom_wrapper = (
-        DartUtilities.has_extended_attribute_value(interface, 'Custom', 'VisitDOMWrapper') or
-        reachable_node_function or
-        set_wrapper_reference_to_list)
-
-    this_gc_type = DartUtilities.gc_type(interface)
-
-    template_contents = {
+    context.update({
         'conditional_string': DartUtilities.conditional_string(interface),  # [Conditional]
         'cpp_class': DartUtilities.cpp_name(interface),
-        'gc_type': this_gc_type,
-        'has_custom_legacy_call_as_function': DartUtilities.has_extended_attribute_value(interface, 'Custom', 'LegacyCallAsFunction'),  # [Custom=LegacyCallAsFunction]
-        'has_custom_to_v8': DartUtilities.has_extended_attribute_value(interface, 'Custom', 'ToV8'),  # [Custom=ToV8]
-        'has_custom_wrap': DartUtilities.has_extended_attribute_value(interface, 'Custom', 'Wrap'),  # [Custom=Wrap]
-        'has_visit_dom_wrapper': has_visit_dom_wrapper,
         'header_includes': header_includes,
-        'interface_name': interface.name,
-        'is_active_dom_object': is_active_dom_object,
-        'is_audio_buffer': is_audio_buffer,
-        'is_check_security': is_check_security,
-        'is_dependent_lifetime': is_dependent_lifetime,
-        'is_document': is_document,
-        'is_event_target': inherits_interface(interface.name, 'EventTarget'),
-        'is_exception': interface.is_exception,
-        'is_garbage_collected': this_gc_type == 'GarbageCollectedObject',
-        'is_will_be_garbage_collected': this_gc_type == 'WillBeGarbageCollectedObject',
-        'is_node': inherits_interface(interface.name, 'Node'),
+        'is_garbage_collected': context['gc_type'] == 'GarbageCollectedObject',
+        'is_will_be_garbage_collected': context['gc_type'] == 'WillBeGarbageCollectedObject',
         'measure_as': DartUtilities.measure_as(interface),  # [MeasureAs]
-        'parent_interface': parent_interface,
         'pass_cpp_type': dart_types.cpp_template_type(
-            dart_types.cpp_ptr_type('PassRefPtr', 'RawPtr', this_gc_type),
+            dart_types.cpp_ptr_type('PassRefPtr', 'RawPtr', context['gc_type']),
             DartUtilities.cpp_name(interface)),
-        'reachable_node_function': reachable_node_function,
         'runtime_enabled_function': DartUtilities.runtime_enabled_function_name(interface),  # [RuntimeEnabled]
-        'set_wrapper_reference_to_list': set_wrapper_reference_to_list,
-        'special_wrap_for': special_wrap_for,
+         'set_wrapper_reference_to_list': set_wrapper_reference_to_list,
         'dart_class': dart_types.dart_type(interface.name),
         'v8_class': DartUtilities.v8_class_name(interface),
-        'wrapper_configuration': 'WrapperConfiguration::Dependent'
-            if (has_visit_dom_wrapper or
-                is_active_dom_object or
-                is_dependent_lifetime)
-            else 'WrapperConfiguration::Independent',
-    }
+    })
 
     # Constructors
-    constructors = [generate_constructor(interface, constructor)
+    constructors = [constructor_context(interface, constructor)
                     for constructor in interface.constructors
                     # FIXME: shouldn't put named constructors with constructors
                     # (currently needed for Perl compatibility)
                     # Handle named constructors separately
                     if constructor.name == 'Constructor']
-    generate_constructor_overloads(constructors)
+    if len(constructors) > 1:
+        context.update({'constructor_overloads': overloads_context(constructors)})
 
     # [CustomConstructor]
-    custom_constructors = [generate_custom_constructor(interface, constructor)
+    custom_constructors = [custom_constructor_context(interface, constructor)
                            for constructor in interface.custom_constructors]
-
-    # [EventConstructor]
-    has_event_constructor = 'EventConstructor' in extended_attributes
-    any_type_attributes = [attribute for attribute in interface.attributes
-                           if attribute.idl_type.name == 'Any']
-    if has_event_constructor:
-        includes.add('bindings/core/v8/Dictionary.h')
-        if any_type_attributes:
-            includes.add('bindings/core/v8/SerializedScriptValue.h')
 
     # [NamedConstructor]
     named_constructor = generate_named_constructor(interface)
 
-    add_native_entries(interface, constructors, bool(custom_constructors))
-    add_native_entries(interface, custom_constructors, bool(custom_constructors))
+    generate_method_native_entries(interface, constructors, 'Constructor')
+    generate_method_native_entries(interface, custom_constructors, 'Constructor')
     if named_constructor:
-        add_native_entries(interface, [named_constructor], bool(custom_constructors))
+        generate_method_native_entries(interface, [named_constructor],
+                                       'Constructor')
+    event_constructor = None
+    if context['has_event_constructor']:
+        event_constructor = {
+            'native_entries': [
+                DartUtilities.generate_native_entry(
+                    interface.name, None, 'Constructor', False, 2)],
+        }
 
-    if (constructors or custom_constructors or has_event_constructor or
+    if (context['constructors'] or custom_constructors or context['has_event_constructor'] or
         named_constructor):
         includes.add('core/frame/LocalDOMWindow.h')
 
-    template_contents.update({
-        'any_type_attributes': any_type_attributes,
+    context.update({
         'constructors': constructors,
         'custom_constructors': custom_constructors,
+        'event_constructor': event_constructor,
         'has_custom_constructor': bool(custom_constructors),
-        'has_event_constructor': has_event_constructor,
         'interface_length':
-            interface_length(interface, constructors + custom_constructors),
+            v8_interface.interface_length(interface, constructors + custom_constructors),
         'is_constructor_call_with_document': DartUtilities.has_extended_attribute_value(
             interface, 'ConstructorCallWith', 'Document'),  # [ConstructorCallWith=Document]
         'is_constructor_call_with_execution_context': DartUtilities.has_extended_attribute_value(
             interface, 'ConstructorCallWith', 'ExecutionContext'),  # [ConstructorCallWith=ExeuctionContext]
-        'is_constructor_raises_exception': extended_attributes.get('RaisesException') == 'Constructor',  # [RaisesException=Constructor]
         'named_constructor': named_constructor,
     })
 
-    # Constants
-    template_contents.update({
-        'constants': [generate_constant(constant) for constant in interface.constants],
-        'do_not_check_constants': 'DoNotCheckConstants' in extended_attributes,
-    })
-
     # Attributes
-    attributes = [dart_attributes.generate_attribute(interface, attribute)
+    attributes = [dart_attributes.attribute_context(interface, attribute)
                   for attribute in interface.attributes
                       # Skip attributes in the IGNORE_MEMBERS list or if an
                       # extended attribute is in the IGNORE_EXTENDED_ATTRIBUTES.
                       if (not _suppress_attribute(interface.name, attribute.name) and
-                          not dart_attributes.is_constructor_attribute(attribute) and
+                          not v8_attributes.is_constructor_attribute(attribute) and
                           not _suppress_extended_attributes(attribute.extended_attributes) and
                           not ('DartSuppress' in attribute.extended_attributes and
                            attribute.extended_attributes.get('DartSuppress') == None))]
-    template_contents.update({
+    context.update({
         'attributes': attributes,
         'has_accessors': any(attribute['is_expose_js_accessors'] for attribute in attributes),
         'has_attribute_configuration': any(
@@ -611,17 +532,19 @@ def generate_interface(interface):
     })
 
     # Methods
-    methods = [dart_methods.generate_method(interface, method)
+    methods = [dart_methods.method_context(interface, method)
                for method in interface.operations
                # Skip anonymous special operations (methods name empty).
                # Skip methods in our IGNORE_MEMBERS list.
                # Skip methods w/ extended attributes in IGNORE_EXTENDED_ATTRIBUTES list.
                if (method.name and
+                   # detect unnamed getters from v8_interface.
+                   method.name != 'anonymousNamedGetter' and
                    # TODO(terry): Eventual eliminate the IGNORE_MEMBERS in favor of DartSupress.
                    not _suppress_method(interface.name, method.name) and
                    not _suppress_extended_attributes(method.extended_attributes) and
                    not 'DartSuppress' in method.extended_attributes)]
-    generate_overloads(methods)
+    compute_method_overloads_context(methods)
     for method in methods:
         method['do_generate_method_configuration'] = (
             method['do_not_check_signature'] and
@@ -629,9 +552,9 @@ def generate_interface(interface):
             # For overloaded methods, only generate one accessor
             ('overload_index' not in method or method['overload_index'] == 1))
 
-    generate_method_native_entries(interface, methods)
+    generate_method_native_entries(interface, methods, 'Method')
 
-    template_contents.update({
+    context.update({
         'has_origin_safe_method_setter': any(
             method['is_check_security_for_frame'] and not method['is_read_only']
             for method in methods),
@@ -640,256 +563,346 @@ def generate_interface(interface):
         'methods': methods,
     })
 
-    native_entries = generate_native_entries(interface, constructors,
-                                             custom_constructors, attributes,
-                                             methods, named_constructor)
-
-    template_contents.update({
+    context.update({
         'indexed_property_getter': indexed_property_getter(interface),
         'indexed_property_setter': indexed_property_setter(interface),
-        'indexed_property_deleter': indexed_property_deleter(interface),
+        'indexed_property_deleter': v8_interface.indexed_property_deleter(interface),
         'is_override_builtins': 'OverrideBuiltins' in extended_attributes,
         'named_property_getter': named_property_getter(interface),
         'named_property_setter': named_property_setter(interface),
-        'named_property_deleter': named_property_deleter(interface),
+        'named_property_deleter': v8_interface.named_property_deleter(interface),
+    })
+
+    generate_native_entries_for_specials(interface, context)
+
+    native_entries = generate_interface_native_entries(context)
+
+    context.update({
         'native_entries': native_entries,
     })
 
-    return template_contents
+    return context
 
 
-def generate_native_entries(interface, constructors, custom_constructors,
-                            attributes, methods, named_constructor):
-    entries = []
-    for constructor in constructors:
-        entries.append(constructor['native_entry'])
-    for constructor in custom_constructors:
-        entries.append(constructor['native_entry'])
-    if named_constructor:
-        entries.append(named_constructor['native_entry'])
+def generate_interface_native_entries(context):
+    entries = {}
+
+    def add(ne):
+        entries[ne['blink_entry']] = ne
+
+    def addAll(nes):
+        for ne in nes:
+            add(ne)
+
+    for constructor in context['constructors']:
+        addAll(constructor['native_entries'])
+    for constructor in context['custom_constructors']:
+        addAll(constructor['native_entries'])
+    if context['named_constructor']:
+        addAll(context['named_constructor']['native_entries'])
+    if context['event_constructor']:
+        addAll(context['event_constructor']['native_entries'])
+    for method in context['methods']:
+        addAll(method['native_entries'])
+    for attribute in context['attributes']:
+        add(attribute['native_entry_getter'])
+        if not attribute['is_read_only'] or attribute['put_forwards']:
+            add(attribute['native_entry_setter'])
+    if context['indexed_property_getter']:
+        addAll(context['indexed_property_getter']['native_entries'])
+    if context['indexed_property_setter']:
+        addAll(context['indexed_property_setter']['native_entries'])
+    if context['indexed_property_deleter']:
+        addAll(context['indexed_property_deleter']['native_entries'])
+    if context['named_property_getter']:
+        addAll(context['named_property_getter']['native_entries'])
+    if context['named_property_setter']:
+        addAll(context['named_property_setter']['native_entries'])
+    if context['named_property_deleter']:
+        addAll(context['named_property_deleter']['native_entries'])
+    return list(entries.values())
+
+
+def generate_method_native_entry(interface, method, count, kind):
+    name = method.get('name')
+    is_static = bool(method.get('is_static'))
+    native_entry = \
+        DartUtilities.generate_native_entry(interface.name, name,
+                                            kind, is_static, count)
+    return native_entry
+
+
+def generate_method_native_entries(interface, methods, kind):
     for method in methods:
-        entries.extend(method['native_entries'])
-    for attribute in attributes:
-        entries.append(attribute['native_entry_getter'])
-        entries.append(attribute['native_entry_setter'])
-    return entries
+        native_entries = []
+        arg_count = method['number_of_arguments']
+        min_arg_count = method['number_of_required_arguments']
+        lb = min_arg_count - 2 if min_arg_count > 2 else 0
+        for x in range(lb, arg_count + 3):
+            native_entry = \
+                generate_method_native_entry(interface, method, x, kind)
+            native_entries.append(native_entry)
 
-
-# [DeprecateAs], [Reflect], [RuntimeEnabled]
-def generate_constant(constant):
-    # (Blink-only) string literals are unquoted in tokenizer, must be re-quoted
-    # in C++.
-    if constant.idl_type.name == 'String':
-        value = '"%s"' % constant.value
-    else:
-        value = constant.value
-
-    extended_attributes = constant.extended_attributes
-    return {
-        'cpp_class': extended_attributes.get('PartialInterfaceImplementedAs'),
-        'name': constant.name,
-        # FIXME: use 'reflected_name' as correct 'name'
-        'reflected_name': extended_attributes.get('Reflect', constant.name),
-        'runtime_enabled_function': DartUtilities.runtime_enabled_function_name(constant),
-        'value': value,
-    }
+        method.update({'native_entries': native_entries})
 
 
 ################################################################################
 # Overloads
 ################################################################################
 
-def generate_method_native_entry(interface, method, count, optional_index):
-    types = None
-    if not method['is_custom']:
-        types = [arg['preprocessed_type'] for arg in method['arguments'][0:count]]
-    if method['is_call_with_script_arguments']:
-        types.append("object")
-    argument_names = [arg['name'] for arg in method['arguments'][0:count]]
-    name = method['name']
-    native_entry = \
-        DartUtilities.generate_native_entry(interface.name, method,
-                                            name, 'Method',
-                                            optional_index,
-                                            argument_names, types)
-    return native_entry
+def compute_method_overloads_context(methods):
+    # Regular methods
+    compute_method_overloads_context_by_type([method for method in methods
+                                              if not method['is_static']])
+    # Static methods
+    compute_method_overloads_context_by_type([method for method in methods
+                                              if method['is_static']])
 
 
-def generate_method_native_entries(interface, methods):
-    for method in methods:
-        native_entries = []
-        required_arg_count = method['number_of_required_arguments']
-        arg_count = method['number_of_arguments']
-        if required_arg_count != arg_count:
-            for x in range(required_arg_count, arg_count + 1):
-                # This is really silly, but is here for now just to match up
-                # the existing name generation in the old dart:html scripts
-                index = arg_count - x + 1
-                native_entry = \
-                    generate_method_native_entry(interface, method, x, index)
-                native_entries.append(native_entry)
-        else:
-            # Eventually, we should probably always generate an unindexed
-            # native entry, to handle cases like
-            # addEventListener in which we suppress the optionality,
-            # and in general to make us more robust against optional changes
-            native_entry = \
-                generate_method_native_entry(interface, method, arg_count, None)
-            native_entries.append(native_entry)
+def compute_method_overloads_context_by_type(methods):
+    """Computes |method.overload*| template values.
 
-        method.update({'native_entries': native_entries})
-
-def generate_overloads(methods):
-    generate_overloads_by_type(methods, is_static=False)  # Regular methods
-    generate_overloads_by_type(methods, is_static=True)
-
-
-def generate_overloads_by_type(methods, is_static):
-    # Generates |overloads| template values and modifies |methods| in place;
-    # |is_static| flag used (instead of partitioning list in 2) because need to
-    # iterate over original list of methods to modify in place
-    method_counts = defaultdict(lambda: 0)
-    for method in methods:
-        if method['is_static'] != is_static:
-            continue
-        name = method['name']
-        # FIXME(vsm): We don't seem to capture optional param
-        # overloads here.
-        method_counts[name] += 1
-
-    # Filter to only methods that are actually overloaded
-    overloaded_method_counts = dict((name, count)
-                                    for name, count in method_counts.iteritems()
-                                    if count > 1)
-
+    Called separately for static and non-static (regular) methods,
+    as these are overloaded separately.
+    Modifies |method| in place for |method| in |methods|.
+    Doesn't change the |methods| list itself (only the values, i.e. individual
+    methods), so ok to treat these separately.
+    """
     # Add overload information only to overloaded methods, so template code can
     # easily verify if a function is overloaded
-    method_overloads = defaultdict(list)
-    for method in methods:
-        name = method['name']
-        if (method['is_static'] != is_static or
-            name not in overloaded_method_counts):
-            continue
-        # Overload index includes self, so first append, then compute index
-        method_overloads[name].append(method)
-        method.update({
-            'overload_index': len(method_overloads[name]),
-            'overload_resolution_expression': overload_resolution_expression(method),
-        })
-        # FIXME(vsm): Looks like we only handle optional parameters if
-        # the method is already overloaded. For a non-overloaded method
-        # with optional parameters, we never get here.
-
-    # Resolution function is generated after last overloaded function;
-    # package necessary information into |method.overloads| for that method.
-    for method in methods:
-        if (method['is_static'] != is_static or
-            'overload_index' not in method):
-            continue
-        name = method['name']
-        if method['overload_index'] != overloaded_method_counts[name]:
-            continue
-        overloads = method_overloads[name]
-        minimum_number_of_required_arguments = min(
-            overload['number_of_required_arguments']
-            for overload in overloads)
-        method['overloads'] = {
-            'has_exception_state': bool(minimum_number_of_required_arguments),
-            'methods': overloads,
-            'minimum_number_of_required_arguments': minimum_number_of_required_arguments,
-            'name': name,
-        }
+    for name, overloads in v8_interface.method_overloads_by_name(methods):
+        # Resolution function is generated after last overloaded function;
+        # package necessary information into |method.overloads| for that method.
+        overloads[-1]['overloads'] = overloads_context(overloads)
+        overloads[-1]['overloads']['name'] = name
 
 
-def overload_resolution_expression(method):
-    # Expression is an OR of ANDs: each term in the OR corresponds to a
-    # possible argument count for a given method, with type checks.
-    # FIXME: Blink's overload resolution algorithm is incorrect, per:
-    # Implement WebIDL overload resolution algorithm.
-    # https://code.google.com/p/chromium/issues/detail?id=293561
+def overloads_context(overloads):
+    """Returns |overloads| template values for a single name.
+
+    Sets |method.overload_index| in place for |method| in |overloads|
+    and returns dict of overall overload template values.
+    """
+    assert len(overloads) > 1  # only apply to overloaded names
+    for index, method in enumerate(overloads, 1):
+        method['overload_index'] = index
+
+    effective_overloads_by_length = v8_interface.effective_overload_set_by_length(overloads)
+    lengths = [length for length, _ in effective_overloads_by_length]
+    name = overloads[0].get('name', '<constructor>')
+
+    # Check and fail if all overloads with the shortest acceptable arguments
+    # list are runtime enabled, since we would otherwise set 'length' on the
+    # function object to an incorrect value when none of those overloads were
+    # actually enabled at runtime. The exception is if all overloads are
+    # controlled by the same runtime enabled feature, in which case there would
+    # be no function object at all if it is not enabled.
+    shortest_overloads = effective_overloads_by_length[0][1]
+    if (all(method.get('runtime_enabled_function')
+            for method, _, _ in shortest_overloads) and
+        not v8_interface.common_value(overloads, 'runtime_enabled_function')):
+        raise ValueError('Function.length of %s depends on runtime enabled features' % name)
+
+    return {
+        'deprecate_all_as': v8_interface.common_value(overloads, 'deprecate_as'),  # [DeprecateAs]
+        'exposed_test_all': v8_interface.common_value(overloads, 'exposed_test'),  # [Exposed]
+        'length_tests_methods': length_tests_methods(effective_overloads_by_length),
+        # 1. Let maxarg be the length of the longest type list of the
+        # entries in S.
+        'maxarg': lengths[-1],
+        'measure_all_as': v8_interface.common_value(overloads, 'measure_as'),  # [MeasureAs]
+        'minarg': lengths[0],
+        'per_context_enabled_function_all': v8_interface.common_value(overloads, 'per_context_enabled_function'),  # [PerContextEnabled]
+        'runtime_enabled_function_all': v8_interface.common_value(overloads, 'runtime_enabled_function'),  # [RuntimeEnabled]
+        'valid_arities': lengths
+            # Only need to report valid arities if there is a gap in the
+            # sequence of possible lengths, otherwise invalid length means
+            # "not enough arguments".
+            if lengths[-1] - lengths[0] != len(lengths) - 1 else None,
+    }
+
+
+def length_tests_methods(effective_overloads_by_length):
+    """Returns sorted list of resolution tests and associated methods, by length.
+
+    This builds the main data structure for the overload resolution loop.
+    For a given argument length, bindings test argument at distinguishing
+    argument index, in order given by spec: if it is compatible with
+    (optionality or) type required by an overloaded method, resolve to that
+    method.
+
+    Returns:
+        [(length, [(test, method)])]
+    """
+    return [(length, list(resolution_tests_methods(effective_overloads)))
+            for length, effective_overloads in effective_overloads_by_length]
+
+
+DART_CHECK_TYPE = {
+    'ArrayBufferView': 'Dart_IsTypedData({cpp_value})',
+    'ArrayBuffer': 'Dart_IsByteBuffer({cpp_value})',
+    'Uint8Array': 'DartUtilities::isUint8Array({cpp_value})',
+    'Uint8ClampedArray': 'DartUtilities::isUint8ClampedArray({cpp_value})',
+}
+
+
+def resolution_tests_methods(effective_overloads):
+    """Yields resolution test and associated method, in resolution order, for effective overloads of a given length.
+
+    This is the heart of the resolution algorithm.
+    http://heycam.github.io/webidl/#dfn-overload-resolution-algorithm
+
+    Note that a given method can be listed multiple times, with different tests!
+    This is to handle implicit type conversion.
+
+    Returns:
+        [(test, method)]
+    """
+    methods = [effective_overload[0]
+               for effective_overload in effective_overloads]
+    if len(methods) == 1:
+        # If only one method with a given length, no test needed
+        yield 'true', methods[0]
+        return
+
+    # 6. If there is more than one entry in S, then set d to be the
+    # distinguishing argument index for the entries of S.
+    index = v8_interface.distinguishing_argument_index(effective_overloads)
+    # (7-9 are for handling |undefined| values for optional arguments before
+    # the distinguishing argument (as "missing"), so you can specify only some
+    # optional arguments. We don't support this, so we skip these steps.)
+    # 10. If i = d, then:
+    # (d is the distinguishing argument index)
+    # 1. Let V be argi.
+    #     Note: This is the argument that will be used to resolve which
+    #           overload is selected.
+    cpp_value = 'Dart_GetNativeArgument(args, %s + argOffset)' % index
+
+    # Extract argument and IDL type to simplify accessing these in each loop.
+    arguments = [method['arguments'][index] for method in methods]
+    arguments_methods = zip(arguments, methods)
+    idl_types = [argument['idl_type_object'] for argument in arguments]
+    idl_types_methods = zip(idl_types, methods)
+
+    # We can't do a single loop through all methods or simply sort them, because
+    # a method may be listed in multiple steps of the resolution algorithm, and
+    # which test to apply differs depending on the step.
     #
-    # Currently if distinguishing non-primitive type from primitive type,
-    # (e.g., sequence<DOMString> from DOMString or Dictionary from double)
-    # the method with a non-primitive type argument must appear *first* in the
-    # IDL file, since we're not adding a check to primitive types.
-    # FIXME: Once fixed, check IDLs, as usually want methods with primitive
-    # types to appear first (style-wise).
-    #
-    # Properly:
-    # 1. Compute effective overload set.
-    # 2. First check type list length.
-    # 3. If multiple entries for given length, compute distinguishing argument
-    #    index and have check for that type.
-    arguments = method['arguments']
-    overload_checks = [overload_check_expression(method, index)
-                       # check *omitting* optional arguments at |index| and up:
-                       # index 0 => argument_count 0 (no arguments)
-                       # index 1 => argument_count 1 (index 0 argument only)
-                       for index, argument in enumerate(arguments)
-                       if argument['is_optional']]
-    # FIXME: this is wrong if a method has optional arguments and a variadic
-    # one, though there are not yet any examples of this
-    if not method['is_variadic']:
-        # Includes all optional arguments (len = last index + 1)
-        overload_checks.append(overload_check_expression(method, len(arguments)))
-    return ' || '.join('(%s)' % check for check in overload_checks)
+    # Instead, we need to go through all methods at each step, either finding
+    # first match (if only one test is allowed) or filtering to matches (if
+    # multiple tests are allowed), and generating an appropriate tests.
 
+    # 2. If V is undefined, and there is an entry in S whose list of
+    # optionality values has "optional" at index i, then remove from S all
+    # other entries.
+    try:
+        method = next(method for argument, method in arguments_methods
+                      if argument['is_optional'])
+        test = 'Dart_IsNull(%s)' % cpp_value
+        yield test, method
+    except StopIteration:
+        pass
 
-def overload_check_expression(method, argument_count):
-    overload_checks = ['info.Length() == %s' % argument_count]
-    arguments = method['arguments'][:argument_count]
-    overload_checks.extend(overload_check_argument(index, argument)
-                           for index, argument in
-                           enumerate(arguments))
-    return ' && '.join('(%s)' % check for check in overload_checks if check)
+    # 3. Otherwise: if V is null or undefined, and there is an entry in S that
+    # has one of the following types at position i of its type list,
+    # - a nullable type
+    try:
+        method = next(method for idl_type, method in idl_types_methods
+                      if idl_type.is_nullable)
+        test = 'Dart_IsNull(%s)' % cpp_value
+        yield test, method
+    except StopIteration:
+        pass
 
+    # 4. Otherwise: if V is a platform object - but not a platform array
+    # object - and there is an entry in S that has one of the following
+    # types at position i of its type list,
+    # - an interface type that V implements
+    # (Unlike most of these tests, this can return multiple methods, since we
+    #  test if it implements an interface. Thus we need a for loop, not a next.)
+    # (We distinguish wrapper types from built-in interface types.)
+    for idl_type, method in ((idl_type, method)
+                             for idl_type, method in idl_types_methods
+                             if idl_type.is_wrapper_type):
+        fmtstr = 'Dart{idl_type}::hasInstance({cpp_value})'
+        if idl_type.base_type in DART_CHECK_TYPE:
+            fmtstr = DART_CHECK_TYPE[idl_type.base_type]
+        test = fmtstr.format(idl_type=idl_type.base_type, cpp_value=cpp_value)
+        yield test, method
 
-def overload_check_argument(index, argument):
-    def null_or_optional_check():
-        # If undefined is passed for an optional argument, the argument should
-        # be treated as missing; otherwise undefined is not allowed.
+    # 8. Otherwise: if V is any kind of object except for a native Date object,
+    # a native RegExp object, and there is an entry in S that has one of the
+    # following types at position i of its type list,
+    # - an array type
+    # - a sequence type
+    # ...
+    # - a dictionary
+    try:
+        # FIXME: IDL dictionary not implemented, so use Blink Dictionary
+        # http://crbug.com/321462
+        idl_type, method = next((idl_type, method)
+                                for idl_type, method in idl_types_methods
+                                if (idl_type.native_array_element_type or
+                                    idl_type.name == 'Dictionary'))
+        if idl_type.native_array_element_type:
+            # (We test for Array instead of generic Object to type-check.)
+            # FIXME: test for Object during resolution, then have type check for
+            # Array in overloaded method: http://crbug.com/262383
+            test = 'Dart_IsList(%s)' % cpp_value
+        else:
+            # FIXME: should be '{1}->IsObject() && !{1}->IsDate() && !{1}->IsRegExp()'.format(cpp_value)
+            # FIXME: the IsDate and IsRegExp checks can be skipped if we've
+            # already generated tests for them.
+            test = 'Dart_IsInstance(%s)' % cpp_value
+        yield test, method
+    except StopIteration:
+        pass
 
-        # FIXME(vsm): We need Dart specific checks here.
-        if idl_type.is_nullable:
-            if argument['is_optional']:
-                return 'isUndefinedOrNull(%s)'
-            return '%s->IsNull()'
-        if argument['is_optional']:
-            return '%s->IsUndefined()'
-        return None
+    # (Check for exact type matches before performing automatic type conversion;
+    # only needed if distinguishing between primitive types.)
+    if len([idl_type.is_primitive_type for idl_type in idl_types]) > 1:
+        # (Only needed if match in step 11, otherwise redundant.)
+        if any(idl_type.is_string_type or idl_type.is_enum
+               for idl_type in idl_types):
+            # 10. Otherwise: if V is a Number value, and there is an entry in S
+            # that has one of the following types at position i of its type
+            # list,
+            # - a numeric type
+            try:
+                method = next(method for idl_type, method in idl_types_methods
+                              if idl_type.is_numeric_type)
+                test = 'Dart_IsNumber(%s)' % cpp_value
+                yield test, method
+            except StopIteration:
+                pass
 
-    cpp_value = 'info[%s]' % index
-    idl_type = argument['idl_type_object']
-    # FIXME(vsm): We need Dart specific checks for the rest of this method.
-    # FIXME: proper type checking, sharing code with attributes and methods
-    # FIXME(terry): DartStrictTypeChecking no longer supported; TypeChecking is
-    #               new extended attribute.
-    if idl_type.name == 'String' and argument['is_strict_type_checking']:
-        return ' || '.join(['isUndefinedOrNull(%s)' % cpp_value,
-                            '%s->IsString()' % cpp_value,
-                            '%s->IsObject()' % cpp_value])
-    if idl_type.native_array_element_type:
-        return '%s->IsArray()' % cpp_value
-    if idl_type.is_callback_interface:
-        return ' || '.join(['%s->IsNull()' % cpp_value,
-                            '%s->IsFunction()' % cpp_value])
-    if idl_type.is_wrapper_type:
-        type_check = 'V8{idl_type}::hasInstance({cpp_value}, info.GetIsolate())'.format(idl_type=idl_type.base_type, cpp_value=cpp_value)
-        if idl_type.is_nullable:
-            type_check = ' || '.join(['%s->IsNull()' % cpp_value, type_check])
-        return type_check
-    if idl_type.is_interface_type:
-        # Non-wrapper types are just objects: we don't distinguish type
-        # We only allow undefined for non-wrapper types (notably Dictionary),
-        # as we need it for optional Dictionary arguments, but we don't want to
-        # change behavior of existing bindings for other types.
-        type_check = '%s->IsObject()' % cpp_value
-        added_check_template = null_or_optional_check()
-        if added_check_template:
-            type_check = ' || '.join([added_check_template % cpp_value,
-                                      type_check])
-        return type_check
-    return None
+    # (Perform automatic type conversion, in order. If any of these match,
+    # that's the end, and no other tests are needed.) To keep this code simple,
+    # we rely on the C++ compiler's dead code elimination to deal with the
+    # redundancy if both cases below trigger.
+
+    # 11. Otherwise: if there is an entry in S that has one of the following
+    # types at position i of its type list,
+    # - DOMString
+    # - ByteString
+    # - ScalarValueString [a DOMString typedef, per definition.]
+    # - an enumeration type
+    try:
+        method = next(method for idl_type, method in idl_types_methods
+                      if idl_type.is_string_type or idl_type.is_enum)
+        yield 'true', method
+    except StopIteration:
+        pass
+
+    # 12. Otherwise: if there is an entry in S that has one of the following
+    # types at position i of its type list,
+    # - a numeric type
+    try:
+        method = next(method for idl_type, method in idl_types_methods
+                      if idl_type.is_numeric_type)
+        yield 'true', method
+    except StopIteration:
+        pass
 
 
 ################################################################################
@@ -897,15 +910,17 @@ def overload_check_argument(index, argument):
 ################################################################################
 
 # [Constructor]
-def generate_custom_constructor(interface, constructor):
+def custom_constructor_context(interface, constructor):
     return {
         'arguments': [custom_constructor_argument(argument, index)
                       for index, argument in enumerate(constructor.arguments)],
         'auto_scope': 'true',
         'is_auto_scope': True,
+        'is_call_with_script_arguments': False,
+        'is_custom': True,
         'number_of_arguments': len(constructor.arguments),
         'number_of_required_arguments':
-            number_of_required_arguments(constructor),
+            v8_interface.number_of_required_arguments(constructor),
         }
 
 
@@ -920,94 +935,28 @@ def custom_constructor_argument(argument, index):
 
 
 # [Constructor]
-def generate_constructor(interface, constructor):
+def constructor_context(interface, constructor):
     return {
-        'argument_list': constructor_argument_list(interface, constructor),
-        # TODO(terry): Use dart_methods.generate_argument instead constructor_argument.
-        'arguments': [constructor_argument(interface, argument, index)
+        'arguments': [dart_methods.argument_context(interface, constructor, argument, index)
                       for index, argument in enumerate(constructor.arguments)],
+        'auto_scope': 'true',
+        'cpp_value': dart_methods.cpp_value(
+            interface, constructor, len(constructor.arguments)),
         'has_exception_state':
             # [RaisesException=Constructor]
             interface.extended_attributes.get('RaisesException') == 'Constructor' or
             any(argument for argument in constructor.arguments
                 if argument.idl_type.name == 'SerializedScriptValue' or
                    argument.idl_type.is_integer_type),
-        'is_constructor': True,
-        'auto_scope': 'true',
         'is_auto_scope': True,
+        'is_call_with_script_arguments': False,
+        'is_constructor': True,
+        'is_custom': False,
         'is_variadic': False,  # Required for overload resolution
         'number_of_required_arguments':
-            number_of_required_arguments(constructor),
+            v8_interface.number_of_required_arguments(constructor),
         'number_of_arguments': len(constructor.arguments),
     }
-
-
-def constructor_argument_list(interface, constructor):
-    # FIXME: unify with dart_methods.cpp_argument.
-
-    def cpp_argument(argument):
-        argument_name = dart_types.check_reserved_name(argument.name)
-        idl_type = argument.idl_type
-        # FIXMEDART: there has to be a cleaner way to check for arraylike
-        # types such as Uint8ClampedArray.
-        if isinstance(idl_type, IdlArrayType) or idl_type.preprocessed_type.is_typed_array_type:
-            return '%s.get()' % argument_name
-
-        return argument_name
-
-    arguments = []
-    # [ConstructorCallWith=ExecutionContext]
-    if DartUtilities.has_extended_attribute_value(interface, 'ConstructorCallWith', 'ExecutionContext'):
-        arguments.append('context')
-    # [ConstructorCallWith=Document]
-    if DartUtilities.has_extended_attribute_value(interface, 'ConstructorCallWith', 'Document'):
-        arguments.append('document')
-
-    arguments.extend([cpp_argument(argument) for argument in constructor.arguments])
-
-    # [RaisesException=Constructor]
-    if interface.extended_attributes.get('RaisesException') == 'Constructor':
-        arguments.append('es')
-
-    return arguments
-
-
-# TODO(terry): Eliminate this function use dart_methods.generate_argument instead
-#              for all constructor arguments.
-def constructor_argument(interface, argument, index):
-    idl_type = argument.idl_type
-    default_value = str(argument.default_value) if argument.default_value else None
-
-    argument_content = {
-        'cpp_type': idl_type.cpp_type_args(),
-        'local_cpp_type': idl_type.cpp_type_args(argument.extended_attributes, raw_type=True),
-        # FIXME: check that the default value's type is compatible with the argument's
-        'default_value': default_value,
-        # FIXME: remove once [Default] removed and just use argument.default_value
-        'has_default': 'Default' in argument.extended_attributes or default_value,
-        'idl_type_object': idl_type,
-        'preprocessed_type': str(idl_type.preprocessed_type),
-        # Dictionary is special-cased, but arrays and sequences shouldn't be
-        'idl_type': idl_type.native_array_element_type,
-        'index': index,
-        'is_array_or_sequence_type': not not idl_type.native_array_element_type,
-        'is_optional': argument.is_optional,
-        'is_strict_type_checking': False,  # Required for overload resolution
-        'name': argument.name,
-        'dart_value_to_local_cpp_value': dart_methods.dart_value_to_local_cpp_value(interface, argument, index),
-    }
-    return argument_content
-
-
-def generate_constructor_overloads(constructors):
-    if len(constructors) <= 1:
-        return
-    for overload_index, constructor in enumerate(constructors):
-        constructor.update({
-            'overload_index': overload_index + 1,
-            'overload_resolution_expression':
-                overload_resolution_expression(constructor),
-        })
 
 
 # [NamedConstructor]
@@ -1019,26 +968,11 @@ def generate_named_constructor(interface):
     # included in constructors (and only name stored in extended attribute)
     # for Perl compatibility
     idl_constructor = interface.constructors[0]
-    constructor = generate_constructor(interface, idl_constructor)
+    constructor = constructor_context(interface, idl_constructor)
     # FIXME(vsm): We drop the name. We don't use this in Dart APIs right now.
     # We probably need to encode this somehow to deal with conflicts.
     # constructor['name'] = extended_attributes['NamedConstructor']
     return constructor
-
-
-def number_of_required_arguments(constructor):
-    return len([argument for argument in constructor.arguments
-        if not (argument.is_optional and not (('Default' in argument.extended_attributes) or argument.default_value))])
-
-
-def interface_length(interface, constructors):
-    # Docs: http://heycam.github.io/webidl/#es-interface-call
-    if 'EventConstructor' in interface.extended_attributes:
-        return 1
-    if not constructors:
-        return 0
-    return min(constructor['number_of_required_arguments']
-               for constructor in constructors)
 
 
 ################################################################################
@@ -1058,6 +992,8 @@ def property_getter(getter, cpp_arguments):
             return '!result'
         return ''
 
+    context = v8_interface.property_getter(getter, [])
+
     idl_type = getter.idl_type
     extended_attributes = getter.extended_attributes
     is_raises_exception = 'RaisesException' in extended_attributes
@@ -1069,22 +1005,14 @@ def property_getter(getter, cpp_arguments):
         cpp_arguments.append('es')
     union_arguments = idl_type.union_arguments
     if union_arguments:
-        cpp_arguments.extend(union_arguments)
+        cpp_arguments.extend([member_argument['cpp_value']
+                              for member_argument in union_arguments])
 
     cpp_value = '%s(%s)' % (cpp_method_name, ', '.join(cpp_arguments))
 
-    return {
+    context.update({
         'cpp_type': idl_type.cpp_type,
         'cpp_value': cpp_value,
-        'is_custom':
-            'Custom' in extended_attributes and
-            (not extended_attributes['Custom'] or
-             DartUtilities.has_extended_attribute_value(getter, 'Custom', 'PropertyGetter')),
-        'is_custom_property_enumerator': DartUtilities.has_extended_attribute_value(
-            getter, 'Custom', 'PropertyEnumerator'),
-        'is_custom_property_query': DartUtilities.has_extended_attribute_value(
-            getter, 'Custom', 'PropertyQuery'),
-        'is_enumerable': 'NotEnumerable' not in extended_attributes,
         'is_null_expression': is_null_expression(idl_type),
         'is_raises_exception': is_raises_exception,
         'name': DartUtilities.cpp_name(getter),
@@ -1092,41 +1020,23 @@ def property_getter(getter, cpp_arguments):
         'dart_set_return_value': idl_type.dart_set_return_value('result',
                                                                 extended_attributes=extended_attributes,
                                                                 script_wrappable='receiver',
-                                                                release=idl_type.release)}
+                                                                release=idl_type.release)})
+    return context
 
 
-def property_setter(interface, setter):
+def property_setter(setter):
+    context = v8_interface.property_setter(setter)
+
     idl_type = setter.arguments[1].idl_type
     extended_attributes = setter.extended_attributes
-    interface_extended_attributes = interface.extended_attributes
-    is_raises_exception = 'RaisesException' in extended_attributes
-    return {
-        'has_strict_type_checking':
-            'DartStrictTypeChecking' in extended_attributes and
-            idl_type.is_wrapper_type,
-        'idl_type': idl_type.base_type,
-        'is_custom': 'Custom' in extended_attributes,
-        'has_exception_state': is_raises_exception or
-                               idl_type.is_integer_type,
-        'is_raises_exception': is_raises_exception,
-        'name': DartUtilities.cpp_name(setter),
+
+    context.update({
         'dart_value_to_local_cpp_value': idl_type.dart_value_to_local_cpp_value(
-            interface_extended_attributes, extended_attributes, 'propertyValue', False),
-    }
+            extended_attributes, 'propertyValue', False,
+            context['has_type_checking_interface']),
+    })
 
-
-def property_deleter(deleter):
-    idl_type = deleter.idl_type
-    if str(idl_type) != 'boolean':
-        raise Exception(
-            'Only deleters with boolean type are allowed, but type is "%s"' %
-            idl_type)
-    extended_attributes = deleter.extended_attributes
-    return {
-        'is_custom': 'Custom' in extended_attributes,
-        'is_raises_exception': 'RaisesException' in extended_attributes,
-        'name': DartUtilities.cpp_name(deleter),
-    }
+    return context
 
 
 ################################################################################
@@ -1165,23 +1075,7 @@ def indexed_property_setter(interface):
     except StopIteration:
         return None
 
-    return property_setter(interface, setter)
-
-
-def indexed_property_deleter(interface):
-    try:
-        # Find indexed property deleter, if present; has form:
-        # deleter TYPE [OPTIONAL_IDENTIFIER](unsigned long ARG)
-        deleter = next(
-            method
-            for method in interface.operations
-            if ('deleter' in method.specials and
-                len(method.arguments) == 1 and
-                str(method.arguments[0].idl_type) == 'unsigned long'))
-    except StopIteration:
-        return None
-
-    return property_deleter(deleter)
+    return property_setter(setter)
 
 
 ################################################################################
@@ -1203,6 +1097,7 @@ def named_property_getter(interface):
         return None
 
     getter.name = getter.name or 'anonymousNamedGetter'
+
     return property_getter(getter, ['propertyName'])
 
 
@@ -1219,20 +1114,29 @@ def named_property_setter(interface):
     except StopIteration:
         return None
 
-    return property_setter(interface, setter)
+    return property_setter(setter)
 
 
-def named_property_deleter(interface):
-    try:
-        # Find named property deleter, if present; has form:
-        # deleter TYPE [OPTIONAL_IDENTIFIER](DOMString ARG)
-        deleter = next(
-            method
-            for method in interface.operations
-            if ('deleter' in method.specials and
-                len(method.arguments) == 1 and
-                str(method.arguments[0].idl_type) == 'DOMString'))
-    except StopIteration:
-        return None
+def generate_native_entries_for_specials(interface, context):
+    def add(prop, name, arity):
+        if context[prop]:
+            if 'native_entries' not in context[prop]:
+                context[prop].update({'native_entries': []})
+            context[prop]['native_entries'].append(
+                DartUtilities.generate_native_entry(
+                    interface.name, name, 'Method', False, arity))
 
-    return property_deleter(deleter)
+    pre = ['indexed_property', 'named_property']
+    post = [('setter', '__setter__', 2),
+            ('getter', '__getter__', 1),
+            ('deleter', '__delete__', 1),
+          ]
+    props = [(p1 + "_" + p2, name, arity)
+             for (p1, (p2, name, arity)) in itertools.product(pre, post)]
+    for t in props:
+        add(*t)
+
+    for (p, name, arity) in props:
+        if context[p]:
+            if context[p].get('is_custom_property_query'):
+                add(p, '__propertyQuery__', 1)

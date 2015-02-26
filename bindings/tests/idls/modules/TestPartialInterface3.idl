@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Google Inc. All rights reserved.
+ * Copyright (C) 2014 Google Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -28,27 +28,18 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-// This is for interface extended attributes that interact with another extended
-// attribute, and thus both cannot be tested at once; and for special
-// operations, which need a separate interface to test on.
-// The more *minor* extended attribute should be put in this file.
-
 [
-    Constructor, // Test interaction with [Custom=Wrap]
-    Custom=Wrap, // Conflicts with and [Custom=ToV8], respectively
-    DependentLifetime, // Covered by [ActiveDOMObject]
-    SetWrapperReferenceFrom=ownerNode, // Conflicts with [SetWrapperReferenceTo]
-    SpecialWrapFor=TestInterface|TestInterfaceEmpty, // Conflicts with [Custom=ToV8]
-] interface TestInterface2 {
-    // Indexed property operations with an identifier
-    [RaisesException] getter TestInterfaceEmpty item(unsigned long index);
-    [RaisesException] setter DOMString setItem(unsigned long index, DOMString value);
-    [RaisesException] deleter boolean deleteItem(unsigned long index);
+    ImplementedAs=TestPartialInterfaceImplementation3,
+    PerContextEnabled=PartialContextName3,
+] partial interface TestInterface {
+    const unsigned short PARTIAL3_UNSIGNED_SHORT = 0;
 
-    // Named property operations with an identifier
-    [RaisesException] getter TestInterfaceEmpty namedItem(DOMString name);
-    [RaisesException] setter DOMString setNamedItem(DOMString name, DOMString value);
-    [RaisesException] deleter boolean deleteNamedItem(DOMString name);
+    attribute long partial3LongAttribute;
+    static attribute long partial3StaticLongAttribute;
 
-    stringifier DOMString stringifierMethod();
+    void voidMethodPartialOverload(DOMString value);
+    static void voidMethodPartialOverload(DOMString value);
+
+    void partial2VoidMethod(DOMString value);
+    static void partial2StaticVoidMethod(DOMString value);
 };

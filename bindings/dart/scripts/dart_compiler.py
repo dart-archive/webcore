@@ -38,7 +38,7 @@ import os
 import cPickle as pickle
 
 from idl_reader import IdlReader
-from utilities import write_file
+from utilities import write_file, idl_filename_to_component
 
 
 # TODO(terry): Temporary whitelist of IDL files to skip code generating. e.g.,
@@ -107,7 +107,9 @@ class IdlCompiler(object):
         idl_pickle_filename = os.path.join(self.output_directory,
                                            '%s_globals.pickle' % interface_name)
         definitions = self.reader.read_idl_definitions(idl_filename)
-        output_code_list = self.code_generator.generate_code(definitions,
+        component = idl_filename_to_component(idl_filename)
+
+        output_code_list = self.code_generator.generate_code(definitions[component],
                                                              interface_name,
                                                              idl_pickle_filename,
                                                              self.only_if_changed)
@@ -120,11 +122,14 @@ class IdlCompiler(object):
             for output_code, output_filename in zip(output_code_list, output_filenames):
                 write_file(output_code, output_filename, self.only_if_changed)
 
-    def generate_global_and_write(self, global_pickle_directories, output_filenames):
-        output_code_list = self.code_generator.generate_globals(global_pickle_directories,
-                                                                self.output_directory)
+    def generate_global_and_write(self, global_entries, output_filenames):
+        output_code_list = self.code_generator.generate_globals(global_entries)
         for output_code, output_filename in zip(output_code_list, output_filenames):
             write_file(output_code, output_filename, self.only_if_changed)
+
+    def generate_dart_blink_and_write(self, global_entries, output_filename):
+        output_code = self.code_generator.generate_dart_blink(global_entries)
+        write_file(output_code, output_filename, self.only_if_changed)
 
     @abc.abstractmethod
     def compile_file(self, idl_filename):

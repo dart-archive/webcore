@@ -62,6 +62,7 @@ interface TestObject {
 
     // Extended attributes
     [DeprecateAs=Constant] const short DEPRECATED_CONSTANT = 1;
+    [MeasureAs=Constant] const short MEASURED_CONSTANT = 1;
     [RuntimeEnabled=FeatureName] const short FEATURE_ENABLED_CONST = 1;
     [Reflect=CONST_IMPL] const short CONST_JAVASCRIPT = 1;
 
@@ -164,11 +165,9 @@ interface TestObject {
     [CachedAttribute=isStringDirty] attribute DOMString? cachedStringOrNoneAttribute;
     [CallWith=ExecutionContext] attribute any callWithExecutionContextAnyAttribute;
     [CallWith=ScriptState] attribute any callWithScriptStateAnyAttribute;
-    [CallWith=ExecutionContext|ScriptState] attribute any callWithExecutionContextAndScriptStateAnyAttribute;
+    [CallWith=(ExecutionContext,ScriptState)] attribute any callWithExecutionContextAndScriptStateAnyAttribute;
     [CheckSecurity=Node] readonly attribute Document checkSecurityForNodeReadonlyDocumentAttribute; // All uses are read only
     [Conditional=CONDITION] attribute long conditionalLongAttribute;
-    [Conditional=(CONDITION_1,CONDITION_2)] attribute long conditionalAndLongAttribute;
-    [Conditional=CONDITION_1|CONDITION_2] attribute long conditionalOrLongAttribute;
     // Constructors: FIXME: replace suffix with [ConstructorAttribute]
     attribute TestInterfaceEmptyConstructor testInterfaceEmptyConstructorAttribute;
     [DeprecateAs=deprecatedTestInterfaceEmptyConstructorAttribute] attribute TestInterfaceEmptyConstructor testInterfaceEmptyConstructorAttribute;
@@ -224,12 +223,12 @@ interface TestObject {
     [Reflect=class] attribute DOMString reflectedClass;
     // Limited value attributes and enumerated attributes
     [Reflect, ReflectOnly="unique"] attribute DOMString limitedToOnlyOneAttribute;
-    [Reflect, ReflectOnly="Per"|"Paal"|"Espen"] attribute DOMString limitedToOnlyAttribute;
-    [Reflect=other, ReflectOnly="Value1"|"Value2" ] attribute DOMString limitedToOnlyOtherAttribute;
-    [Reflect, ReflectOnly="rsa"|"dsa", ReflectMissing="rsa"] attribute DOMString limitedWithMissingDefaultAttribute;
-    [Reflect, ReflectOnly="ltr"|"rtl"|"auto", ReflectMissing="auto", ReflectInvalid="ltr"] attribute DOMString limitedWithInvalidMissingDefaultAttribute;
-    [Reflect, ReflectOnly="anonymous"|"use-credentials", ReflectEmpty="anonymous", ReflectInvalid="anonymous"] readonly attribute DOMString corsSettingAttribute;
-    [Reflect, ReflectOnly="empty"|"missing"|"invalid"|"a-normal", ReflectEmpty="empty", ReflectMissing="missing", ReflectInvalid="invalid"] readonly attribute DOMString limitedWithEmptyMissingInvalidAttribute;
+    [Reflect, ReflectOnly=("Per","Paal","Espen")] attribute DOMString limitedToOnlyAttribute;
+    [Reflect=other, ReflectOnly=("Value1","Value2")] attribute DOMString limitedToOnlyOtherAttribute;
+    [Reflect, ReflectOnly=("rsa","dsa"), ReflectMissing="rsa"] attribute DOMString limitedWithMissingDefaultAttribute;
+    [Reflect, ReflectOnly=("ltr","rtl","auto"), ReflectMissing="auto", ReflectInvalid="ltr"] attribute DOMString limitedWithInvalidMissingDefaultAttribute;
+    [Reflect, ReflectOnly=("anonymous","use-credentials"), ReflectEmpty="anonymous", ReflectInvalid="anonymous"] readonly attribute DOMString corsSettingAttribute;
+    [Reflect, ReflectOnly=("empty","missing","invalid","a-normal"), ReflectEmpty="empty", ReflectMissing="missing", ReflectInvalid="invalid"] readonly attribute DOMString limitedWithEmptyMissingInvalidAttribute;
 
     [Replaceable] readonly attribute long replaceableReadonlyLongAttribute;
     [Replaceable, PutForwards=href] readonly attribute TestNode locationReplaceable;
@@ -253,8 +252,6 @@ interface TestObject {
     [Reflect, URL] attribute DOMString urlStringAttribute;
     [Reflect=reflectUrlAttribute, URL] attribute DOMString urlStringAttribute;
     [Unforgeable] attribute long unforgeableLongAttribute;
-    [LogActivity=SetterOnly, LogPreviousValue] attribute DOMString? activityLoggingSetterOnlyLogPreviousValueAttribute;
-    [LogActivity, LogPreviousValue] attribute TestInterfaceEmpty activityLoggingLogPreviousValueInterfaceAttribute;
 
 
     // Methods
@@ -311,11 +308,8 @@ interface TestObject {
     void voidMethodVoidCallbackFunctionArg(VoidCallbackFunction voidCallbackFunctionArg);
     void voidMethodAnyCallbackFunctionOptionalAnyArg(AnyCallbackFunctionOptionalAnyArg anyCallbackFunctionOptionalAnyArgArg);
     // Custom type conversions
-    CompareHow compareHowMethod();
     any anyMethod();
-    void voidMethodCompareHowArg(CompareHow compareHowArg);
     void voidMethodEventTargetArg(EventTarget eventTargetArg);
-    void voidMethodMediaQueryListListenerArg(MediaQueryListListener mediaQueryListListenerArg);
     void voidMethodAnyArg(any anyArg);
     // DOM node types
     void voidMethodAttrArg(Attr attrArg);
@@ -349,11 +343,16 @@ interface TestObject {
     void voidMethodSequenceLongArg(sequence<long> longSequenceArg);
     void voidMethodSequenceStringArg(sequence<DOMString> stringSequenceArg);
     void voidMethodSequenceTestInterfaceEmptyArg(sequence<TestInterfaceEmpty> testInterfaceEmptySequenceArg);
+    void voidMethodSequenceSequenceDOMStringArg(sequence<sequence<DOMString>> stringSequenceSequenceArg);
     // Nullable types
     long? nullableLongMethod();
     DOMString? nullableStringMethod();
     TestInterface? nullableTestInterfaceMethod();
     sequence<long>? nullableLongSequenceMethod();
+    // Union types
+    (TestInterfaceGarbageCollected or DOMString) testInterfaceGarbageCollectedOrDOMStringMethod();
+    (TestInterfaceWillBeGarbageCollected or TestDictionary) testInterfaceWillBeGarbageCollectedOrTestDictionaryMethod();
+    (sequence<long> or DOMString[] or unrestricted double) longSequenceOrDOMStringArrayOrUnrestrictedDoubleMethod();
     // Currently only used on interface type arguments
     void voidMethodTestInterfaceEmptyOrNullArg(TestInterfaceEmpty? nullableTestInterfaceEmptyArg);
     // Callback interface types
@@ -376,6 +375,8 @@ interface TestObject {
     void voidMethodSerializedScriptValueArg(SerializedScriptValue serializedScriptValueArg);
     void voidMethodXPathNSResolverArg(XPathNSResolver xPathNSResolverArg);
     void voidMethodDictionarySequenceArg(sequence<Dictionary> dictionarySequenceArg);
+    Promise overloadedPromiseMethod(long arg);
+    Promise overloadedPromiseMethod(DOMString arg);
 
     // Arguments
     void voidMethodStringArgLongArg(DOMString stringArg, long longArg);
@@ -433,6 +434,8 @@ interface TestObject {
     void overloadedMethodH(TestInterfaceEmpty testInterfaceEmptyArg);
     void overloadedMethodI(DOMString stringArg);
     void overloadedMethodI(double doubleArg);
+    void overloadedMethodJ(DOMString stringArg);
+    void overloadedMethodJ(TestDictionary testDictionaryArg);
 
 
     [PerWorldBindings] void overloadedPerWorldBindingsMethod();
@@ -468,7 +471,6 @@ interface TestObject {
     [CallWith=(ActiveWindow,FirstWindow)] void callWithActiveWindowScriptWindow();
     [CheckSecurity=Node] void checkSecurityForNodeVoidMethod();
     [Conditional=CONDITION] void conditionalConditionVoidMethod();
-    [Conditional=(CONDITION_1,CONDITION_2)] void conditionalCondition1AndCondition2VoidMethod();
     [Conditional=CONDITION] static void conditionalConditionStaticVoidMethod();
     [Custom] void customVoidMethod();
     [Conditional=CONDITION, Custom] void conditionalConditionCustomVoidMethod();
@@ -549,4 +551,5 @@ interface TestObject {
     [OnlyExposedToPrivateScript] attribute DOMString attributeImplementedInCPPForPrivateScriptOnly;
     [ImplementedInPrivateScript, OnlyExposedToPrivateScript] short methodForPrivateScriptOnly(short value1, short value2);
     [ImplementedInPrivateScript, OnlyExposedToPrivateScript] attribute DOMString attributeForPrivateScriptOnly;
+    [ImplementedInPrivateScript] attribute TestEnum enumForPrivateScript;
 };

@@ -84,22 +84,24 @@ import dart_callback_interface
 import dart_interface
 import dart_types
 from dart_utilities import DartUtilities
-from utilities import write_pickle_file
+from utilities import write_pickle_file, idl_filename_to_interface_name
+import dart_dictionary
 from v8_globals import includes, interfaces
 
-# TODO(jacobr): remove this hacked together list.
-INTERFACES_WITHOUT_RESOLVERS = frozenset([
-    'TypeConversions',
-    'GCObservation',
-    'InternalProfilers',
-    'InternalRuntimeFlags',
-    'InternalSettings',
-    'InternalSettingsGenerated',
-    'Internals',
-    'LayerRect',
-    'LayerRectList',
-    'MallocStatistics',
-    'TypeConversions'])
+
+def render_template(interface_info, header_template, cpp_template,
+                    template_context):
+    template_context['code_generator'] = module_pyname
+
+    # Add includes for any dependencies
+    template_context['header_includes'] = sorted(
+        template_context['header_includes'])
+    includes.update(interface_info.get('dependencies_include_paths', []))
+    template_context['cpp_includes'] = sorted(includes)
+
+    header_text = header_template.render(template_context)
+    cpp_text = cpp_template.render(template_context)
+    return header_text, cpp_text
 
 class CodeGeneratorDart(object):
     def __init__(self, interfaces_info, cache_dir):
@@ -108,45 +110,49 @@ class CodeGeneratorDart(object):
         self.jinja_env = initialize_jinja_env(cache_dir)
 
         # Set global type info
-        idl_types.set_ancestors(dict(
-            (interface_name, interface_info['ancestors'])
-            for interface_name, interface_info in interfaces_info.iteritems()
-            if interface_info['ancestors']))
-        IdlType.set_callback_interfaces(set(
-            interface_name
-            for interface_name, interface_info in interfaces_info.iteritems()
-            if interface_info['is_callback_interface']))
-        IdlType.set_implemented_as_interfaces(dict(
-            (interface_name, interface_info['implemented_as'])
-            for interface_name, interface_info in interfaces_info.iteritems()
-            if interface_info['implemented_as']))
-        IdlType.set_garbage_collected_types(set(
-            interface_name
-            for interface_name, interface_info in interfaces_info.iteritems()
-            if 'GarbageCollected' in interface_info['inherited_extended_attributes']))
-        IdlType.set_will_be_garbage_collected_types(set(
-            interface_name
-            for interface_name, interface_info in interfaces_info.iteritems()
-            if 'WillBeGarbageCollected' in interface_info['inherited_extended_attributes']))
-        dart_types.set_component_dirs(dict(
-            (interface_name, interface_info['component_dir'])
-            for interface_name, interface_info in interfaces_info.iteritems()))
+        if 'ancestors' in interfaces_info:
+            idl_types.set_ancestors(interfaces_info['ancestors'])
+        if 'callback_interfaces' in interfaces_info:
+            IdlType.set_callback_interfaces(interfaces_info['callback_interfaces'])
+        if 'dictionaries' in interfaces_info:
+            IdlType.set_dictionaries(interfaces_info['dictionaries'])
+        if 'implemented_as_interfaces' in interfaces_info:
+            IdlType.set_implemented_as_interfaces(interfaces_info['implemented_as_interfaces'])
+        if 'garbage_collected_interfaces' in interfaces_info:
+            IdlType.set_garbage_collected_types(interfaces_info['garbage_collected_interfaces'])
+        if 'will_be_garbage_collected_interfaces' in interfaces_info:
+            IdlType.set_will_be_garbage_collected_types(interfaces_info['will_be_garbage_collected_interfaces'])
+        if 'component_dirs' in interfaces_info:
+            dart_types.set_component_dirs(interfaces_info['component_dirs'])
 
     def generate_code(self, definitions, interface_name, idl_pickle_filename,
                       only_if_changed):
         """Returns .h/.cpp code as (header_text, cpp_text)."""
-        try:
+
+        IdlType.set_enums((enum.name, enum.values)
+                          for enum in definitions.enumerations.values())
+
+        if interface_name in definitions.interfaces:
             interface = definitions.interfaces[interface_name]
-        except KeyError:
-            raise Exception('%s not in IDL definitions' % interface_name)
+        elif interface_name in definitions.dictionaries:
+            output_code_list = self.generate_dictionary_code(
+                definitions, interface_name,
+                definitions.dictionaries[interface_name])
+
+            # Pickle the dictionary information...
+            idl_world = self.load_idl_pickle_file(idl_pickle_filename)
+            idl_world['dictionary'] = {'name': interface_name}
+            write_pickle_file(idl_pickle_filename,  idl_world, only_if_changed)
+
+            return output_code_list
+        else:
+            raise ValueError('%s is not in IDL definitions' % interface_name)
 
         # Store other interfaces for introspection
         interfaces.update(definitions.interfaces)
 
         # Set local type info
         IdlType.set_callback_functions(definitions.callback_functions.keys())
-        IdlType.set_enums((enum.name, enum.values)
-                          for enum in definitions.enumerations.values())
 
         # Select appropriate Jinja template and contents function
         if interface.is_callback:
@@ -156,7 +162,7 @@ class CodeGeneratorDart(object):
         else:
             header_template_filename = 'interface_h.template'
             cpp_template_filename = 'interface_cpp.template'
-            generate_contents = dart_interface.generate_interface
+            generate_contents = dart_interface.interface_context
         header_template = self.jinja_env.get_template(header_template_filename)
         cpp_template = self.jinja_env.get_template(cpp_template_filename)
 
@@ -177,27 +183,36 @@ class CodeGeneratorDart(object):
         includes.discard('core/dom/GlobalEventHandlers.h')
         includes.discard('core/frame/DOMWindowEventHandlers.h')
 
+        # Remove v8 usages not needed.
+        includes.discard('core/frame/UseCounter.h')
+        includes.discard('bindings/core/v8/V8ScriptState.h')
+        includes.discard('bindings/core/v8/V8DOMActivityLogger.h')
+        includes.discard('bindings/core/v8/V8DOMConfiguration.h')
+        includes.discard('bindings/core/v8/V8ExceptionState.h')
+        includes.discard('bindings/core/v8/V8HiddenValue.h')
+        includes.discard('bindings/core/v8/V8ObjectConstructor.h')
+        includes.discard('core/dom/ContextFeatures.h')
+        includes.discard('core/dom/Document.h')
+        includes.discard('platform/RuntimeEnabledFeatures.h')
+        includes.discard('platform/TraceEvent.h')
+
         template_contents['cpp_includes'] = sorted(includes)
 
-        idl_world = {'interface': None, 'callback': None}
-
-        # Load the pickle file for this IDL.
-        if os.path.isfile(idl_pickle_filename):
-            with open(idl_pickle_filename) as idl_pickle_file:
-                idl_global_data = pickle.load(idl_pickle_file)
-                idl_pickle_file.close()
-            idl_world['interface'] = idl_global_data['interface']
-            idl_world['callback'] = idl_global_data['callback']
+        idl_world = self.load_idl_pickle_file(idl_pickle_filename)
 
         if 'interface_name' in template_contents:
-            interface_global = {'component_dir': interface_info['component_dir'],
-                                'name': template_contents['interface_name'],
+            # interfaces no longer remember there component_dir re-compute based
+            # on relative_dir (first directory is the component).
+            component_dir = split_path(interface_info['relative_dir'])[0]
+            interface_global = {'name': template_contents['interface_name'],
                                 'parent_interface': template_contents['parent_interface'],
                                 'is_active_dom_object': template_contents['is_active_dom_object'],
                                 'is_event_target': template_contents['is_event_target'],
-                                'has_resolver': template_contents['interface_name'] not in INTERFACES_WITHOUT_RESOLVERS,
+                                'has_resolver': template_contents['interface_name'],
+                                'native_entries': sorted(template_contents['native_entries'], key=lambda(x): x['blink_entry']),
                                 'is_node': template_contents['is_node'],
                                 'conditional_string': template_contents['conditional_string'],
+                                'component_dir': component_dir,
                                }
             idl_world['interface'] = interface_global
         else:
@@ -211,50 +226,105 @@ class CodeGeneratorDart(object):
         cpp_text = cpp_template.render(template_contents)
         return header_text, cpp_text
 
-    # Generates global file for all interfaces.
-    def generate_globals(self, global_pickle_directories, output_directory):
-        header_template_filename = 'global_h.template'
-        cpp_template_filename = 'global_cpp.template'
+    def load_idl_pickle_file(self, idl_pickle_filename):
+        # Pickle the dictionary information...
+        idl_world = {'interface': None, 'callback': None, 'dictionary': None}
 
-        # Delete the global pickle file we'll rebuild from each pickle generated
-        # for each IDL file '(%s_globals.pickle) % interface_name'.
-        global_pickle_filename = os.path.join(output_directory, 'global.pickle')
-        if os.path.isfile(global_pickle_filename):
-            os.remove(global_pickle_filename)
+        # Load the pickle file for this IDL.
+        if os.path.isfile(idl_pickle_filename):
+            with open(idl_pickle_filename) as idl_pickle_file:
+                idl_global_data = pickle.load(idl_pickle_file)
+                idl_pickle_file.close()
+            idl_world['interface'] = idl_global_data['interface']
+            idl_world['callback'] = idl_global_data['callback']
+            idl_world['dictionary'] = idl_global_data['dictionary']
 
+        return idl_world
+
+    def generate_dictionary_code(self, definitions, dictionary_name,
+                                 dictionary):
+        interface_info = self.interfaces_info[dictionary_name]
+        bindings_results = self.generate_dictionary_bindings(
+            dictionary_name, interface_info, dictionary)
+        impl_results = self.generate_dictionary_impl(
+            dictionary_name, interface_info, dictionary)
+        return bindings_results + impl_results
+
+    def generate_dictionary_bindings(self, dictionary_name,
+                                     interface_info, dictionary):
+        header_template = self.jinja_env.get_template('dictionary_dart_h.template')
+        cpp_template = self.jinja_env.get_template('dictionary_dart_cpp.template')
+        template_context = dart_dictionary.dictionary_context(dictionary)
+        # Add the include for interface itself
+        template_context['header_includes'].add(interface_info['include_path'])
+        header_text, cpp_text = render_template(
+            interface_info, header_template, cpp_template, template_context)
+        return (header_text, cpp_text)
+
+    def generate_dictionary_impl(self, dictionary_name,
+                                 interface_info, dictionary):
+        header_template = self.jinja_env.get_template('dictionary_impl_h.template')
+        cpp_template = self.jinja_env.get_template('dictionary_impl_cpp.template')
+        template_context = dart_dictionary.dictionary_impl_context(
+            dictionary, self.interfaces_info)
+        header_text, cpp_text = render_template(
+            interface_info, header_template, cpp_template, template_context)
+        return (header_text, cpp_text)
+
+    def load_global_pickles(self, global_entries):
         # List of all interfaces and callbacks for global code generation.
-        world = {'interfaces': [], 'callbacks': []}
+        world = {'interfaces': [], 'callbacks': [], 'dictionary': []}
 
         # Load all pickled data for each interface.
-        for pickle_directory in global_pickle_directories:
-            listing = os.listdir(pickle_directory)
-            for filename in listing:
-                if filename.endswith('_globals.pickle'):
-                    idl_filename = os.path.join(pickle_directory, filename)
-                    with open(idl_filename) as idl_pickle_file:
-                        idl_world = pickle.load(idl_pickle_file)
-                        if 'interface' in idl_world:
-                            # FIXME: Why are some of these None?
-                            if idl_world['interface']:
-                                world['interfaces'].append(idl_world['interface'])
-                        if 'callbacks' in idl_world:
-                            # FIXME: Why are some of these None?
-                            if idl_world['callbacks']:
-                                world['callbacks'].append(idl_world['callback'])
-                        idl_pickle_file.close()
-
+        for (directory, file_list) in global_entries:
+            for idl_filename in file_list:
+                interface_name = idl_filename_to_interface_name(idl_filename)
+                idl_pickle_filename = interface_name + "_globals.pickle"
+                idl_pickle_filename = os.path.join(directory, idl_pickle_filename)
+                with open(idl_pickle_filename) as idl_pickle_file:
+                    idl_world = pickle.load(idl_pickle_file)
+                    if 'interface' in idl_world:
+                        # FIXME: Why are some of these None?
+                        if idl_world['interface']:
+                            world['interfaces'].append(idl_world['interface'])
+                    if 'callbacks' in idl_world:
+                        # FIXME: Why are some of these None?
+                        if idl_world['callbacks']:
+                            world['callbacks'].append(idl_world['callback'])
+                    if 'dictionary' in idl_world:
+                        # It's an IDL dictionary
+                        if idl_world['dictionary']:
+                            world['dictionary'].append(idl_world['dictionary'])
         world['interfaces'] = sorted(world['interfaces'], key=lambda (x): x['name'])
         world['callbacks'] = sorted(world['callbacks'], key=lambda (x): x['name'])
+        world['dictionary'] = sorted(world['dictionary'], key=lambda (x): x['name'])
+        return world
 
-        template_contents = world
+    # Generates global file for all interfaces.
+    def generate_globals(self, global_entries):
+        template_contents = self.load_global_pickles(global_entries)
         template_contents['code_generator'] = module_pyname
 
+        header_template_filename = 'global_h.template'
         header_template = self.jinja_env.get_template(header_template_filename)
         header_text = header_template.render(template_contents)
 
+        cpp_template_filename = 'global_cpp.template'
         cpp_template = self.jinja_env.get_template(cpp_template_filename)
         cpp_text = cpp_template.render(template_contents)
+
         return header_text, cpp_text
+
+    # Generates global dart blink file for all interfaces.
+    def generate_dart_blink(self, global_entries):
+        template_contents = self.load_global_pickles(global_entries)
+        template_contents['code_generator'] = module_pyname
+
+        template_filename = 'dart_blink.template'
+        template = self.jinja_env.get_template(template_filename)
+
+        text = template.render(template_contents)
+        return text
 
 
 def initialize_jinja_env(cache_dir):
@@ -292,6 +362,15 @@ def runtime_enabled_if(code, runtime_enabled_function_name):
     indent = re.match(' *', code).group(0)
     return ('%sif (%s())\n' % (indent, runtime_enabled_function_name) +
             '    %s' % code)
+
+
+def split_path(path):
+    path_list = []
+    while os.path.basename(path):
+        path_list.append(os.path.basename(path))
+        path = os.path.dirname(path)
+    path_list.reverse()
+    return path_list
 
 
 ################################################################################

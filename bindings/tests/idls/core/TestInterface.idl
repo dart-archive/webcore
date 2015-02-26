@@ -34,12 +34,13 @@
 [
     ActiveDOMObject,
     Conditional=CONDITION,
-    Custom=LegacyCallAsFunction|ToV8,
+    Custom=(LegacyCallAsFunction,ToV8),
     DoNotCheckConstants,
     ImplementedAs=TestInterfaceImplementation,
+    Iterable,
     RuntimeEnabled=FeatureName,
     SetWrapperReferenceTo(TestInterface referencedName),
-    TypeChecking=Interface|Unrestricted,
+    TypeChecking=(Interface,Unrestricted),
     Exposed=(Worker,Window),
 ] interface TestInterface : TestInterfaceEmpty {
     // members needed to test [ImplementedAs], as this affect attribute
@@ -87,6 +88,9 @@
     [Exposed=Window] attribute long windowExposedAttribute;
 
     [Exposed=(Window,ServiceWorker)] void windowAndServiceWorkerExposedMethod();
+
+    void voidMethodPartailOverload();
+    static void voidMethodPartailOverload();
 };
 
 TestInterface implements TestImplements;

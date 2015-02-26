@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010 Google Inc. All rights reserved.
+ * Copyright (C) 2014 Google Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -28,9 +28,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+// https://slightlyoff.github.io/ServiceWorker/spec/service_worker/#extendable-event-interface
 [
-    WillBeGarbageCollected,
-    NoInterfaceObject,
-] interface SQLTransactionSync {
-    [RaisesException, Custom] SQLResultSet executeSql(DOMString sqlStatement, object[] arguments);
+    RuntimeEnabled=ServiceWorker,
+    Exposed=ServiceWorker,
+] interface ExtendableEvent : Event {
+    [CallWith=ScriptState] void waitUntil(any value);
 };

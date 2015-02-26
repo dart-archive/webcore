@@ -44,6 +44,14 @@ import v8_types  # Required
 import v8_utilities
 
 
+def _enum_validation_expression(idl_type):
+    # FIXME: Add IdlEnumType, move property to derived type, and remove this check
+    if not idl_type.is_enum:
+        return None
+    return ' || '.join(['((String){param_name}) == "%s"' % enum_value
+                        for enum_value in idl_type.enum_values])
+
+
 def _scoped_name(interface, definition, base_name):
     # partial interfaces are implemented as separate classes, with their members
     # implemented as static member functions
@@ -90,6 +98,7 @@ _CALL_WITH_ARGUMENTS = {
     'ScriptArguments': 'scriptArguments.release()',
     'ActiveWindow': 'DartUtilities::callingDomWindowForCurrentIsolate()',
     'FirstWindow': 'DartUtilities::enteredDomWindowForCurrentIsolate()',
+    'Document': 'document',
 }
 
 # List because key order matters, as we want arguments in deterministic order
@@ -99,12 +108,11 @@ _CALL_WITH_VALUES = [
     'ScriptArguments',
     'ActiveWindow',
     'FirstWindow',
+    'Document',
 ]
 
 
-def _call_with_arguments(member, call_with_values=None):
-    # Optional parameter so setter can override with [SetterCallWith]
-    call_with_values = call_with_values or member.extended_attributes.get('CallWith')
+def _call_with_arguments(call_with_values):
     if not call_with_values:
         return []
     return [_CALL_WITH_ARGUMENTS[value]
@@ -132,36 +140,36 @@ def _measure_as(definition_or_member):
     return extended_attributes['MeasureAs']
 
 
-def _generate_native_entry(interface_name, thing, name, kind,
-                           optional_index, args, types):
-    index = thing.get('overload_index') or optional_index
-    is_static = bool(thing.get('is_static'))
-    tag = ""
+def _generate_native_entry(interface_name, name, kind, is_static, arity):
+
+    def mkPublic(s):
+        if s.startswith("_") or s.startswith("$"):
+            return "$" + s
+        return s
+
+    arity_str = ""
     if kind == 'Getter':
-        tag = "%s_Getter" % name
-        blink_entry = tag
+        suffix = "_Getter"
     elif kind == 'Setter':
-        tag = "%s_Setter" % name
-        blink_entry = tag
+        suffix = "_Setter"
     elif kind == 'Constructor':
-        tag = "constructorCallback"
-        blink_entry = tag
-        if index is not None:
-            blink_entry = "_create_%s%s" % (index, blink_entry)
+        name = "constructor"
+        suffix = "Callback"
+        arity_str = "_" + str(arity)
     elif kind == 'Method':
-        tag = "%s_Callback" % name
-        if index is None:
-            blink_entry = tag
-        else:
-            blink_entry = "_%s_%d_Callback" % (name, index)
-    components = [interface_name, tag]
-    if types is not None:
-        components.extend(types)
-    native_entry = "_".join(components)
+        suffix = "_Callback"
+        arity_str = "_" + str(arity)
+
+    tag = "%s%s" % (name, suffix)
+    blink_entry = mkPublic(tag + arity_str)
+    native_entry = "_".join([interface_name, tag])
+
+    argument_names = ['__arg_%d' % i for i in range(0, arity)]
     if not is_static and kind != 'Constructor':
-        args.insert(0, "mthis")
-    return {'blink_entry': "$" + blink_entry,
-            'argument_names': args,
+        argument_names.insert(0, "mthis")
+
+    return {'blink_entry': blink_entry,
+            'argument_names': argument_names,
             'resolver_string': native_entry}
 
 ################################################################################
@@ -184,6 +192,7 @@ DartUtilities.conditional_string = v8_utilities.conditional_string
 DartUtilities.cpp_name = v8_utilities.cpp_name
 DartUtilities.deprecate_as = _deprecate_as
 DartUtilities.extended_attribute_value_contains = v8_utilities.extended_attribute_value_contains
+DartUtilities.enum_validation_expression = _enum_validation_expression
 DartUtilities.gc_type = v8_utilities.gc_type
 DartUtilities.generate_native_entry = _generate_native_entry
 DartUtilities.has_extended_attribute = v8_utilities.has_extended_attribute

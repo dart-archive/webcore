@@ -50,13 +50,19 @@ def parse_options():
     parser.add_option('--output-directory')
     parser.add_option('--interfaces-info-file')
     parser.add_option('--write-file-only-if-changed', type='int', default='1')
-    parser.add_option('--generate-global', type='int')
-    parser.add_option("-p", "--global-pickle-directories",
-                      action="store",
+    parser.add_option('--generate-dart-blink',
+                      action='append',
                       type='string',
-                      dest="global_pickle_directories",
+                      dest='blink_global_entries',
+                      nargs=3,
+                      help="Pickle file directory, idl file list, idl dictionaries list")
+
+    parser.add_option('--generate-globals',
+                      action='append',
+                      type='string',
+                      dest='global_entries',
                       nargs=2,
-                      help="Directories to load _globals.pickle files (max 2)")
+                      help="Pickle file directory and idl file list (global class table)")
 
     # ensure output comes last, so command line easy to parse via regexes
     parser.disable_interspersed_args()
@@ -65,12 +71,12 @@ def parse_options():
     if options.output_directory is None:
         parser.error('Must specify output directory using --output-directory.')
     options.write_file_only_if_changed = bool(options.write_file_only_if_changed)
-    options.generate_global = bool(options.generate_global)
-    if len(args) != 1:
-        # parser.error('Must specify exactly 1 input file as argument, but %d given.' % len(args))
+    if bool(options.global_entries) or bool(options.blink_global_entries):
         return options, None
-    idl_filename = os.path.realpath(args[0])
-    return options, idl_filename
+    if len(args) != 1:
+        parser.error('Must specify exactly 1 input file as argument, but %d given.' % len(args))
+    filename = os.path.realpath(args[0])
+    return options, filename
 
 
 def idl_filename_to_interface_name(idl_filename):
@@ -96,26 +102,46 @@ class IdlCompilerDart(IdlCompiler):
                                     'Dart%s.cpp' % interface_name)
         self.compile_and_write(idl_filename, (header_filename, cpp_filename))
 
-    def generate_global(self, global_pickle_directories):
+    def generate_global(self, global_entries):
+        expanded_global_entries = []
+        for (directory, file_list_file) in global_entries:
+            with open(file_list_file) as input_file:
+                idl_file_list = sorted([line.rstrip('\n')
+                                        for line in input_file])
+            expanded_global_entries.append((directory, idl_file_list))
         global_header_filename = os.path.join(self.output_directory, 'DartWebkitClassIds.h')
         global_cpp_filename = os.path.join(self.output_directory, 'DartWebkitClassIds.cpp')
-        self.generate_global_and_write(global_pickle_directories,
+        self.generate_global_and_write(expanded_global_entries,
                                        (global_header_filename, global_cpp_filename))
+
+    def generate_dart_blink(self, global_entries):
+        global_dart_blink_filename = os.path.join(self.output_directory,
+                                                  '_blink_dartium.dart')
+        expanded_global_entries = []
+        for (directory, file_list_file, file_list_dictionary) in global_entries:
+            with open(file_list_file) as input_file:
+                idl_file_list = sorted([line.rstrip('\n')
+                                        for line in input_file])
+            with open(file_list_dictionary) as input_file:
+                dictionary_file_list = sorted([line.rstrip('\n')
+                                               for line in input_file])
+            expanded_global_entries.append((directory, idl_file_list))
+            expanded_global_entries.append((directory, dictionary_file_list))
+        self.generate_dart_blink_and_write(expanded_global_entries,
+                                           global_dart_blink_filename)
 
 
 def main():
-    options, idl_filename = parse_options()
-
-    if options.generate_global:
-        idl_compiler = IdlCompilerDart(options.output_directory,
-                                       interfaces_info_filename=options.interfaces_info_file,
-                                       only_if_changed=options.write_file_only_if_changed)
-        idl_compiler.generate_global(options.global_pickle_directories)
+    options, filename = parse_options()
+    idl_compiler = IdlCompilerDart(options.output_directory,
+                                   interfaces_info_filename=options.interfaces_info_file,
+                                   only_if_changed=options.write_file_only_if_changed)
+    if bool(options.global_entries):
+        idl_compiler.generate_global(options.global_entries)
+    elif bool(options.blink_global_entries):
+        idl_compiler.generate_dart_blink(options.blink_global_entries)
     else:
-        idl_compiler = IdlCompilerDart(options.output_directory,
-                                       interfaces_info_filename=options.interfaces_info_file,
-                                       only_if_changed=options.write_file_only_if_changed)
-        idl_compiler.compile_file(idl_filename)
+        idl_compiler.compile_file(filename)
 
 
 if __name__ == '__main__':

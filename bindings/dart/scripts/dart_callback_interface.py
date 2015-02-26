@@ -114,7 +114,9 @@ def generate_method(operation):
 
 def generate_arguments_contents(arguments, call_with_this_handle):
     def generate_argument(argument):
-        creation_context = '<Dart%s>' % argument.idl_type.base_type
+        creation_context = ''
+        if argument.idl_type.native_array_element_type is not None:
+            creation_context = '<Dart%s>' % argument.idl_type.native_array_element_type
         return {
             'handle': '%sHandle' % argument.name,
             'cpp_value_to_dart_value': argument.idl_type.cpp_value_to_dart_value(argument.name,

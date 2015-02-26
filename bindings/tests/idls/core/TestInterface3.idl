@@ -28,24 +28,19 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-// Test for length > 0, overloaded constructor.
-// Need separate tests for constructors with length == 0 and length > 0,
-// and for overloaded vs. non-overloaded, if length > 0.
-// length == 0, non-overloaded just omits a block and is not worth another test.
-//
-// Also includes some [Default] arguments (instead of in
-// TestInterfaceConstructor.idl), otherwise overload resolution check string is
-// extremely long and triggers a lint warning (line length).
+// This is for interface extended attributes that interact with another extended
+// attribute, and thus both cannot be tested at once; and for special
+// operations, which need a separate interface to test on.
+// The more *minor* extended attribute should be put in this file.
+
 [
-    // 2 constructors with same type length, to test overload resolution
-    Constructor(DOMString stringArg),
-    Constructor(Dictionary dictionaryArg),
-    Constructor(
-        TestInterfaceEmpty testInterfaceEmptyArg,
-        long longArg,
-        [Default=Undefined] optional DOMString defaultUndefinedOptionalStringArg,
-        optional DOMString defaultNullStringOptionalStringArg = null,
-        [Default=Undefined] optional Dictionary defaultUndefinedOptionalDictionaryArg,
-        optional DOMString optionalStringArg),
-] interface TestInterfaceConstructor2 {
+    Custom=VisitDOMWrapper, // Conflict with [SetWrapperReferenceTo] and [SetWrapperReferenceFrom]
+] interface TestInterface3 {
+    [Custom] getter boolean (unsigned long index);
+    [Custom] setter boolean (unsigned long index, Node value);
+    [Custom] deleter boolean (unsigned long index);
+
+    [Custom=(PropertyGetter,PropertyEnumerator,PropertyQuery)] getter Node (DOMString name);
+    [Custom] setter Node (DOMString name, Node value);
+    [Custom] deleter boolean (DOMString name);
 };

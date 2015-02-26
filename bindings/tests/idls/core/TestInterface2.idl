@@ -34,13 +34,24 @@
 // The more *minor* extended attribute should be put in this file.
 
 [
-    Custom=VisitDOMWrapper, // Conflict with [SetWrapperReferenceTo] and [SetWrapperReferenceFrom]
-] interface TestInterface3 {
-    [Custom] getter boolean (unsigned long index);
-    [Custom] setter boolean (unsigned long index, Node value);
-    [Custom] deleter boolean (unsigned long index);
+    Constructor, // Test interaction with [Custom=Wrap]
+    Custom=Wrap, // Conflicts with and [Custom=ToV8], respectively
+    DependentLifetime, // Covered by [ActiveDOMObject]
+    SetWrapperReferenceFrom=ownerNode, // Conflicts with [SetWrapperReferenceTo]
+    SpecialWrapFor=(TestInterface,TestInterfaceEmpty), // Conflicts with [Custom=ToV8]
+] interface TestInterface2 {
+    // This interface has only runtime enabled constants.
+    [RuntimeEnabled=FeatureName] const unsigned short CONST_VALUE_1 = 1;
 
-    [Custom=PropertyGetter|PropertyEnumerator|PropertyQuery] getter Node (DOMString name);
-    [Custom] setter Node (DOMString name, Node value);
-    [Custom] deleter boolean (DOMString name);
+    // Indexed property operations with an identifier
+    [RaisesException] getter TestInterfaceEmpty item(unsigned long index);
+    [RaisesException] setter DOMString setItem(unsigned long index, DOMString value);
+    [RaisesException] deleter boolean deleteItem(unsigned long index);
+
+    // Named property operations with an identifier
+    [RaisesException] getter TestInterfaceEmpty namedItem(DOMString name);
+    [RaisesException] setter DOMString setNamedItem(DOMString name, DOMString value);
+    [RaisesException] deleter boolean deleteNamedItem(DOMString name);
+
+    stringifier DOMString stringifierMethod();
 };

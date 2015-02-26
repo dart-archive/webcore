@@ -38,9 +38,9 @@ Design doc: http://www.chromium.org/developers/design-documents/idl-compiler
 """
 
 import posixpath
-from idl_types import IdlTypeBase, IdlType, IdlUnionType, TYPE_NAMES, IdlArrayOrSequenceType
+from idl_types import IdlTypeBase, IdlType, IdlUnionType, TYPE_NAMES, IdlArrayOrSequenceType, IdlSequenceType
 
-import dart_attributes  # for IdlType.constructor_type_name
+import dart_attributes
 from dart_utilities import DartUtilities
 from v8_globals import includes
 
@@ -50,11 +50,9 @@ from v8_globals import includes
 ################################################################################
 
 NON_WRAPPER_TYPES = frozenset([
-    'CompareHow',
     'Dictionary',
     'EventHandler',
     'EventListener',
-    'MediaQueryListListener',
     'NodeFilter',
     'SerializedScriptValue',
 ])
@@ -105,11 +103,10 @@ CPP_UNSIGNED_TYPES = set([
     'unsigned short',
 ])
 CPP_SPECIAL_CONVERSION_RULES = {
-    'CompareHow': 'Range::CompareHow',
     'Date': 'double',
     'Dictionary': 'Dictionary',
     'EventHandler': 'EventListener*',
-    'MediaQueryListListener': 'RefPtrWillBeRawPtr<MediaQueryListListener>',
+    'NodeFilter': 'RefPtrWillBeRawPtr<NodeFilter>',
     'Promise': 'ScriptPromise',
     'ScriptValue': 'ScriptValue',
     # FIXME: Eliminate custom bindings for XPathNSResolver  http://crbug.com/345529
@@ -120,7 +117,7 @@ CPP_SPECIAL_CONVERSION_RULES = {
 }
 
 
-def cpp_type(idl_type, extended_attributes=None, raw_type=False, used_as_rvalue_type=False, used_in_cpp_sequence=False):
+def cpp_type(idl_type, extended_attributes=None, raw_type=False, used_as_rvalue_type=False, used_as_variadic_argument=False, used_in_cpp_sequence=False):
     """Returns C++ type corresponding to IDL type.
 
     |idl_type| argument is of type IdlType, while return value is a string
@@ -169,8 +166,6 @@ def cpp_type(idl_type, extended_attributes=None, raw_type=False, used_as_rvalue_
 
     if idl_type.is_typed_array_type and raw_type:
         return 'RefPtr<%s>' % base_idl_type
-    if idl_type.is_callback_interface:
-        return 'OwnPtr<%s>' % base_idl_type
     if idl_type.is_interface_type:
         implemented_as_class = idl_type.implemented_as
         if raw_type:
@@ -180,6 +175,11 @@ def cpp_type(idl_type, extended_attributes=None, raw_type=False, used_as_rvalue_
         return cpp_template_type(ptr_type, implemented_as_class)
 
     # Default, assume native type is a pointer with same type name as idl type
+
+    # FIXME: How to handle sequence<WebGLShader>?
+    if base_idl_type is None:
+        base_idl_type = idl_type.inner_type.element_type.base_type
+
     return base_idl_type + '*'
 
 
@@ -197,6 +197,8 @@ IdlUnionType.cpp_type_args = cpp_type_union
 IdlTypeBase.native_array_element_type = None
 IdlArrayOrSequenceType.native_array_element_type = property(
     lambda self: self.element_type)
+
+IdlTypeBase.enum_validation_expression = property(DartUtilities.enum_validation_expression)
 
 
 def cpp_template_type(template, inner_type):
@@ -295,7 +297,6 @@ def includes_for_cpp_class(class_name, relative_dir_posix):
 # TODO(terry): Will we need this group header for dart:blink?
 INCLUDES_FOR_TYPE = {
     'object': set(),
-    'CompareHow': set(),
     'Dictionary': set(['bindings/core/v8/Dictionary.h']),
     'EventHandler': set(),
     'EventListener': set(),
@@ -303,15 +304,15 @@ INCLUDES_FOR_TYPE = {
                            'core/dom/ClassCollection.h',
                            'core/dom/TagCollection.h',
                            'core/html/HTMLCollection.h',
+                           'core/html/HTMLDataListOptionsCollection.h',
                            'core/html/HTMLFormControlsCollection.h',
                            'core/html/HTMLTableRowsCollection.h']),
-    'MediaQueryListListener': set(['core/css/MediaQueryListListener.h']),
     'NodeList': set(['bindings/core/dart/DartNodeList.h',
                      'core/dom/NameNodeList.h',
                      'core/dom/NodeList.h',
                      'core/dom/StaticNodeList.h',
                      'core/html/LabelsNodeList.h']),
-    'Promise': set(),
+    'Promise': set(['bindings/core/dart/DartScriptPromise.h']),
     'SerializedScriptValue': set(),
     'ScriptValue': set(['bindings/core/dart/DartScriptValue.h']),
 }
@@ -405,12 +406,10 @@ DART_TO_CPP_VALUE = {
     'long long': 'DartUtilities::dartToLongLong(args, {index}, exception)',
     'unsigned long long': 'DartUtilities::dartToUnsignedLongLong(args, {index}, exception)',
     # Interface types
-    'CompareHow': 'static_cast<Range::CompareHow>(0) /* FIXME, DART_TO_CPP_VALUE[CompareHow] */',
     'Dictionary': 'DartUtilities::dartToDictionary{null_check}(args, {index}, exception)',
     'EventTarget': '0 /* FIXME, DART_TO_CPP_VALUE[EventTarget] */',
-    'MediaQueryListListener': 'nullptr /* FIXME, DART_TO_CPP_VALUE[MediaQueryListener] */',
     'NodeFilter': 'nullptr /* FIXME, DART_TO_CPP_VALUE[NodeFilter] */',
-    'Promise': 'nullptr /* FIXME, DART_TO_CPP_VALUE[Promise] */',
+    'Promise': 'DartUtilities::dartToScriptPromise{null_check}(args, {index})',
     'SerializedScriptValue': 'nullptr /* FIXME, DART_TO_CPP_VALUE[SerializedScriptValue] */',
     'ScriptValue': 'DartUtilities::dartToScriptValue{null_check}(args, {index})',
     # FIXME(vsm): Why don't we have an entry for Window? V8 does.
@@ -423,8 +422,28 @@ DART_TO_CPP_VALUE = {
 }
 
 
-def dart_value_to_cpp_value(idl_type, interface_extended_attributes, extended_attributes, variable_name,
-                            null_check, index, auto_scope=True):
+def dart_dictionary_value_argument(idl_type, index):
+    if idl_type.is_dictionary:
+        argument_expression_format = 'DartUtilities::dartToDictionaryWithNullCheck(args, {index}, exception)'
+        return argument_expression_format.format(index=index)
+
+    return None
+
+
+def dart_dictionary_to_local_cpp_value(idl_type, index=None):
+    """Returns an expression that converts a Dictionary value as a local value."""
+    idl_type = idl_type.preprocessed_type
+
+    cpp_value = dart_dictionary_value_argument(idl_type, index)
+
+    return cpp_value
+
+IdlTypeBase.dart_dictionary_to_local_cpp_value = dart_dictionary_to_local_cpp_value
+
+
+def dart_value_to_cpp_value(idl_type, extended_attributes, variable_name,
+                            null_check, has_type_checking_interface,
+                            index, auto_scope=True):
     # Composite types
     native_array_element_type = idl_type.native_array_element_type
     if native_array_element_type:
@@ -453,15 +472,22 @@ def dart_value_to_cpp_value(idl_type, interface_extended_attributes, extended_at
         cpp_expression_format = ('DartUtilities::dartTo{idl_type}WithNullCheck(args, {index}, exception)')
     elif idl_type.is_callback_interface:
         cpp_expression_format = ('Dart{idl_type}::create{null_check}(args, {index}, exception)')
+    elif idl_type.is_dictionary:
+        # Value of dictionary is defined in method dart_dictionary_value_argument.
+        cpp_expression_format = 'Dart{idl_type}::toImpl(dictionary, es)'
     else:
         cpp_expression_format = ('Dart{idl_type}::toNative{null_check}(args, {index}, exception)')
 
     # We allow the calling context to force a null check to handle
     # some cases that require calling context info.  V8 handles all
     # of this differently, and we may wish to reconsider this approach
-    null_check = 'WithNullCheck' \
-        if null_check or allow_null(idl_type, interface_extended_attributes, extended_attributes) else ''
-    return cpp_expression_format.format(null_check=null_check,
+    check_string = ''
+    if null_check or allow_null(idl_type, extended_attributes,
+                                has_type_checking_interface):
+        check_string = 'WithNullCheck'
+    elif allow_empty(idl_type, extended_attributes):
+        check_string = 'WithEmptyCheck'
+    return cpp_expression_format.format(null_check=check_string,
                                         arguments=arguments,
                                         index=index,
                                         idl_type=base_idl_type,
@@ -480,7 +506,7 @@ def dart_value_to_cpp_value_array_or_sequence(native_array_element_type, variabl
         this_cpp_type = None
         ref_ptr_type = cpp_ptr_type('RefPtr', 'Member', native_array_element_type.gc_type)
         # FIXME(vsm): We're not using ref_ptr_type....
-        expression_format = 'DartUtilities::toNativeVector<{cpp_type} >(args, {index}, {variable_name}, exception)'
+        expression_format = 'DartUtilities::toNativeVector<{native_array_element_type} >(args, {index}, {variable_name}, exception)'
         add_includes_for_type(native_array_element_type)
     else:
         ref_ptr_type = None
@@ -492,14 +518,17 @@ def dart_value_to_cpp_value_array_or_sequence(native_array_element_type, variabl
                                           variable_name=variable_name)
     return expression
 
-def dart_value_to_local_cpp_value(idl_type, interface_extended_attributes, extended_attributes,
-                                  variable_name, null_check, index=None, auto_scope=True):
+
+def dart_value_to_local_cpp_value(idl_type, extended_attributes, variable_name,
+                                  null_check, has_type_checking_interface,
+                                  index=None, auto_scope=True):
     """Returns an expression that converts a Dart value to a C++ value as a local value."""
     idl_type = idl_type.preprocessed_type
 
     cpp_value = dart_value_to_cpp_value(
-        idl_type, interface_extended_attributes, extended_attributes,
-        variable_name, null_check, index, auto_scope)
+        idl_type, extended_attributes, variable_name,
+        null_check, has_type_checking_interface,
+        index, auto_scope)
 
     return cpp_value
 
@@ -532,7 +561,8 @@ def preprocess_idl_type_and_value(idl_type, cpp_value, extended_attributes):
     """Returns IDL type and value, with preliminary type conversions applied."""
     idl_type = idl_type.preprocessed_type
     if idl_type.name == 'Promise':
-        idl_type = IdlType('ScriptValue')
+        idl_type = IdlType('ScriptPromise')
+
     # FIXME(vsm): V8 maps 'long long' and 'unsigned long long' to double
     # as they are not representable in ECMAScript.  Should we do the same?
 
@@ -559,6 +589,11 @@ def dart_conversion_type(idl_type, extended_attributes):
 
     # Composite types
     native_array_element_type = idl_type.native_array_element_type
+
+    # FIXME: Work around sequence behaving like an array.
+    if (not native_array_element_type) and type(idl_type.inner_type) is IdlSequenceType:
+        native_array_element_type = idl_type.inner_type.native_array_element_type
+
     if native_array_element_type:
         if native_array_element_type.is_interface_type:
             add_includes_for_type(native_array_element_type)
@@ -571,7 +606,9 @@ def dart_conversion_type(idl_type, extended_attributes):
         return 'int'
     if base_idl_type in CPP_UNSIGNED_TYPES or base_idl_type == 'unsigned long long':
         return 'unsigned'
-    if base_idl_type == 'DOMString':
+    if idl_type.is_string_type:
+        if idl_type.is_nullable:
+            return 'StringOrNull'
         if 'TreatReturnedNullStringAs' not in extended_attributes:
             return 'DOMString'
         treat_returned_null_string_as = extended_attributes['TreatReturnedNullStringAs']
@@ -625,6 +662,7 @@ DART_SET_RETURN_VALUE = {
     'array': 'Dart_SetReturnValue(args, {cpp_value})',
     'Date': 'Dart_SetReturnValue(args, {cpp_value})',
     'EventHandler': DART_FIX_ME,
+    'ScriptPromise': 'Dart_SetReturnValue(args, {cpp_value})',
     'ScriptValue': 'Dart_SetReturnValue(args, {cpp_value})',
     'SerializedScriptValue': DART_FIX_ME,
     # DOMWrapper
@@ -657,7 +695,7 @@ def dart_set_return_value(idl_type, cpp_value,
     idl_type, cpp_value = preprocess_idl_type_and_value(idl_type, cpp_value, extended_attributes)
     this_dart_conversion_type = idl_type.dart_conversion_type(extended_attributes)
     # SetReturn-specific overrides
-    if this_dart_conversion_type in ['Date', 'EventHandler', 'ScriptValue', 'SerializedScriptValue', 'array']:
+    if this_dart_conversion_type in ['Date', 'EventHandler', 'ScriptPromise', 'ScriptValue', 'SerializedScriptValue', 'array']:
         # Convert value to Dart and then use general Dart_SetReturnValue
         # FIXME(vsm): Why do we differ from V8 here? It doesn't have a
         # creation_context.
@@ -696,7 +734,6 @@ def dart_set_return_value_union(idl_type, cpp_value, extended_attributes=None,
     release: can be either False (False for all member types) or
              a sequence (list or tuple) of booleans (if specified individually).
     """
-
     return [
         # FIXME(vsm): Why do we use 'result' instead of cpp_value as V8?
         member_type.dart_set_return_value('result' + str(i),
@@ -734,6 +771,7 @@ CPP_VALUE_TO_DART_VALUE = {
     # Special cases
     'EventHandler': '-----OOPS TO DART-EVENT---',
     # We need to generate the NullCheck version in some cases.
+    'ScriptPromise': 'DartUtilities::scriptPromiseToDart({cpp_value})',
     'ScriptValue': 'DartUtilities::scriptValueToDart({cpp_value})',
     'SerializedScriptValue': 'DartUtilities::serializedScriptValueToDart({cpp_value})',
     # General
@@ -754,6 +792,75 @@ def cpp_value_to_dart_value(idl_type, cpp_value, creation_context='', extended_a
     return statement
 
 IdlTypeBase.cpp_value_to_dart_value = cpp_value_to_dart_value
+
+# FIXME(leafp) This is horrible, we should do better, but currently this is hard to do
+# in a nice way.  Best solution might be to extend DartStringAdapter to accomodate
+# initialization from constant strings, but better to do that once we're stable
+# on the bots so we can track any performance regression
+CPP_LITERAL_TO_DART_VALUE = {
+    'DOMString': {'nullptr': 'DartStringAdapter(DartStringPeer::nullString())',
+                  'String("")': 'DartStringAdapter(DartStringPeer::emptyString())',
+                  '*': 'DartUtilities::dartToString(DartUtilities::stringToDart({cpp_literal}), exception)'},
+    'ScalarValueString': {'nullptr': 'DartStringAdapter(DartStringPeer::nullString())',
+                          'String("")': 'DartStringAdapter(DartStringPeer::emptyString())',
+                          '*': 'DartUtilities::dartToScalarValueString(DartUtilities::stringToDart({cpp_literal}), exception)'},
+}
+
+
+def literal_cpp_value(idl_type, idl_literal):
+    """Converts an expression that is a valid C++ literal for this type."""
+    # FIXME: add validation that idl_type and idl_literal are compatible
+    literal_value = str(idl_literal)
+    base_type = idl_type.preprocessed_type.base_type
+    if base_type in CPP_UNSIGNED_TYPES:
+        return literal_value + 'u'
+    if base_type in CPP_LITERAL_TO_DART_VALUE:
+        if literal_value in CPP_LITERAL_TO_DART_VALUE[base_type]:
+            format_string = CPP_LITERAL_TO_DART_VALUE[base_type][literal_value]
+        else:
+            format_string = CPP_LITERAL_TO_DART_VALUE[base_type]['*']
+        return format_string.format(cpp_literal=literal_value)
+    return literal_value
+
+IdlType.literal_cpp_value = literal_cpp_value
+
+
+CPP_DEFAULT_VALUE_FOR_CPP_TYPE = {
+    'DOMString': 'DartStringAdapter(DartStringPeer::emptyString())',
+    'ByteString': 'DartStringAdapter(DartStringPeer::emptyString())',
+    'ScalarValueString': 'DartStringAdapter(DartStringPeer::emptyString())',
+    'boolean': 'false',
+    'float': '0.0f',
+    'unrestricted float': '0.0f',
+    'double': '0.0',
+    'unrestricted double': '0.0',
+    'byte': '0',
+    'octet': '0',
+    'short': '0',
+    'unsigned short': '0',
+    'long': '0',
+    'unsigned long': '0',
+    'long long': '0',
+    'unsigned long long': '0',
+    'Dictionary': 'Dictionary()',
+    'ScriptValue': 'DartUtilities::dartToScriptValueWithNullCheck(Dart_Null())',
+    'MediaQueryListListener': 'nullptr',
+    'NodeFilter': 'nullptr',
+    'SerializedScriptValue': 'nullptr',
+    'XPathNSResolver': 'nullptr',
+}
+
+
+def default_cpp_value_for_cpp_type(idl_type):
+    idl_type = idl_type.preprocessed_type
+    add_includes_for_type(idl_type)
+    base_idl_type = idl_type.base_type
+    if base_idl_type in CPP_DEFAULT_VALUE_FOR_CPP_TYPE:
+        return CPP_DEFAULT_VALUE_FOR_CPP_TYPE[base_idl_type]
+    if base_idl_type in NON_WRAPPER_TYPES:
+        return 'nullptr'
+    format_str = 'Dart{idl_type}::toNativeWithNullCheck(Dart_Null(), exception)'
+    return format_str.format(idl_type=idl_type)
 
 
 # Override idl_type.name to not suffix orNull to the name, in Dart we always
@@ -779,19 +886,8 @@ IdlType.name = property(dart_name)
 IdlUnionType.name = property(dart_name)
 
 
-def typechecked_interface(extended_attributes):
-    return ('TypeChecking' in extended_attributes and\
-            DartUtilities.extended_attribute_value_contains(extended_attributes['TypeChecking'], 'Interface'))
-
-
-def typechecked_argument(idl_type, interface_extended_attributes, extended_attributes):
-    return (idl_type.is_wrapper_type and
-            (typechecked_interface(interface_extended_attributes) or
-            (typechecked_interface(extended_attributes))))
-
-
 # If True use the WithNullCheck version when converting.
-def allow_null(idl_type, interface_extended_attributes, extended_attributes):
+def allow_null(idl_type, extended_attributes, has_type_checking_interface):
     if idl_type.base_type in ('DOMString', 'ByteString', 'ScalarValueString'):
         # This logic is in cpp_types in v8_types.py, since they handle
         # this using the V8StringResource type.  We handle it here
@@ -811,11 +907,25 @@ def allow_null(idl_type, interface_extended_attributes, extended_attributes):
         return False
     else:
         # This logic is implemented in the methods.cpp template in V8
-        if (idl_type.is_nullable or
-           (not typechecked_argument(idl_type, interface_extended_attributes, extended_attributes))):
+        if (idl_type.is_nullable or not has_type_checking_interface):
             return True
 
         if extended_attributes.get('Default') == 'Undefined':
             return True
 
         return False
+
+
+# If True use the WithEmptyCheck version when converting.
+def allow_empty(idl_type, extended_attributes):
+    if idl_type.base_type in ('DOMString', 'ByteString', 'ScalarValueString'):
+        # This logic is in cpp_types in v8_types.py, since they handle
+        # this using the V8StringResource type.  We handle it here
+        if (extended_attributes.get('TreatNullAs') == 'EmptyString' or
+            extended_attributes.get('TreatUndefinedAs') == 'EmptyString'):
+            return True
+
+        if extended_attributes.get('Default') == 'EmptyString':
+            return True
+
+    return False

@@ -39,7 +39,12 @@ from compute_interfaces_info_overall import compute_interfaces_info_overall, int
 from compiler import IdlCompilerDart
 
 # TODO(terry): Temporary solution list of IDLs to parse and IDL as dependencies.
-from idl_files import full_path_core_idl_files, full_path_core_dependency_idl_files, full_path_modules_idl_files, full_path_modules_dependency_idl_files
+from idl_files import full_path_core_idl_files,\
+                      full_path_core_dependency_idl_files,\
+                      full_path_modules_idl_files,\
+                      full_path_modules_dependency_idl_files,\
+                      full_path_core_dictionary_idl_files,\
+                      full_path_modules_dictionary_idl_files
 
 #from dart_tests import run_dart_tests
 
@@ -191,14 +196,17 @@ def main(argv):
         core_dependency_idls = full_path_core_dependency_idl_files()
         modules_idls = full_path_modules_idl_files()
         modules_dependency_idls = full_path_modules_dependency_idl_files()
+        core_dictionary_idls = full_path_core_dictionary_idl_files()
+        modules_dictionary_idls = full_path_modules_dictionary_idl_files()
 
         all_interfaces = core_idls + modules_idls
         all_dependencies = core_dependency_idls + modules_dependency_idls
-        all_files = all_interfaces + all_dependencies
+        all_dictionaries = core_dictionary_idls + modules_dictionary_idls
+        all_files = all_interfaces + all_dependencies + all_dictionaries
 
         # 2-stage computation: individual, then overall
         for idl_filename in all_files:
-            compute_info_individual(idl_filename, 'dart')
+            compute_info_individual(idl_filename)
         info_individuals = [info_individual()]
         compute_interfaces_info_overall(info_individuals)
 
@@ -214,7 +222,7 @@ def main(argv):
             print 'Output directory %s created' % build.output_directory
 
         # Compile IDLs
-        for filename in all_interfaces:
+        for filename in (all_dictionaries + all_interfaces):
             if not filename.endswith('.idl'):
                 continue
             if build.generate_from_idl(filename):

@@ -32,5 +32,5 @@
     RuntimeEnabled=WebMIDI,
 ] partial interface Navigator {
     // FIXMEDART: Remove the DartSuppress once Dart support Blink Promises.
-    [CallWith=ScriptState, DartSuppress] Promise requestMIDIAccess(optional Dictionary options);
+    [CallWith=ScriptState, DartSuppress] Promise requestMIDIAccess(optional MIDIOptions options);
 };
