@@ -24,8 +24,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+// http://www.w3.org/TR/SVG2/paths.html#InterfaceSVGPathSegLinetoVerticalRel
+
 [
     TypeChecking=Interface,
+    RuntimeEnabled=SVG1DOM,
+    MeasureAs=SVGPathSegDOM,
 ] interface SVGPathSegLinetoVerticalRel : SVGPathSeg {
     attribute float y;
 };

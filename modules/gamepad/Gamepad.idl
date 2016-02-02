@@ -32,7 +32,5 @@
     readonly attribute unsigned long long timestamp;
     readonly attribute DOMString mapping;
     readonly attribute double[] axes;
-// FIXMEDART: enable buttons for dart once we handle HeapVector propertly on
-// the Dart side of the bindings.
-    [DartSuppress] readonly attribute GamepadButton[] buttons;
+    readonly attribute GamepadButton[] buttons;
 };

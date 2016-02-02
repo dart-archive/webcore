@@ -68,15 +68,18 @@ def main(args):
             # Skip internal libraries - they should be indirectly imported via the public ones.
             if not name.startswith('_'):
                 snapshotScript.write('import \'dart:%(name)s\' as %(name)s;\n' % {'name': name})
+        snapshotScript.write('import \'dart:vmserviceio\';\n')
 
-    binarySnapshotFile = path(outputFilePath, 'DartSnapshot.bin')
+    binaryVmIsolateSnapshotFile = path(outputFilePath, 'DartVmIsolateSnapshot.bin')
+    binaryIsolateSnapshotFile = path(outputFilePath, 'DartIsolateSnapshot.bin')
 
     # Build a command to generate the snapshot bin file.
     command = [
         'python',
         path(dartPath, 'runtime', 'tools', 'create_snapshot_bin.py'),
         '--executable=%s' % path(genSnapshotBinPath),
-        '--output_bin=%s' % binarySnapshotFile,
+        '--vm_output_bin=%s' % binaryVmIsolateSnapshotFile,
+        '--output_bin=%s' % binaryIsolateSnapshotFile,
         '--script=%s' % snapshotScriptName,
     ]
     command.extend(['--url_mapping=dart:%s,%s' % lib for lib in snapshottedLibs])
@@ -93,7 +96,8 @@ def main(args):
         'python',
         path(dartPath, 'runtime', 'tools', 'create_snapshot_file.py'),
         '--input_cc=%s' % dartSnapshotTemplateFile,
-        '--input_bin=%s' % binarySnapshotFile,
+        '--vm_input_bin=%s' % binaryVmIsolateSnapshotFile,
+        '--input_bin=%s' % binaryIsolateSnapshotFile,
         '--output=%s' % path(outputFilePath, 'DartSnapshot.bytes'),
     ]
 
@@ -104,7 +108,7 @@ def main(args):
     if (pipe.returncode != 0):
         raise Exception('Snapshot file generation failed: %s/%s' % (out, error))
 
-    snapshotSizeInBytes = os.path.getsize(binarySnapshotFile)
+    snapshotSizeInBytes = os.path.getsize(binaryIsolateSnapshotFile)
     productDir = os.path.dirname(genSnapshotBinPath)
     snapshotSizeOutputPath = os.path.join(productDir, 'snapshot-size.txt')
     with file(snapshotSizeOutputPath, 'w') as snapshotSizeFile:

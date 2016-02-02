@@ -27,9 +27,12 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+// Console API (non-standard but widely implemented in some form)
+// https://developer.chrome.com/devtools/docs/console-api
+
 [
     NoInterfaceObject,
-    WillBeGarbageCollected,
+    GarbageCollected,
 ] interface ConsoleBase {
     [CallWith=(ScriptArguments,ScriptState)] void debug();
     [CallWith=(ScriptArguments,ScriptState)] void error();
@@ -40,7 +43,7 @@
     [CallWith=(ScriptArguments,ScriptState)] void dirxml();
     [CallWith=(ScriptArguments,ScriptState)] void table();
     [CallWith=(ScriptArguments,ScriptState)] void trace();
-    [CallWith=(ScriptArguments,ScriptState), ImplementedAs=assertCondition, DartName=assertCondition] void assert([Default=Undefined] optional boolean condition);
+    [CallWith=(ScriptArguments,ScriptState), ImplementedAs=assertCondition] void assert([Default=Undefined] optional boolean condition);
     [CallWith=(ScriptArguments,ScriptState)] void count();
     [DeprecateAs=ConsoleMarkTimeline] void markTimeline(optional DOMString title = null);
 

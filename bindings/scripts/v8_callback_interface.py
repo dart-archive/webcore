@@ -79,8 +79,7 @@ def callback_interface_context(callback_interface):
         'v8_class': v8_utilities.v8_class_name(callback_interface),
         'header_includes': set(CALLBACK_INTERFACE_H_INCLUDES),
         'methods': [method_context(operation)
-                    for operation in callback_interface.operations
-                    if not v8_utilities.dart_custom_method(operation.extended_attributes)],
+                    for operation in callback_interface.operations],
     }
 
 

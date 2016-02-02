@@ -51,7 +51,7 @@
     [RaisesException] void updateIce(optional Dictionary configuration, optional Dictionary mediaConstraints);
 
     // DEPRECATED
-    [RaisesException, DartSuppress] void addIceCandidate(RTCIceCandidate candidate);
+    [RaisesException] void addIceCandidate(RTCIceCandidate candidate);
 
     [RaisesException] void addIceCandidate(RTCIceCandidate candidate, VoidCallback successCallback, RTCErrorCallback failureCallback);
 

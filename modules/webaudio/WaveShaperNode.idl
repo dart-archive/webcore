@@ -31,8 +31,6 @@ enum OverSampleType {
 [
     Conditional=WEB_AUDIO
 ] interface WaveShaperNode : AudioNode {
-    // FIXMEDART(ager): Auto-generate this custom method when the info about
-    // retaining typed arrays is in the IDL.
-    [DartCustom=Setter] attribute Float32Array curve;
-    [RaisesException=Setter] attribute OverSampleType oversample;
+    [RaisesException=Setter] attribute Float32Array curve;
+    attribute OverSampleType oversample;
 };

@@ -30,6 +30,4 @@
     attribute EventHandler onaudioprocess;
 
     readonly attribute long bufferSize;
-
-    [DartCustom=New] void _setEventListener(EventListener eventListener);
 };
