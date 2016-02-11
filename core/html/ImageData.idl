@@ -40,5 +40,6 @@
     readonly attribute long width;
     readonly attribute long height;
     // TODO(philipj): Expose data.
-    // readonly attribute Uint8ClampedArray data;
+    // FIXMEDART: Uncomment - we need this property.
+    readonly attribute Uint8ClampedArray data;
 };
