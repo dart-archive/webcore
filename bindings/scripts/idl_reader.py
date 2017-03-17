@@ -75,6 +75,7 @@ def validate_blink_idl_definitions(idl_filename, idl_file_basename,
 
 
 class IdlReader(object):
+    # FIXMEDART: Added multi_interface argument and property for IdlReader class.
     def __init__(self, interfaces_info=None, outputdir='', multi_interface=False):
         self.multi_interface = multi_interface
         self.extended_attribute_validator = IDLExtendedAttributeValidator()
@@ -114,6 +115,7 @@ class IdlReader(object):
         idl_file_basename, _ = os.path.splitext(os.path.basename(idl_filename))
         definitions = IdlDefinitions(idl_file_basename, ast)
 
+        # FIXMEDART: Added multi_interface.
         if not self.multi_interface:
             validate_blink_idl_definitions(idl_filename, idl_file_basename, definitions)
         else:

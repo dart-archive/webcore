@@ -43,5 +43,6 @@
     // boolean taintEnabled(); // constant false
     readonly attribute DOMString userAgent;
 
+    // FIXMEDART: Added for Dart
     readonly attribute boolean dartEnabled;
 };
