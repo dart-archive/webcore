@@ -47,12 +47,14 @@ import os
 import posixpath
 import sys
 
+from idl_compiler import idl_filename_to_interface_name
 from idl_definitions import Visitor
 from idl_reader import IdlReader
-from utilities import get_file_contents, read_file_to_list, idl_filename_to_interface_name, idl_filename_to_component, write_pickle_file, get_interface_extended_attributes_from_idl, is_callback_interface_from_idl
+from utilities import get_file_contents, read_file_to_list, idl_filename_to_interface_name, idl_filename_to_component, write_pickle_file, get_interface_extended_attributes_from_idl, is_callback_interface_from_idl, merge_dict_recursively
 
 module_path = os.path.dirname(__file__)
 source_path = os.path.normpath(os.path.join(module_path, os.pardir, os.pardir))
+gen_path = os.path.join('gen', 'blink')
 
 
 class IdlBadFilenameError(Exception):
@@ -84,9 +86,9 @@ def parse_options():
 # Computations
 ################################################################################
 
-def relative_dir_posix(idl_filename):
+def relative_dir_posix(idl_filename, base_path):
     """Returns relative path to the directory of idl_file in POSIX format."""
-    relative_path_local = os.path.relpath(idl_filename, source_path)
+    relative_path_local = os.path.relpath(idl_filename, base_path)
     relative_dir_local = os.path.dirname(relative_path_local)
     return relative_dir_local.replace(os.path.sep, posixpath.sep)
 
@@ -97,11 +99,13 @@ def include_path(idl_filename, implemented_as=None):
     POSIX format is used for consistency of output, so reference tests are
     platform-independent.
     """
-    relative_dir = relative_dir_posix(idl_filename)
+    if idl_filename.startswith(gen_path):
+        relative_dir = relative_dir_posix(idl_filename, gen_path)
+    else:
+        relative_dir = relative_dir_posix(idl_filename, source_path)
 
     # IDL file basename is used even if only a partial interface file
-    idl_file_basename, _ = os.path.splitext(os.path.basename(idl_filename))
-    cpp_class_name = implemented_as or idl_file_basename
+    cpp_class_name = implemented_as or idl_filename_to_interface_name(idl_filename)
 
     return posixpath.join(relative_dir, cpp_class_name + '.h')
 
@@ -128,6 +132,13 @@ def get_put_forward_interfaces_from_definition(definition):
     return sorted(set(attribute.idl_type.base_type
                       for attribute in definition.attributes
                       if 'PutForwards' in attribute.extended_attributes))
+
+
+def get_unforgeable_attributes_from_definition(definition):
+    if 'Unforgeable' in definition.extended_attributes:
+        return sorted(definition.attributes)
+    return sorted(attribute for attribute in definition.attributes
+                  if 'Unforgeable' in attribute.extended_attributes)
 
 
 def collect_union_types_from_definitions(definitions):
@@ -172,6 +183,34 @@ class InterfaceInfoCollector(object):
     def collect_info(self, idl_filename):
         """Reads an idl file and collects information which is required by the
         binding code generation."""
+        def collect_unforgeable_attributes(definition, idl_filename):
+            """Collects [Unforgeable] attributes so that we can define them on
+            sub-interfaces later.  The resulting structure is as follows.
+                interfaces_info[interface_name] = {
+                    'unforgeable_attributes': {
+                        'core': [IdlAttribute, ...],
+                        'modules': [IdlAttribute, ...],
+                    },
+                    ...
+                }
+            """
+            interface_info = {}
+            unforgeable_attributes = get_unforgeable_attributes_from_definition(definition)
+            if not unforgeable_attributes:
+                return interface_info
+
+            if definition.is_partial:
+                interface_basename = idl_filename_to_interface_name(idl_filename)
+                # TODO(yukishiino): [PartialInterfaceImplementedAs] is treated
+                # in interface_dependency_resolver.transfer_extended_attributes.
+                # Come up with a better way to keep them consistent.
+                for attr in unforgeable_attributes:
+                    attr.extended_attributes['PartialInterfaceImplementedAs'] = definition.extended_attributes.get('ImplementedAs', interface_basename)
+            component = idl_filename_to_component(idl_filename)
+            interface_info['unforgeable_attributes'] = {}
+            interface_info['unforgeable_attributes'][component] = unforgeable_attributes
+            return interface_info
+
         definitions = self.reader.read_idl_file(idl_filename)
 
         this_union_types = collect_union_types_from_definitions(definitions)
@@ -208,6 +247,15 @@ class InterfaceInfoCollector(object):
         else:
             return
 
+        if definition.name not in self.interfaces_info:
+            self.interfaces_info[definition.name] = {}
+
+        # Remember [Unforgeable] attributes.
+        if definitions.interfaces:
+            merge_dict_recursively(self.interfaces_info[definition.name],
+                                   collect_unforgeable_attributes(definition, idl_filename))
+
+        component = idl_filename_to_component(idl_filename)
         extended_attributes = definition.extended_attributes
         implemented_as = extended_attributes.get('ImplementedAs')
         full_path = os.path.realpath(idl_filename)
@@ -219,10 +267,22 @@ class InterfaceInfoCollector(object):
             if this_include_path:
                 partial_include_paths.append(this_include_path)
             if this_union_types:
-                component = idl_filename_to_component(idl_filename)
                 partial_include_paths.append(
                     'bindings/%s/v8/UnionTypes%s.h' % (component, component.capitalize()))
             self.add_paths_to_partials_dict(definition.name, full_path, partial_include_paths)
+            # Collects C++ header paths which should be included from generated
+            # .cpp files.  The resulting structure is as follows.
+            #   interfaces_info[interface_name] = {
+            #       'cpp_includes': {
+            #           'core': set(['core/foo/Foo.h', ...]),
+            #           'modules': set(['modules/bar/Bar.h', ...]),
+            #       },
+            #       ...
+            #   }
+            if this_include_path:
+                merge_dict_recursively(
+                    self.interfaces_info[definition.name],
+                    {'cpp_includes': {component: set([this_include_path])}})
             return
 
         # 'implements' statements can be included in either the file for the
@@ -244,9 +304,9 @@ class InterfaceInfoCollector(object):
             # 'implements': http://crbug.com/360435
             'is_legacy_treat_as_partial_interface': 'LegacyTreatAsPartialInterface' in extended_attributes,
             'parent': definition.parent,
-            'relative_dir': relative_dir_posix(idl_filename),
+            'relative_dir': relative_dir_posix(idl_filename, source_path),
         })
-        self.interfaces_info[definition.name] = interface_info
+        merge_dict_recursively(self.interfaces_info[definition.name], interface_info)
 
     def get_info_as_dict(self):
         """Returns info packaged as a dict."""

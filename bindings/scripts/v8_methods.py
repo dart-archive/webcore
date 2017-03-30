@@ -48,8 +48,6 @@ from v8_utilities import (has_extended_attribute_value, is_unforgeable,
 CUSTOM_REGISTRATION_EXTENDED_ATTRIBUTES = frozenset([
     'DoNotCheckSecurity',
     'DoNotCheckSignature',
-    'NotEnumerable',
-    'Unforgeable',
 ])
 
 
@@ -75,13 +73,6 @@ def method_context(interface, method, is_visible=True):
 
     this_cpp_value = cpp_value(interface, method, len(arguments))
 
-    def function_template():
-        if is_static:
-            return 'functionTemplate'
-        if is_unforgeable(interface, method):
-            return 'instanceTemplate'
-        return 'prototypeTemplate'
-
     is_implemented_in_private_script = 'ImplementedInPrivateScript' in extended_attributes
     if is_implemented_in_private_script:
         includes.add('bindings/core/v8/PrivateScriptRunner.h')
@@ -93,28 +84,26 @@ def method_context(interface, method, is_visible=True):
 
     is_call_with_script_arguments = has_extended_attribute_value(method, 'CallWith', 'ScriptArguments')
     if is_call_with_script_arguments:
-        includes.update(['bindings/core/v8/ScriptCallStackFactory.h',
+        includes.update(['bindings/core/v8/ScriptCallStack.h',
                          'core/inspector/ScriptArguments.h'])
     is_call_with_script_state = has_extended_attribute_value(method, 'CallWith', 'ScriptState')
     is_call_with_this_value = has_extended_attribute_value(method, 'CallWith', 'ThisValue')
     if is_call_with_script_state or is_call_with_this_value:
         includes.add('bindings/core/v8/ScriptState.h')
-    is_check_security_for_node = 'CheckSecurity' in extended_attributes
-    if is_check_security_for_node:
+
+    # [CheckSecurity]
+    is_do_not_check_security = 'DoNotCheckSecurity' in extended_attributes
+    is_check_security_for_receiver = (
+        has_extended_attribute_value(interface, 'CheckSecurity', 'Receiver') and
+        not is_do_not_check_security)
+    is_check_security_for_return_value = (
+        has_extended_attribute_value(method, 'CheckSecurity', 'ReturnValue'))
+    if is_check_security_for_receiver or is_check_security_for_return_value:
         includes.add('bindings/core/v8/BindingSecurity.h')
+
     is_custom_element_callbacks = 'CustomElementCallbacks' in extended_attributes
     if is_custom_element_callbacks:
         includes.add('core/dom/custom/CustomElementProcessingStack.h')
-
-    is_do_not_check_security = 'DoNotCheckSecurity' in extended_attributes
-
-    is_check_security_for_frame = (
-        has_extended_attribute_value(interface, 'CheckSecurity', 'Frame') and
-        not is_do_not_check_security)
-
-    is_check_security_for_window = (
-        has_extended_attribute_value(interface, 'CheckSecurity', 'Window') and
-        not is_do_not_check_security)
 
     is_raises_exception = 'RaisesException' in extended_attributes
     is_custom_call_prologue = has_extended_attribute_value(method, 'Custom', 'CallPrologue')
@@ -124,17 +113,27 @@ def method_context(interface, method, is_visible=True):
         includes.add('bindings/core/v8/SerializedScriptValueFactory.h')
         includes.add('core/dom/DOMArrayBuffer.h')
         includes.add('core/dom/MessagePort.h')
+        includes.add('core/frame/ImageBitmap.h')
 
     if 'LenientThis' in extended_attributes:
         raise Exception('[LenientThis] is not supported for operations.')
 
+    if 'RuntimeEnabled' in extended_attributes:
+        includes.add('platform/RuntimeEnabledFeatures.h')
+
+    if 'OriginTrialEnabled' in extended_attributes:
+        includes.add('core/inspector/ConsoleMessage.h')
+        includes.add('core/origin_trials/OriginTrials.h')
+
+    argument_contexts = [
+        argument_context(interface, method, argument, index, is_visible=is_visible)
+        for index, argument in enumerate(arguments)]
+
     return {
         'activity_logging_world_list': v8_utilities.activity_logging_world_list(method),  # [ActivityLogging]
-        'arguments': [argument_context(interface, method, argument, index, is_visible=is_visible)
-                      for index, argument in enumerate(arguments)],
+        'arguments': argument_contexts,
         'argument_declarations_for_private_script':
             argument_declarations_for_private_script(interface, method),
-        'conditional_string': v8_utilities.conditional_string(method),
         'cpp_type': (v8_types.cpp_template_type('Nullable', idl_type.cpp_type)
                      if idl_type.is_explicit_nullable else idl_type.cpp_type),
         'cpp_value': this_cpp_value,
@@ -144,27 +143,28 @@ def method_context(interface, method, is_visible=True):
                 extended_attributes.iterkeys()),
         'deprecate_as': v8_utilities.deprecate_as(method),  # [DeprecateAs]
         'exposed_test': v8_utilities.exposed(method, interface),  # [Exposed]
-        'function_template': function_template(),
+        # TODO(yukishiino): Retire has_custom_registration flag.  Should be
+        # replaced with V8DOMConfiguration::PropertyLocationConfiguration.
         'has_custom_registration':
-            is_static or
-            is_unforgeable(interface, method) or
             v8_utilities.has_extended_attribute(
                 method, CUSTOM_REGISTRATION_EXTENDED_ATTRIBUTES),
         'has_exception_state':
             is_raises_exception or
-            is_check_security_for_frame or
-            is_check_security_for_window or
+            is_check_security_for_receiver or
             any(argument for argument in arguments
                 if (argument.idl_type.name == 'SerializedScriptValue' or
                     argument_conversion_needs_exception_state(method, argument))),
+        'has_optional_argument_without_default_value':
+            any(True for argument_context in argument_contexts
+                if argument_context['is_optional_without_default_value']),
         'idl_type': idl_type.base_type,
+        'is_origin_trial_enabled': v8_utilities.origin_trial_enabled_function(method) or v8_utilities.origin_trial_enabled_function(interface),  # [OriginTrialEnabled]
         'is_call_with_execution_context': has_extended_attribute_value(method, 'CallWith', 'ExecutionContext'),
         'is_call_with_script_arguments': is_call_with_script_arguments,
         'is_call_with_script_state': is_call_with_script_state,
         'is_call_with_this_value': is_call_with_this_value,
-        'is_check_security_for_frame': is_check_security_for_frame,
-        'is_check_security_for_node': is_check_security_for_node,
-        'is_check_security_for_window': is_check_security_for_window,
+        'is_check_security_for_receiver': is_check_security_for_receiver,
+        'is_check_security_for_return_value': is_check_security_for_return_value,
         'is_custom': 'Custom' in extended_attributes and
             not (is_custom_call_prologue or is_custom_call_epilogue),
         'is_custom_call_prologue': is_custom_call_prologue,
@@ -179,8 +179,8 @@ def method_context(interface, method, is_visible=True):
         'is_per_world_bindings': 'PerWorldBindings' in extended_attributes,
         'is_post_message': is_post_message,
         'is_raises_exception': is_raises_exception,
-        'is_read_only': is_unforgeable(interface, method),
         'is_static': is_static,
+        'is_unforgeable': is_unforgeable(interface, method),
         'is_variadic': arguments and arguments[-1].is_variadic,
         'measure_as': v8_utilities.measure_as(method, interface),  # [MeasureAs]
         'name': name,
@@ -195,13 +195,14 @@ def method_context(interface, method, is_visible=True):
         'on_interface': v8_utilities.on_interface(interface, method),
         'on_prototype': v8_utilities.on_prototype(interface, method),
         'only_exposed_to_private_script': is_only_exposed_to_private_script,
+        'origin_trial_enabled': v8_utilities.origin_trial_enabled_function(method),  # [OriginTrialEnabled]
+        'origin_trial_enabled_per_interface': v8_utilities.origin_trial_enabled_function(interface),  # [OriginTrialEnabled]
         'private_script_v8_value_to_local_cpp_value': idl_type.v8_value_to_local_cpp_value(
             extended_attributes, 'v8Value', 'cppValue', isolate='scriptState->isolate()', bailout_return_value='false'),
         'property_attributes': property_attributes(interface, method),
         'returns_promise': method.returns_promise,
         'runtime_enabled_function': v8_utilities.runtime_enabled_function_name(method),  # [RuntimeEnabled]
         'should_be_exposed_to_script': not (is_implemented_in_private_script and is_only_exposed_to_private_script),
-        'signature': 'v8::Local<v8::Signature>()' if is_static or 'DoNotCheckSignature' in extended_attributes else 'defaultSignature',
         'use_output_parameter_for_result': idl_type.use_output_parameter_for_result,
         'use_local_result': use_local_result(method),
         'v8_set_return_value': v8_set_return_value(interface.name, method, this_cpp_value),
@@ -219,21 +220,21 @@ def argument_context(interface, method, argument, index, is_visible=True):
     this_cpp_value = cpp_value(interface, method, index)
     is_variadic_wrapper_type = argument.is_variadic and idl_type.is_wrapper_type
 
-    # [TypeChecking=Interface] / [LegacyInterfaceTypeChecking]
+    # [LegacyInterfaceTypeChecking]
     has_type_checking_interface = (
         not is_legacy_interface_type_checking(interface, method) and
         idl_type.is_wrapper_type)
 
     if ('ImplementedInPrivateScript' in extended_attributes and
-        not idl_type.is_wrapper_type and
-        not idl_type.is_basic_type):
+            not idl_type.is_wrapper_type and
+            not idl_type.is_basic_type):
         raise Exception('Private scripts supports only primitive types and DOM wrappers.')
 
     set_default_value = argument.set_default_value
     this_cpp_type = idl_type.cpp_type_args(extended_attributes=extended_attributes,
                                            raw_type=True,
                                            used_as_variadic_argument=argument.is_variadic)
-    return {
+    context = {
         'cpp_type': (
             v8_types.cpp_template_type('Nullable', this_cpp_type)
             if idl_type.is_explicit_nullable and not argument.is_variadic
@@ -270,6 +271,14 @@ def argument_context(interface, method, argument, index, is_visible=True):
         'v8_set_return_value_for_main_world': v8_set_return_value(interface.name, method, this_cpp_value, for_main_world=True),
         'v8_value_to_local_cpp_value': v8_value_to_local_cpp_value(method, argument, index),
     }
+    context.update({
+        'is_optional_without_default_value':
+            context['is_optional'] and
+            not context['has_default'] and
+            not context['is_dictionary'] and
+            not context['is_callback_interface'],
+    })
+    return context
 
 
 def argument_declarations_for_private_script(interface, method):
@@ -314,8 +323,8 @@ def cpp_value(interface, method, number_of_arguments):
     # static member functions, which for instance members (non-static members)
     # take *impl as their first argument
     if ('PartialInterfaceImplementedAs' in method.extended_attributes and
-        not 'ImplementedInPrivateScript' in method.extended_attributes and
-        not method.is_static):
+            'ImplementedInPrivateScript' not in method.extended_attributes and
+            not method.is_static):
         cpp_arguments.append('*impl')
     cpp_arguments.extend(cpp_argument(argument) for argument in arguments)
 
@@ -323,8 +332,8 @@ def cpp_value(interface, method, number_of_arguments):
         if method.idl_type.name != 'void':
             cpp_arguments.append('&result')
     elif ('RaisesException' in method.extended_attributes or
-        (method.is_constructor and
-         has_extended_attribute_value(interface, 'RaisesException', 'Constructor'))):
+          (method.is_constructor and
+           has_extended_attribute_value(interface, 'RaisesException', 'Constructor'))):
         cpp_arguments.append('exceptionState')
 
     # If a method returns an IDL dictionary or union type, the return value is
@@ -354,8 +363,8 @@ def v8_set_return_value(interface_name, method, cpp_value, for_main_world=False)
         return None
 
     if ('ImplementedInPrivateScript' in extended_attributes and
-        not idl_type.is_wrapper_type and
-        not idl_type.is_basic_type):
+            not idl_type.is_wrapper_type and
+            not idl_type.is_basic_type):
         raise Exception('Private scripts supports only primitive types and DOM wrappers.')
 
     release = False
@@ -412,7 +421,7 @@ def v8_value_to_local_cpp_value(method, argument, index, return_promise=False, r
 # Auxiliary functions
 ################################################################################
 
-# [NotEnumerable]
+# [NotEnumerable], [Unforgeable]
 def property_attributes(interface, method):
     extended_attributes = method.extended_attributes
     property_attributes_list = []
@@ -420,8 +429,7 @@ def property_attributes(interface, method):
         property_attributes_list.append('v8::DontEnum')
     if is_unforgeable(interface, method):
         property_attributes_list.append('v8::ReadOnly')
-    if property_attributes_list:
-        property_attributes_list.insert(0, 'v8::DontDelete')
+        property_attributes_list.append('v8::DontDelete')
     return property_attributes_list
 
 

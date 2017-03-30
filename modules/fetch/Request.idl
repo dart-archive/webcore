@@ -13,25 +13,26 @@ enum RequestContext {
     "prefetch", "script", "serviceworker", "sharedworker",
     "subresource", "style", "track", "video", "worker", "xmlhttprequest", "xslt"
 };
-enum RequestMode { "same-origin", "no-cors", "cors" };
+enum RequestMode { "navigate", "same-origin", "no-cors", "cors" };
 enum RequestCredentials { "omit", "same-origin", "include" };
+enum RequestRedirect { "follow", "error", "manual" };
 
 [
     Constructor(RequestInfo input, optional Dictionary requestInitDict),
     ConstructorCallWith=ScriptState,
     Exposed=(Window,Worker),
     RaisesException=Constructor,
-    ActiveDOMObject,
+    DependentLifetime,
     GarbageCollected,
-    TypeChecking=Interface,
 ] interface Request {
     readonly attribute ByteString method;
     readonly attribute USVString url;
     readonly attribute Headers headers;
-    [DeprecateAs=FetchAPIRequestContext] readonly attribute RequestContext context;
     readonly attribute DOMString referrer;
     readonly attribute RequestMode mode;
     readonly attribute RequestCredentials credentials;
+    readonly attribute RequestRedirect redirect;
+    readonly attribute DOMString integrity;
 
     [RaisesException] Request clone();
 };

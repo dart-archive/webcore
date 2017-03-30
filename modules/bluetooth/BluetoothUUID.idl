@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// https://webbluetoothcg.github.io/web-bluetooth/#idl-def-bluetoothuuid
+// https://webbluetoothchrome.github.io/web-bluetooth/#idl-def-bluetoothuuid
 
 // Implement BluetoothUUID: http://crbug.com/491441
 // Significant TODOs remain in BluetoothUUID.cpp.
@@ -10,6 +10,8 @@
 [
     GarbageCollected,
     RuntimeEnabled=WebBluetooth,
+    // TODO(https://crbug.com/584113) Enable Web Bluetooth Experiment.
+    // OriginTrialEnabled=WebBluetooth,
 ] interface BluetoothUUID {
     [RaisesException] static UUID getService((DOMString or unsigned long) name);
     [RaisesException] static UUID getCharacteristic((DOMString or unsigned long) name);

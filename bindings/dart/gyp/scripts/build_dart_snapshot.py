@@ -78,8 +78,9 @@ def main(args):
         'python',
         path(dartPath, 'runtime', 'tools', 'create_snapshot_bin.py'),
         '--executable=%s' % path(genSnapshotBinPath),
+        '--snapshot_kind=core',
         '--vm_output_bin=%s' % binaryVmIsolateSnapshotFile,
-        '--output_bin=%s' % binaryIsolateSnapshotFile,
+        '--isolate_output_bin=%s' % binaryIsolateSnapshotFile,
         '--script=%s' % snapshotScriptName,
     ]
     command.extend(['--url_mapping=dart:%s,%s' % lib for lib in snapshottedLibs])

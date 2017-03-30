@@ -15,10 +15,10 @@ enum ContextFrameType {
     Exposed=ServiceWorker,
     RuntimeEnabled=ServiceWorkerClientAttributes,
     GarbageCollected,
-    TypeChecking=Interface,
     ImplementedAs=ServiceWorkerWindowClient,
 ] interface WindowClient : Client {
     readonly attribute VisibilityState visibilityState;
     readonly attribute boolean focused;
     [CallWith=ScriptState] Promise<WindowClient> focus();
+    [RuntimeEnabled=ServiceWorkerWindowClientNavigate, CallWith=ScriptState] Promise<WindowClient> navigate(USVString url);
 };

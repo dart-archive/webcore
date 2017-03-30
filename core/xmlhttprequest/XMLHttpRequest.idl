@@ -41,11 +41,9 @@ enum XMLHttpRequestResponseType {
 // TODO(philipj): Most DOMString types in the XMLHttpRequest interface should be
 // either ByteString or USVString.
 [
-    ActiveDOMObject,
+    DependentLifetime,
     Constructor,
     ConstructorCallWith=ScriptState,
-    // TODO(philipj): The spec has Exposed=(Window,Worker)
-    // https://github.com/whatwg/xhr/issues/19
     Exposed=(Window,DedicatedWorker,SharedWorker)
 ] interface XMLHttpRequest : XMLHttpRequestEventTarget {
     // event handler

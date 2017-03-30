@@ -38,11 +38,11 @@ enum IDBRequestReadyState {
 
 [
     Exposed=(Window,Worker),
-    ActiveDOMObject,
+    DependentLifetime,
     GarbageCollected,
 ] interface IDBRequest : EventTarget {
     [RaisesException=Getter, CachedAttribute=isResultDirty] readonly attribute any result;
-    [RaisesException=Getter, Measure] readonly attribute DOMError error;
+    [RaisesException=Getter] readonly attribute DOMException error;
 
     readonly attribute any source;
     readonly attribute IDBTransaction transaction;

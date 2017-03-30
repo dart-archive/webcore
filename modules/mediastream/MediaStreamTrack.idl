@@ -24,16 +24,17 @@
 
 [
     GarbageCollected,
-    ActiveDOMObject
+    DependentLifetime
 ] interface MediaStreamTrack : EventTarget {
     readonly attribute DOMString kind;
     readonly attribute DOMString id;
     readonly attribute DOMString label;
     attribute boolean enabled;
     readonly attribute boolean muted;
+    readonly attribute boolean remote;
     readonly attribute DOMString readyState;
 
-    [CallWith=ExecutionContext, RaisesException, MeasureAs=MediaStreamTrackGetSources] static void getSources(MediaStreamTrackSourcesCallback callback);
+    [CallWith=ExecutionContext, RaisesException, DeprecateAs=MediaStreamTrackGetSources] static void getSources(MediaStreamTrackSourcesCallback callback);
     [ImplementedAs=stopTrack, RaisesException] void stop();
     [CallWith=ExecutionContext] MediaStreamTrack clone();
 

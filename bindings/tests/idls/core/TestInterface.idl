@@ -32,21 +32,18 @@
 // Also used as a target by TestObject
 
 [
-    ActiveDOMObject,
-    Conditional=CONDITION,
+    DependentLifetime,
     Custom=LegacyCallAsFunction,
     DoNotCheckConstants,
     ImplementedAs=TestInterfaceImplementation,
     Iterable,
-    Measure,
+    OriginTrialEnabled=OriginTrialFeatureName,
     RuntimeEnabled=FeatureName,
     SetWrapperReferenceTo(TestInterface referencedName),
-    TypeChecking=Interface,
     Exposed=(Worker,Window),
 ] interface TestInterface : TestInterfaceEmpty {
     // members needed to test [ImplementedAs], as this affect attribute
-    // configuration and method configuration, and [TypeChecking]
-    // constants also needed for [DoNotCheckConstants]
+    // configuration and method configuration
     const unsigned long UNSIGNED_LONG = 0;
     [Reflect=CONST_CPP] const short CONST_JAVASCRIPT = 1;
 
@@ -60,8 +57,13 @@
     attribute unrestricted float unrestrictedFloatAttribute;
     attribute TestEnum testEnumAttribute;
     attribute DOMStringOrDouble stringOrDoubleAttribute;
+    [RuntimeEnabled=FeatureName] attribute long conditionalLongAttribute;
+    [RuntimeEnabled=FeatureName] readonly attribute long conditionalReadOnlyLongAttribute;
     static attribute DOMString staticStringAttribute;
     static attribute TestInterface staticReturnDOMWrapperAttribute;
+    static readonly attribute DOMString staticReadOnlyStringAttribute;
+    static readonly attribute TestInterface staticReadOnlyReturnDOMWrapperAttribute;
+    [RuntimeEnabled=FeatureName] static readonly attribute long staticConditionalReadOnlyLongAttribute;
     [LegacyInterfaceTypeChecking] attribute TestInterfaceEmpty legacyInterfaceTypeCheckingAttribute;
 
     void voidMethodTestInterfaceEmptyArg(TestInterfaceEmpty testInterfaceEmptyArg);
