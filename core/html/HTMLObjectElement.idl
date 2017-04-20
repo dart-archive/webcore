@@ -22,7 +22,9 @@
 
 // TODO(yukishiino): HTMLObjectElement should not have [OverrideBuiltins].
 [
-    Custom=LegacyCallAsFunction,
+// FIXMEDART: TODO(terry): Needed to remove Custom=LegacyCallAsFunction from Embed and Object
+//                         otherwise an anonymous function is returned.
+//    Custom=LegacyCallAsFunction,
     OverrideBuiltins,
 ] interface HTMLObjectElement : HTMLElement {
     [Reflect, URL] attribute DOMString data;
