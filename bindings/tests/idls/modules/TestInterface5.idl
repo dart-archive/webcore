@@ -32,15 +32,16 @@
 // Also used as a target by TestObject
 
 enum TestEnumModules { "EnumModulesValue1", "EnumModulesValue2" };
+callback VoidCallbackFunctionModules = void ();
 
 [
+    ActiveScriptWrappable,
     DependentLifetime,
     Custom=LegacyCallAsFunction,
     DoNotCheckConstants,
     ImplementedAs=TestInterface5Implementation,
     RuntimeEnabled=FeatureName,
-    SetWrapperReferenceTo(TestInterface5 referencedName),
-    Exposed=(Worker,Window),
+    Exposed=(Worker,Window)
 ] interface TestInterface5 : TestInterfaceEmpty {
     // members needed to test [ImplementedAs], as this affect attribute
     // configuration and method configuration
@@ -65,10 +66,12 @@ enum TestEnumModules { "EnumModulesValue1", "EnumModulesValue2" };
     setter DOMString (unsigned long index, DOMString value);
     deleter boolean (unsigned long index);
 
+    // iterable<V> needs a "length" property accompanying the indexed property
+    // operations above.
+    readonly attribute unsigned long length;
+
     // Anonymous named property operations
     getter DOMString (DOMString name);
-    setter DOMString (DOMString name, DOMString value);
-    deleter boolean (DOMString name);
 
     [NotEnumerable] stringifier;
 
@@ -90,6 +93,10 @@ enum TestEnumModules { "EnumModulesValue1", "EnumModulesValue2" };
     // Union types
     void voidMethodBooleanOrDOMStringArg((boolean or DOMString) arg);
     void voidMethodDoubleOrDOMStringArg((double or DOMString) arg);
+
+    // Callback functions
+    void voidMethodVoidExperimentalCallbackFunction(VoidExperimentalCallbackFunction arg);
+    void voidMethodVoidCallbackFunctionModulesArg(VoidCallbackFunctionModules arg);
 
     iterable<any>;
 };

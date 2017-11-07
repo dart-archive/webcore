@@ -40,14 +40,14 @@ enum NotificationPermission {
 // https://notifications.spec.whatwg.org/#api
 
 [
-    GarbageCollected,
-    DependentLifetime,
-    Constructor(DOMString title, optional NotificationOptions options),
+    ActiveScriptWrappable,
     ConstructorCallWith=ExecutionContext,
+    Constructor(DOMString title, optional NotificationOptions options),
+    DependentLifetime,
     Exposed=(Window,Worker),
     MeasureAs=NotificationCreated,
     RaisesException=Constructor,
-    RuntimeEnabled=Notifications,
+    RuntimeEnabled=Notifications
 ] interface Notification : EventTarget {
     [CallWith=ExecutionContext, MeasureAs=NotificationPermission] static readonly attribute NotificationPermission permission;
 
@@ -65,19 +65,17 @@ enum NotificationPermission {
     readonly attribute DOMString lang;
     readonly attribute DOMString body;
     readonly attribute DOMString tag;
+    [RuntimeEnabled=NotificationContentImage] readonly attribute USVString image;
     readonly attribute USVString icon;
+    readonly attribute USVString badge;
 
-    [RuntimeEnabled=NotificationExperimental] readonly attribute sequence<unsigned long>? vibrate;
+    [SameObject, SaveSameObject] readonly attribute FrozenArray<unsigned long> vibrate;
     readonly attribute DOMTimeStamp timestamp;
     readonly attribute boolean renotify;
     readonly attribute boolean silent;
     readonly attribute boolean requireInteraction;
-    [CallWith=ScriptState, SameObject] readonly attribute any data;
-
-    // TODO(johnme): Ship once Blink supports FrozenArray (https://crbug.com/515920)
-    // and we've implemented the additional Object.freeze described in
-    // https://notifications.spec.whatwg.org/#dom-notification-actions
-    [RuntimeEnabled=NotificationExperimental] readonly attribute sequence<NotificationAction> actions;
+    [CallWith=ScriptState, SameObject, SaveSameObject] readonly attribute any data;
+    [CallWith=ScriptState, SameObject, SaveSameObject] readonly attribute FrozenArray<NotificationAction> actions;
 
     [MeasureAs=NotificationClosed] void close();
 };

@@ -26,9 +26,9 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+// https://www.w3.org/TR/webdatabase/#sqlresultset
 [
-    NoInterfaceObject,
-    GarbageCollected,
+    NoInterfaceObject
 ] interface SQLResultSet {
     readonly attribute SQLResultSetRowList rows;
 

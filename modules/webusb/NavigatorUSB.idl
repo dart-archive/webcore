@@ -2,11 +2,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// http://wicg.github.io/webusb/#device-enumeration
+// https://wicg.github.io/webusb/#enumeration
 
 [
-    GarbageCollected,
-    RuntimeEnabled=WebUSB,
+    ImplementedAs=NavigatorUSB
 ] partial interface Navigator {
-    readonly attribute USB usb;
+    [SecureContext, RuntimeEnabled=WebUSB] readonly attribute USB usb;
 };

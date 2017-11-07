@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// https://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html#extendablemessage-event-section
+// https://w3c.github.io/ServiceWorker/#extendablemessageevent-interface
 
 [
     // TODO(bashi): Stop using CustomConstructor once we solve reference
@@ -10,12 +10,11 @@
     // Constructor should be:
     // Constructor(DOMString type, optional ExtendableMessageEventInit eventInitDict),
     CustomConstructor,
-    Exposed=ServiceWorker,
-    RuntimeEnabled=ServiceWorkerExtendableMessageEvent,
+    Exposed=ServiceWorker
 ] interface ExtendableMessageEvent : ExtendableEvent {
     [Custom=Getter] readonly attribute any data;
     readonly attribute DOMString origin;
     readonly attribute DOMString lastEventId;
     [SameObject] readonly attribute (Client or ServiceWorker or MessagePort)? source;
-    [SameObject] readonly attribute MessagePort[]? ports;
+    readonly attribute FrozenArray<MessagePort> ports;
 };

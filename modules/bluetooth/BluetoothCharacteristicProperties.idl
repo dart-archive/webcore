@@ -2,15 +2,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// https://webbluetoothcg.github.io/web-bluetooth/#characteristicproperties
+// https://webbluetoothcg.github.io/web-bluetooth/#bluetoothcharacteristicproperties
 
 // Implement BluetoothCharacteristicProperties interface: http://crbug.com/483345
 
 [
-    GarbageCollected,
-    RuntimeEnabled=WebBluetooth,
-    // TODO(https://crbug.com/584113) Enable Web Bluetooth Experiment.
-    // OriginTrialEnabled=WebBluetooth,
+    RuntimeEnabled=WebBluetooth
 ] interface BluetoothCharacteristicProperties {
     readonly attribute boolean broadcast;
     readonly attribute boolean read;

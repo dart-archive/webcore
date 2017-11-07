@@ -30,24 +30,25 @@
 [
     Constructor(DOMString type, optional MessageEventInit eventInitDict),
     Exposed=(Window,Worker),
-    RaisesException=Constructor,
+    RaisesException=Constructor
 ] interface MessageEvent : Event {
     [Custom=Getter] readonly attribute any data;
     readonly attribute DOMString origin;
     readonly attribute DOMString lastEventId;
     // TODO(bashi): |source| should be (WindowProxy or MessagePort)?
     readonly attribute EventTarget? source;
-    readonly attribute MessagePort[]? ports;
-    [RuntimeEnabled=suborigins] readonly attribute DOMString suborigin;
+    [CachedAttribute=isPortsDirty] readonly attribute FrozenArray<MessagePort> ports;
+    [RuntimeEnabled=Suborigins] readonly attribute DOMString suborigin;
 
-    // TODO(philipj): None of the initMessageEvent() arguments should be
-    // optional, and |sourceArg| and |portsArg| are of the wrong type.
+    // TODO(foolip): |typeArg| should not be optional, none of the arguments
+    // should have [Default=Undefined] (they have other default values in the
+    // spec) and |sourceArg|'s type is wrong.
     [Custom, MeasureAs=InitMessageEvent] void initMessageEvent([Default=Undefined] optional DOMString typeArg,
                                    [Default=Undefined] optional boolean canBubbleArg,
                                    [Default=Undefined] optional boolean cancelableArg,
                                    [Default=Undefined] optional any dataArg,
                                    [Default=Undefined] optional DOMString originArg,
                                    [Default=Undefined] optional DOMString lastEventIdArg,
-                                   [Default=Undefined] optional Window sourceArg,
-                                   [Default=Undefined] optional MessagePort[] portsArg);
+                                   [Default=Undefined] optional EventTarget sourceArg,
+                                   [Default=Undefined] optional sequence<MessagePort> portsArg);
 };

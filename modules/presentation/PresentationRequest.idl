@@ -2,17 +2,17 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// TODO(mlamouri): double-check link after spec changes have landed.
 // https://w3c.github.io/presentation-api/#interface-presentationrequest
 
 [
-    Constructor(DOMString url),
+    ActiveScriptWrappable,
     ConstructorCallWith=ExecutionContext,
-    RaisesException=Constructor,
+    Constructor(USVString url),
+    Constructor(sequence<USVString> urls),
     DependentLifetime,
-    GarbageCollected,
-    RuntimeEnabled=Presentation,
-    MeasureAs=PresentationRequestConstructor
+    MeasureAs=PresentationRequestConstructor,
+    RaisesException=Constructor,
+    RuntimeEnabled=Presentation
 ] interface PresentationRequest : EventTarget {
     [CallWith=ScriptState, MeasureAs=PresentationRequestStart] Promise<PresentationConnection> start();
     [CallWith=ScriptState, MeasureAs=PresentationRequestReconnect] Promise<PresentationConnection> reconnect(DOMString id);

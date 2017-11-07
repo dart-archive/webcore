@@ -5,7 +5,7 @@
 # If you would like to add a new extended attribute or value, please:
 #     (1) add the extended attribute or value to this file
 #     (2) add an explanation to the Blink IDL extended attributes document:
-#         idl-extended-attributes.md (in this directory)
+#         IDLExtendedAttributes.md (in this directory)
 #     (3) add appropriate test cases to run-bindings-tests
 #
 # The syntax of this file is as follows:
@@ -31,18 +31,24 @@
 #       arbitrary, but that "X" is standard, e.g. [Attr=X], [Attr=Foo].
 #
 
+ActiveScriptWrappable
+AllowShared
+CEReactions
+CachedAccessor
 CachedAttribute=*
-CallWith=ExecutionContext|ScriptState|ScriptArguments|ActiveWindow|FirstWindow|ThisValue
+CallWith=ExecutionContext|ScriptState|ScriptArguments|CurrentWindow|EnteredWindow|ThisValue
 CheckSecurity=Receiver|ReturnValue
 Clamp
 Constructor
 # FIXME: remove [ConstructorCallWith=Document], as can instead use
 # [ConstructorCallWith=ExecutionContext] + toDocument(executionContext)
 ConstructorCallWith=ExecutionContext|ScriptState|Document
-Custom=|Getter|Setter|LegacyCallAsFunction|VisitDOMWrapper|PropertyGetter|PropertyEnumerator|PropertyQuery|CallPrologue|CallEpilogue
+ContextEnabled=*
+CrossOrigin=|Getter|Setter
+Custom=|Getter|Setter|LegacyCallAsFunction|PropertyGetter|PropertyEnumerator|PropertyQuery|CallPrologue|CallEpilogue
 CustomConstructor
 CustomElementCallbacks
-# Dartium specific attributes.
+# FIXMEDART: Dartium specific attributes.
 # DartCustom can have no value or New if New an additional method is added (V8 will not see this method)
 DartCustom=|New|Setter|Getter
 # DartName should have the alias name to be used to resolve.
@@ -65,18 +71,18 @@ Default=Undefined
 DependentLifetime
 DeprecateAs=*
 DoNotCheckConstants
-DoNotCheckSecurity=|Setter
-DoNotCheckSignature
+DoNotTestNewObject
 EnforceRange
 Exposed=*
+FeaturePolicy=*
 FlexibleArrayBufferView
-GarbageCollected
 Global=|*
+HTMLConstructor
+ImmutablePrototype
 ImplementedAs=*
-ImplementedInPrivateScript
-Iterable
 LegacyInterfaceTypeChecking
 LegacyTreatAsPartialInterface
+LegacyUnenumerableNamedProperties
 LenientThis
 LogActivity=|GetterOnly|SetterOnly
 LogAllWorlds
@@ -84,10 +90,8 @@ NewObject
 Measure
 MeasureAs=*
 NamedConstructor=*
-NoImplHeader
 NoInterfaceObject
 NotEnumerable
-OnlyExposedToPrivateScript
 OriginTrialEnabled=*
 OverrideBuiltins
 PartialInterfaceImplementedAs=*
@@ -104,15 +108,17 @@ ReflectMissing=*
 ReflectOnly=*
 Replaceable
 # Valid values for [RuntimeEnabled] are the Runtime Enabled Features, listed in
-# Source/core/page/RuntimeEnabledFeatures.in
+# Source/platform/runtime_enabled_features.json5
 RuntimeEnabled=*
+# Valid values for [RuntimeCallStatsCounter] are counters defined in
+# Source/platform/bindings/RuntimeCallStats.h
+RuntimeCallStatsCounter=*
 SameObject
-SetWrapperReferenceFrom=*
-SetWrapperReferenceTo=*
-SetterCallWith=ExecutionContext|ScriptArguments|ActiveWindow|FirstWindow
+SaveSameObject
+SecureContext
+SetterCallWith=ExecutionContext|ScriptArguments|CurrentWindow|EnteredWindow
 TreatNullAs=NullString|EmptyString
-TreatUndefinedAs=NullString
 URL
 Unforgeable
-Unscopeable
-WillBeGarbageCollected
+Unscopable
+WebAgentAPI

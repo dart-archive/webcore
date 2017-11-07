@@ -31,23 +31,23 @@
 // https://html.spec.whatwg.org/#imagebitmapfactories
 
 typedef (HTMLImageElement or
+         SVGImageElement or
          HTMLVideoElement or
          HTMLCanvasElement or
          Blob or
          ImageData or
-         ImageBitmap) ImageBitmapSource;
+         ImageBitmap or
+         OffscreenCanvas) ImageBitmapSource;
 
 [
     LegacyTreatAsPartialInterface,
     NoInterfaceObject, // Always used on target of 'implements'
-    Exposed=(Window,Worker),
+    Exposed=(Window,Worker)
 ] interface ImageBitmapFactories {
-    [CallWith=ScriptState, RaisesException] Promise createImageBitmap(ImageBitmapSource imageBitmap);
-    [CallWith=ScriptState, RaisesException, RuntimeEnabled=ExperimentalCanvasFeatures] Promise createImageBitmap(
-        ImageBitmapSource imageBitmap, ImageBitmapOptions options);
-    [CallWith=ScriptState, RaisesException] Promise createImageBitmap(ImageBitmapSource imageBitmap, long sx, long sy, long sw, long sh);
-    [CallWith=ScriptState, RaisesException, RuntimeEnabled=ExperimentalCanvasFeatures] Promise createImageBitmap(
-        ImageBitmapSource imageBitmap, long sx, long sy, long sw, long sh, ImageBitmapOptions options);
+    [CallWith=ScriptState] Promise createImageBitmap(
+        ImageBitmapSource imageBitmap, optional ImageBitmapOptions options);
+    [CallWith=ScriptState] Promise createImageBitmap(
+        ImageBitmapSource imageBitmap, long sx, long sy, long sw, long sh, optional ImageBitmapOptions options);
 };
 
 Window implements ImageBitmapFactories;

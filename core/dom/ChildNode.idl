@@ -24,11 +24,10 @@
 
 [
     LegacyTreatAsPartialInterface,
-    NoInterfaceObject, // Always used on target of 'implements'
+    NoInterfaceObject // Always used on target of 'implements'
 ] interface ChildNode {
-    // [Unscopeable] void before((Node or DOMString)... nodes);
-    // [Unscopeable] void after((Node or DOMString)... nodes);
-    // [Unscopeable] void replaceWith((Node or DOMString)... nodes);
-    // TODO(philipj): remove() should be [Unscopeable]. crbug.com/462916
-    [RaisesException, CustomElementCallbacks] void remove();
+    [Unscopable, RaisesException, CEReactions, CustomElementCallbacks] void before((Node or DOMString) ... nodes);
+    [Unscopable, RaisesException, CEReactions, CustomElementCallbacks] void after((Node or DOMString)... nodes);
+    [Unscopable, RaisesException, CEReactions, CustomElementCallbacks] void replaceWith((Node or DOMString)... nodes);
+    [Unscopable, RaisesException, CEReactions, CustomElementCallbacks] void remove();
 };

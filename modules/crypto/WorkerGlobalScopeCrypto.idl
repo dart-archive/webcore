@@ -28,6 +28,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-partial interface WorkerGlobalScope {
+// https://w3c.github.io/webcrypto/Overview.html#crypto-interface
+
+[
+    ImplementedAs=WorkerGlobalScopeCrypto
+] partial interface WorkerGlobalScope {
     readonly attribute Crypto crypto;
 };

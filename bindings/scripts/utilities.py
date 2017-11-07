@@ -13,14 +13,19 @@ import re
 import shlex
 import string
 import subprocess
+import sys
+
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', '..', '..', '..',
+                             'third_party', 'blink', 'tools'))
+from blinkpy.common.name_style_converter import NameStyleConverter
 
 
 KNOWN_COMPONENTS = frozenset(['core', 'modules'])
 KNOWN_COMPONENTS_WITH_TESTING = frozenset(['core', 'modules', 'testing'])
 
 
-def idl_filename_to_interface_name(idl_filename):
-    # interface name is the root of the basename: InterfaceName.idl
+def idl_filename_to_basename(idl_filename):
+    """Returns the basename without the extension."""
     return os.path.splitext(os.path.basename(idl_filename))[0]
 
 
@@ -88,8 +93,12 @@ class ComponentInfoProvider(object):
         return set()
 
     @property
-    def include_path_for_union_types(self):
+    def include_path_for_union_types(self, union_type):
         return None
+
+    @property
+    def callback_functions(self):
+        return {}
 
 
 class ComponentInfoProviderCore(ComponentInfoProvider):
@@ -118,9 +127,13 @@ class ComponentInfoProviderCore(ComponentInfoProvider):
     def union_types(self):
         return self._component_info['union_types']
 
+    def include_path_for_union_types(self, union_type):
+        name = to_snake_case(shorten_union_name(union_type))
+        return 'bindings/core/v8/%s.h' % name
+
     @property
-    def include_path_for_union_types(self):
-        return 'bindings/core/v8/UnionTypesCore.h'
+    def callback_functions(self):
+        return self._component_info['callback_functions']
 
     @property
     def specifier_for_export(self):
@@ -165,9 +178,18 @@ class ComponentInfoProviderModules(ComponentInfoProvider):
         # generating multiple container generation.
         return self._component_info_modules['union_types'] - self._component_info_core['union_types']
 
+    def include_path_for_union_types(self, union_type):
+        core_union_type_names = [core_union_type.name for core_union_type
+                                 in self._component_info_core['union_types']]
+        name = shorten_union_name(union_type)
+        if union_type.name in core_union_type_names:
+            return 'bindings/core/v8/%s.h' % to_snake_case(name)
+        return 'bindings/modules/v8/%s.h' % to_snake_case(name)
+
     @property
-    def include_path_for_union_types(self):
-        return 'bindings/modules/v8/UnionTypesModules.h'
+    def callback_functions(self):
+        return dict(self._component_info_core['callback_functions'].items() +
+                    self._component_info_modules['callback_functions'].items())
 
     @property
     def specifier_for_export(self):
@@ -282,15 +304,21 @@ def read_idl_files_list_from_file(filename, is_gyp_format):
 
 def read_pickle_files(pickle_filenames):
     for pickle_filename in pickle_filenames:
-        with open(pickle_filename) as pickle_file:
-            yield pickle.load(pickle_file)
+        yield read_pickle_file(pickle_filename)
 
 
-def write_file(new_text, destination_filename, only_if_changed):
-    if only_if_changed and os.path.isfile(destination_filename):
+def read_pickle_file(pickle_filename):
+    with open(pickle_filename) as pickle_file:
+        return pickle.load(pickle_file)
+
+
+def write_file(new_text, destination_filename):
+    # If |new_text| is same with the file content, we skip updating.
+    if os.path.isfile(destination_filename):
         with open(destination_filename) as destination_file:
             if destination_file.read() == new_text:
                 return
+
     destination_dirname = os.path.dirname(destination_filename)
     if not os.path.exists(destination_dirname):
         os.makedirs(destination_dirname)
@@ -298,8 +326,9 @@ def write_file(new_text, destination_filename, only_if_changed):
         destination_file.write(new_text)
 
 
-def write_pickle_file(pickle_filename, data, only_if_changed):
-    if only_if_changed and os.path.isfile(pickle_filename):
+def write_pickle_file(pickle_filename, data):
+    # If |data| is same with the file content, we skip updating.
+    if os.path.isfile(pickle_filename):
         with open(pickle_filename) as pickle_file:
             try:
                 if pickle.load(pickle_file) == data:
@@ -314,25 +343,29 @@ def write_pickle_file(pickle_filename, data, only_if_changed):
 ################################################################################
 # IDL parsing
 #
-# We use regular expressions for parsing; this is incorrect (Web IDL is not a
-# regular language), but simple and sufficient in practice.
+# TODO(bashi): We use regular expressions for parsing; this is incorrect
+# (Web IDL is not a regular language) and broken. Remove these functions and
+# always use the parser and ASTs.
 # Leading and trailing context (e.g. following '{') used to avoid false matches.
 ################################################################################
 
-def is_callback_interface_from_idl(file_contents):
+def is_non_legacy_callback_interface_from_idl(file_contents):
+    """Returns True if the specified IDL is a non-legacy callback interface."""
     match = re.search(r'callback\s+interface\s+\w+\s*{', file_contents)
-    return bool(match)
+    # Having constants means it's a legacy callback interface.
+    # https://heycam.github.io/webidl/#legacy-callback-interface-object
+    return bool(match) and not re.search(r'\s+const\b', file_contents)
 
 
 def should_generate_impl_file_from_idl(file_contents):
     """True when a given IDL file contents could generate .h/.cpp files."""
     # FIXME: This would be error-prone and we should use AST rather than
     # improving the regexp pattern.
-    match = re.search(r'(interface|dictionary|exception)\s+\w+', file_contents)
+    match = re.search(r'(interface|dictionary)\s+\w+', file_contents)
     return bool(match)
 
 
-def match_interface_extended_attributes_from_idl(file_contents):
+def match_interface_extended_attributes_and_name_from_idl(file_contents):
     # Strip comments
     # re.compile needed b/c Python 2.6 doesn't support flags in re.sub
     single_line_comment_re = re.compile(r'//.*$', flags=re.MULTILINE)
@@ -340,19 +373,18 @@ def match_interface_extended_attributes_from_idl(file_contents):
     file_contents = re.sub(single_line_comment_re, '', file_contents)
     file_contents = re.sub(block_comment_re, '', file_contents)
 
-    match = re.search(r'\[(.*)\]\s*'
-                      r'((callback|partial)\s+)?'
-                      r'(interface|exception)\s+'
-                      r'\w+\s*'
-                      r'(:\s*\w+\s*)?'
-                      r'{',
-                      file_contents, flags=re.DOTALL)
+    match = re.search(
+        r'(?:\[([^[]*)\]\s*)?'
+        r'(interface|callback\s+interface|partial\s+interface|dictionary)\s+'
+        r'(\w+)\s*'
+        r'(:\s*\w+\s*)?'
+        r'{',
+        file_contents, flags=re.DOTALL)
     return match
 
-
 def get_interface_extended_attributes_from_idl(file_contents):
-    match = match_interface_extended_attributes_from_idl(file_contents)
-    if not match:
+    match = match_interface_extended_attributes_and_name_from_idl(file_contents)
+    if not match or not match.group(1):
         return {}
 
     extended_attributes_string = match.group(1)
@@ -370,8 +402,8 @@ def get_interface_extended_attributes_from_idl(file_contents):
 
 
 def get_interface_exposed_arguments(file_contents):
-    match = match_interface_extended_attributes_from_idl(file_contents)
-    if not match:
+    match = match_interface_extended_attributes_and_name_from_idl(file_contents)
+    if not match or not match.group(1):
         return None
 
     extended_attributes_string = match.group(1)
@@ -384,3 +416,142 @@ def get_interface_exposed_arguments(file_contents):
         arguments.append({'exposed': exposed, 'runtime_enabled': runtime_enabled})
 
     return arguments
+
+
+def get_first_interface_name_from_idl(file_contents):
+    match = match_interface_extended_attributes_and_name_from_idl(file_contents)
+    if match:
+        return match.group(3)
+    return None
+
+
+# Workaround for crbug.com/611437 and crbug.com/711464
+# TODO(bashi): Remove this hack once we resolve too-long generated file names.
+# pylint: disable=line-too-long
+def shorten_union_name(union_type):
+    aliases = {
+        # modules/canvas2d/CanvasRenderingContext2D.idl
+        'CSSImageValueOrHTMLImageElementOrSVGImageElementOrHTMLVideoElementOrHTMLCanvasElementOrImageBitmapOrOffscreenCanvas': 'CanvasImageSource',
+        # modules/canvas/HTMLCanvasElementModule.idl
+        'CanvasRenderingContext2DOrWebGLRenderingContextOrWebGL2RenderingContextOrImageBitmapRenderingContext': 'RenderingContext',
+        # core/imagebitmap/ImageBitmapFactories.idl
+        'HTMLImageElementOrSVGImageElementOrHTMLVideoElementOrHTMLCanvasElementOrBlobOrImageDataOrImageBitmapOrOffscreenCanvas': 'ImageBitmapSource',
+        # bindings/tests/idls/core/TestTypedefs.idl
+        'NodeOrLongSequenceOrEventOrXMLHttpRequestOrStringOrStringByteStringOrNodeListRecord': 'NestedUnionType',
+        # modules/offscreencanvas/OffscreenCanvasModules.idl
+        'OffscreenCanvasRenderingContext2DOrWebGLRenderingContextOrWebGL2RenderingContext': 'OffscreenRenderingContext',
+    }
+
+    idl_type = union_type
+    if union_type.is_nullable:
+        idl_type = union_type.inner_type
+    name = idl_type.cpp_type or idl_type.name
+    alias = aliases.get(name)
+    if alias:
+        return alias
+    if len(name) >= 80:
+        raise Exception('crbug.com/711464: The union name %s is too long. '
+                        'Please add an alias to shorten_union_name()' % name)
+    return name
+
+
+def to_snake_case(name):
+    if name.lower() == name:
+        return name
+    return NameStyleConverter(name).to_snake_case()
+
+
+def format_remove_duplicates(text, patterns):
+    """Removes duplicated line-basis patterns.
+
+    Based on simple pattern matching, removes duplicated lines in a block
+    of lines.  Lines that match with a same pattern are considered as
+    duplicates.
+
+    Designed to be used as a filter function for Jinja2.
+
+    Args:
+        text: A str of multi-line text.
+        patterns: A list of str where each str represents a simple
+            pattern.  The patterns are not considered as regexp, and
+            exact match is applied.
+
+    Returns:
+        A formatted str with duplicates removed.
+    """
+    pattern_founds = [False] * len(patterns)
+    output = []
+    for line in text.split('\n'):
+        to_be_removed = False
+        for i, pattern in enumerate(patterns):
+            if pattern not in line:
+                continue
+            if pattern_founds[i]:
+                to_be_removed = True
+            else:
+                pattern_founds[i] = True
+        if to_be_removed:
+            continue
+        output.append(line)
+
+    # Let |'\n'.join| emit the last newline.
+    if output:
+        output.append('')
+
+    return '\n'.join(output)
+
+
+def format_blink_cpp_source_code(text):
+    """Formats C++ source code.
+
+    Supported modifications are:
+    - Reduces successive empty lines into a single empty line.
+    - Removes empty lines just after an open brace or before closing brace.
+      This rule does not apply to namespaces.
+
+    Designed to be used as a filter function for Jinja2.
+
+    Args:
+        text: A str of C++ source code.
+
+    Returns:
+        A formatted str of the source code.
+    """
+    re_empty_line = re.compile(r'^\s*$')
+    re_first_brace = re.compile(r'(?P<first>[{}])')
+    re_last_brace = re.compile(r'.*(?P<last>[{}]).*?$')
+    was_open_brace = True  # Trick to remove the empty lines at the beginning.
+    was_empty_line = False
+    output = []
+    for line in text.split('\n'):
+        # Skip empty lines.
+        if re_empty_line.match(line):
+            was_empty_line = True
+            continue
+
+        # Emit a single empty line if needed.
+        if was_empty_line:
+            was_empty_line = False
+            match = re_first_brace.search(line)
+            if was_open_brace:
+                # No empty line just after an open brace.
+                pass
+            elif match and match.group('first') == '}' and 'namespace' not in line:
+                # No empty line just before a closing brace.
+                pass
+            else:
+                # Preserve a single empty line.
+                output.append('')
+
+        # Emit the line itself.
+        output.append(line)
+
+        # Remember an open brace.
+        match = re_last_brace.search(line)
+        was_open_brace = (match and match.group('last') == '{' and 'namespace' not in line)
+
+    # Let |'\n'.join| emit the last newline.
+    if output:
+        output.append('')
+
+    return '\n'.join(output)

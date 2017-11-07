@@ -31,11 +31,14 @@
 Design doc: http://www.chromium.org/developers/design-documents/idl-compiler
 """
 
+import os
 import re
+import sys
 
 from idl_types import IdlTypeBase
 import idl_types
 from idl_definitions import Exposure, IdlInterface, IdlAttribute
+from utilities import to_snake_case
 from v8_globals import includes
 
 ACRONYMS = [
@@ -44,6 +47,7 @@ ACRONYMS = [
     'HTML',
     'IME',
     'JS',
+    'SMIL',
     'SVG',
     'URL',
     'WOFF',
@@ -112,13 +116,16 @@ def uncapitalize(name):
     return name[0].lower() + name[1:]
 
 
+def runtime_enabled_function(name):
+    """Returns a function call of a runtime enabled feature."""
+    return 'RuntimeEnabledFeatures::%sEnabled()' % name
+
+
 ################################################################################
 # C++
 ################################################################################
 
 def scoped_name(interface, definition, base_name):
-    if 'ImplementedInPrivateScript' in definition.extended_attributes:
-        return '%s::PrivateScript::%s' % (v8_class_name(interface), base_name)
     # partial interfaces are implemented as separate classes, with their members
     # implemented as static member functions
     partial_interface_implemented_as = definition.extended_attributes.get('PartialInterfaceImplementedAs')
@@ -141,6 +148,26 @@ def v8_class_name_or_partial(interface):
     return class_name
 
 
+def build_basename(name, snake_case, prefix=None, ext=None):
+    basename = name
+    if prefix:
+        basename = prefix + name
+    if snake_case:
+        basename = to_snake_case(basename)
+        if not ext:
+            return basename
+        if ext == '.cpp':
+            return basename + '.cc'
+        return basename + ext
+    if ext:
+        return basename + ext
+    return basename
+
+
+def binding_header_basename(name, snake_case):
+    return build_basename(name, snake_case, prefix='V8', ext='.h')
+
+
 ################################################################################
 # Specific extended attributes
 ################################################################################
@@ -158,7 +185,7 @@ def activity_logging_world_list(member, access_type=''):
     if log_activity and not log_activity.startswith(access_type):
         return set()
 
-    includes.add('bindings/core/v8/V8DOMActivityLogger.h')
+    includes.add('platform/bindings/V8DOMActivityLogger.h')
     if 'LogAllWorlds' in extended_attributes:
         return set(['', 'ForMainWorld'])
     return set([''])  # At minimum, include isolated worlds.
@@ -185,19 +212,19 @@ def activity_logging_world_check(member):
 CALL_WITH_ARGUMENTS = {
     'ScriptState': 'scriptState',
     'ExecutionContext': 'executionContext',
-    'ScriptArguments': 'scriptArguments.release()',
-    'ActiveWindow': 'currentDOMWindow(info.GetIsolate())',
-    'FirstWindow': 'enteredDOMWindow(info.GetIsolate())',
+    'ScriptArguments': 'scriptArguments',
+    'CurrentWindow': 'CurrentDOMWindow(info.GetIsolate())',
+    'EnteredWindow': 'EnteredDOMWindow(info.GetIsolate())',
     'Document': 'document',
-    'ThisValue': 'ScriptValue(scriptState, info.This())',
+    'ThisValue': 'ScriptValue(scriptState, info.Holder())',
 }
 # List because key order matters, as we want arguments in deterministic order
 CALL_WITH_VALUES = [
     'ScriptState',
     'ExecutionContext',
     'ScriptArguments',
-    'ActiveWindow',
-    'FirstWindow',
+    'CurrentWindow',
+    'EnteredWindow',
     'Document',
     'ThisValue',
 ]
@@ -229,18 +256,19 @@ def deprecate_as(member):
 
 # [Exposed]
 EXPOSED_EXECUTION_CONTEXT_METHOD = {
-    'CompositorWorker': 'isCompositorWorkerGlobalScope',
-    'DedicatedWorker': 'isDedicatedWorkerGlobalScope',
-    'ServiceWorker': 'isServiceWorkerGlobalScope',
-    'SharedWorker': 'isSharedWorkerGlobalScope',
-    'Window': 'isDocument',
-    'Worker': 'isWorkerGlobalScope',
-    'Worklet': 'isWorkletGlobalScope',
+    'AnimationWorklet': 'IsAnimationWorkletGlobalScope',
+    'AudioWorklet': 'IsAudioWorkletGlobalScope',
+    'DedicatedWorker': 'IsDedicatedWorkerGlobalScope',
+    'PaintWorklet': 'IsPaintWorkletGlobalScope',
+    'ServiceWorker': 'IsServiceWorkerGlobalScope',
+    'SharedWorker': 'IsSharedWorkerGlobalScope',
+    'Window': 'IsDocument',
+    'Worker': 'IsWorkerGlobalScope',
+    'Worklet': 'IsWorkletGlobalScope',
 }
 
 
 EXPOSED_WORKERS = set([
-    'CompositorWorker',
     'DedicatedWorker',
     'SharedWorker',
     'ServiceWorker',
@@ -282,8 +310,7 @@ class ExposureSet:
         exposed = ('executionContext->%s()' %
                    EXPOSED_EXECUTION_CONTEXT_METHOD[exposure.exposed])
         if exposure.runtime_enabled is not None:
-            runtime_enabled = ('RuntimeEnabledFeatures::%sEnabled()' %
-                               uncapitalize(exposure.runtime_enabled))
+            runtime_enabled = (runtime_enabled_function(exposure.runtime_enabled))
             return '({0} && {1})'.format(exposed, runtime_enabled)
         return exposed
 
@@ -305,8 +332,8 @@ def exposed(member, interface):
       => context->isDocument()
 
     EXAMPLE: [Exposed(Window Feature1, Window Feature2)]
-      => context->isDocument() && RuntimeEnabledFeatures::feature1Enabled() ||
-         context->isDocument() && RuntimeEnabledFeatures::feature2Enabled()
+      => context->isDocument() && RuntimeEnabledFeatures::Feature1Enabled() ||
+         context->isDocument() && RuntimeEnabledFeatures::Feature2Enabled()
     """
     exposure_set = ExposureSet(
         extended_attribute_value_as_list(member, 'Exposed'))
@@ -323,22 +350,21 @@ def exposed(member, interface):
     return exposure_set.code()
 
 
-# [GarbageCollected], [WillBeGarbageCollected]
-def gc_type(definition):
-    extended_attributes = definition.extended_attributes
-    if 'GarbageCollected' in extended_attributes:
-        return 'GarbageCollectedObject'
-    elif 'WillBeGarbageCollected' in extended_attributes:
-        return 'WillBeGarbageCollectedObject'
-    return 'RefCountedObject'
+# [SecureContext]
+def secure_context(member, interface):
+    """Returns C++ code that checks whether an interface/method/attribute/etc. is exposed
+    to the current context."""
+    if 'SecureContext' in member.extended_attributes or 'SecureContext' in interface.extended_attributes:
+        return 'executionContext->IsSecureContext()'
+    return None
 
 
 # [ImplementedAs]
 def cpp_name(definition_or_member):
     extended_attributes = definition_or_member.extended_attributes
-    if 'ImplementedAs' not in extended_attributes:
-        return definition_or_member.name
-    return extended_attributes['ImplementedAs']
+    if extended_attributes and 'ImplementedAs' in extended_attributes:
+        return extended_attributes['ImplementedAs']
+    return definition_or_member.name
 
 
 def cpp_name_from_interfaces_info(name, interfaces_info):
@@ -367,48 +393,83 @@ def measure_as(definition_or_member, interface):
     return None
 
 
-def runtime_feature_name(definition_or_member):
+# [OriginTrialEnabled]
+def origin_trial_enabled_function_name(definition_or_member):
+    """Returns the name of the OriginTrials enabled function.
+
+    An exception is raised if OriginTrialEnabled is used in conjunction with any
+    of the following (which must be mutually exclusive with origin trials):
+      - RuntimeEnabled
+
+    The returned function checks if the IDL member should be enabled.
+    Given extended attribute OriginTrialEnabled=FeatureName, return:
+        OriginTrials::{featureName}Enabled
+
+    If the OriginTrialEnabled extended attribute is found, the includes are
+    also updated as a side-effect.
+    """
     extended_attributes = definition_or_member.extended_attributes
-    if 'RuntimeEnabled' not in extended_attributes:
-        return None
-    return extended_attributes['RuntimeEnabled']
+    is_origin_trial_enabled = 'OriginTrialEnabled' in extended_attributes
+
+    if is_origin_trial_enabled and 'RuntimeEnabled' in extended_attributes:
+        raise Exception('[OriginTrialEnabled] and [RuntimeEnabled] must '
+                        'not be specified on the same definition: %s'
+                        % definition_or_member.name)
+
+    if is_origin_trial_enabled:
+        trial_name = extended_attributes['OriginTrialEnabled']
+        return 'OriginTrials::%sEnabled' % uncapitalize(trial_name)
+
+    is_feature_policy_enabled = 'FeaturePolicy' in extended_attributes
+
+    if is_feature_policy_enabled and 'RuntimeEnabled' in extended_attributes:
+        raise Exception('[FeaturePolicy] and [RuntimeEnabled] must '
+                        'not be specified on the same definition: %s'
+                        % definition_or_member.name)
+
+    if is_feature_policy_enabled and 'SecureContext' in extended_attributes:
+        raise Exception('[FeaturePolicy] and [SecureContext] must '
+                        'not be specified on the same definition '
+                        '(see https://crbug.com/695123 for workaround): %s'
+                        % definition_or_member.name)
+
+    if is_feature_policy_enabled:
+        includes.add('platform/bindings/ScriptState.h')
+        includes.add('platform/feature_policy/FeaturePolicy.h')
+
+        trial_name = extended_attributes['FeaturePolicy']
+        return 'FeaturePolicy::%sEnabled' % uncapitalize(trial_name)
+
+    return None
 
 
-def is_origin_trial_enabled(definition_or_member):
-    return 'OriginTrialEnabled' in definition_or_member.extended_attributes
+def origin_trial_feature_name(definition_or_member):
+    extended_attributes = definition_or_member.extended_attributes
+    return extended_attributes.get('OriginTrialEnabled') or extended_attributes.get('FeaturePolicy')
 
 
-def origin_trial_name(definition_or_member):
-    return definition_or_member.extended_attributes['OriginTrialEnabled'] if is_origin_trial_enabled(definition_or_member) else None
+# [ContextEnabled]
+def context_enabled_feature_name(definition_or_member):
+    return definition_or_member.extended_attributes.get('ContextEnabled')
 
 
-def origin_trial_enabled_function(definition_or_member):
-    trial_name = origin_trial_name(definition_or_member)
-    feature_name = runtime_feature_name(definition_or_member)
-    if not feature_name or not trial_name:
-        return
-    return 'OriginTrials::%sEnabled' % uncapitalize(feature_name)
+# [RuntimeCallStatsCounter]
+def rcs_counter_name(member, generic_counter_name):
+    extended_attribute_defined = 'RuntimeCallStatsCounter' in member.extended_attributes
+    if extended_attribute_defined:
+        counter = 'k' + member.extended_attributes['RuntimeCallStatsCounter']
+    else:
+        counter = generic_counter_name
+    return (counter, extended_attribute_defined)
 
 
 # [RuntimeEnabled]
-def runtime_enabled_function_name(definition_or_member):
-    """Returns the name of the RuntimeEnabledFeatures function.
-
-    The returned function checks if a method/attribute is enabled.
-    Given extended attribute RuntimeEnabled=FeatureName, return:
-        RuntimeEnabledFeatures::{featureName}Enabled
-    """
-    feature_name = runtime_feature_name(definition_or_member)
-
-    # If an origin trial is on the method/attribute, it overrides the runtime
-    # enabled status. For now, we are unconditionally installing these
-    # attributes/methods, so we are acting as though the runtime enabled
-    # function doesn't exist. (It is checked in the generated OriginTrials
-    # function, instead)
-    trial_name = origin_trial_name(definition_or_member)
-    if not feature_name or trial_name:
-        return
-    return 'RuntimeEnabledFeatures::%sEnabled' % uncapitalize(feature_name)
+def runtime_enabled_feature_name(definition_or_member):
+    extended_attributes = definition_or_member.extended_attributes
+    if 'RuntimeEnabled' not in extended_attributes:
+        return None
+    includes.add('platform/runtime_enabled_features.h')
+    return extended_attributes['RuntimeEnabled']
 
 
 # [Unforgeable]
@@ -429,16 +490,16 @@ def on_instance(interface, member):
     """Returns True if the interface's member needs to be defined on every
     instance object.
 
-    The following members must be defiend on an instance object.
+    The following members must be defined on an instance object.
     - [Unforgeable] members
     - regular members of [Global] or [PrimaryGlobal] interfaces
     """
     if member.is_static:
         return False
 
-    # TODO(yukishiino): Remove a hack for toString once we support
-    # Symbol.toStringTag.
-    if (interface.name == 'Window' and member.name == 'toString'):
+    # TODO(yukishiino): Remove a hack for ToString once we support
+    # Symbol.ToStringTag.
+    if interface.name == 'Window' and member.name == 'ToString':
         return False
 
     # TODO(yukishiino): Implement "interface object" and its [[Call]] method
@@ -497,6 +558,27 @@ def on_interface(interface, member):
     if member.is_static:
         return True
     return False
+
+
+################################################################################
+# Legacy callers
+# https://heycam.github.io/webidl/#idl-legacy-callers
+################################################################################
+
+def legacy_caller(interface):
+    try:
+        # Find legacy caller, if present; has form:
+        # legacycaller TYPE [OPTIONAL_IDENTIFIER](OPTIONAL_ARGUMENTS)
+        caller = next(
+            method
+            for method in interface.operations
+            if 'legacycaller' in method.specials)
+        if not caller.name:
+            raise Exception('legacycaller with no identifier is not supported: '
+                            '%s' % interface.name)
+        return caller
+    except StopIteration:
+        return None
 
 
 ################################################################################
@@ -561,7 +643,7 @@ def named_property_getter(interface):
             if ('getter' in method.specials and
                 len(method.arguments) == 1 and
                 str(method.arguments[0].idl_type) == 'DOMString'))
-        getter.name = getter.name or 'anonymousNamedGetter'
+        getter.name = getter.name or 'AnonymousNamedGetter'
         return getter
     except StopIteration:
         return None
@@ -595,6 +677,7 @@ def named_property_deleter(interface):
         return None
 
 
+IdlInterface.legacy_caller = property(legacy_caller)
 IdlInterface.indexed_property_getter = property(indexed_property_getter)
 IdlInterface.indexed_property_setter = property(indexed_property_setter)
 IdlInterface.indexed_property_deleter = property(indexed_property_deleter)

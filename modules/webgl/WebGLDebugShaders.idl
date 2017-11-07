@@ -23,10 +23,11 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+// https://www.khronos.org/registry/webgl/extensions/WEBGL_debug_shaders/
+
 [
-    NoInterfaceObject,
-    GarbageCollected,
-    SetWrapperReferenceFrom=canvas,
+    DependentLifetime,
+    NoInterfaceObject
 ] interface WebGLDebugShaders {
-    DOMString? getTranslatedShaderSource(WebGLShader? shader);
+    DOMString? getTranslatedShaderSource(WebGLShader shader);
 };

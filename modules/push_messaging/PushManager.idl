@@ -5,11 +5,13 @@
 // https://w3c.github.io/push-api/#pushmanager-interface
 
 [
-    Exposed=(Window,ServiceWorker),
-    GarbageCollected,
-    RuntimeEnabled=PushMessaging,
+    Exposed=(Window,Worker),
+    RuntimeEnabled=PushMessaging
 ] interface PushManager {
-    [CallWith=ScriptState] Promise<PushSubscription> subscribe(optional PushSubscriptionOptions options);
+    [SameObject, SaveSameObject]
+    static readonly attribute FrozenArray<DOMString> supportedContentEncodings;
+
+    [CallWith=ScriptState, RaisesException] Promise<PushSubscription> subscribe(optional PushSubscriptionOptionsInit options);
     [CallWith=ScriptState] Promise<PushSubscription?> getSubscription();
-    [CallWith=ScriptState] Promise permissionState(optional PushSubscriptionOptions options);
+    [CallWith=ScriptState, RaisesException] Promise permissionState(optional PushSubscriptionOptionsInit options);
 };

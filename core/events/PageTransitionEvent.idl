@@ -26,8 +26,8 @@
 // https://html.spec.whatwg.org/multipage/browsers.html#the-pagetransitionevent-interface
 
 [
-    Constructor(DOMString type, optional PageTransitionEventInit eventInitDict),
-    // TODO(philipj): Exposed=(Window,Worker)
+    Constructor(DOMString type, optional PageTransitionEventInit eventInitDict)
+    // TODO(foolip): Exposed=(Window,Worker)
 ] interface PageTransitionEvent : Event {
     readonly attribute boolean persisted;
 };

@@ -2,10 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// https://www.w3.org/TR/mediacapture-fromelement/#the-canvascapturemediastream
-[
-    RuntimeEnabled=MediaCaptureFromCanvas
-] interface CanvasCaptureMediaStreamTrack : MediaStreamTrack {
+// https://w3c.github.io/mediacapture-fromelement/#the-canvascapturemediastreamtrack
+interface CanvasCaptureMediaStreamTrack : MediaStreamTrack {
     readonly attribute HTMLCanvasElement canvas;
     void requestFrame ();
 };

@@ -5,8 +5,10 @@
 // https://w3c.github.io/web-animations/#extensions-to-the-document-interface
 
 [
-    RuntimeEnabled=WebAnimationsAPI,
+    ImplementedAs=DocumentAnimation,
+    RuntimeEnabled=WebAnimationsAPI
 ] partial interface Document {
-    // TODO(dstockwell): This should be a DocumentTimeline.
-    readonly attribute AnimationTimeline timeline;
+    readonly attribute DocumentTimeline timeline;
+
+    sequence<Animation> getAnimations();
 };

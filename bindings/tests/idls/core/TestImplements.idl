@@ -27,7 +27,7 @@
  */
 
 [
-    NoInterfaceObject, // Always used on target of 'implements'
+    NoInterfaceObject // Always used on target of 'implements'
 ] interface TestImplements {
     static readonly attribute long implementsStaticReadOnlyLongAttribute;
     static attribute DOMString implementsStaticStringAttribute;
@@ -45,4 +45,7 @@
     [Reflect=IMPLEMENTS_REFLECT_CONSTANT] const unsigned short IMPLEMENTS_CONSTANT_2 = 2;
 
     [RuntimeEnabled=ImplementsFeatureName] attribute Node implementsRuntimeEnabledNodeAttribute;
+
+    [NotEnumerable] stringifier;
+    [NotEnumerable, RaisesException] serializer;
 };

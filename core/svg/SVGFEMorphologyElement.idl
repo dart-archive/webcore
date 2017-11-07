@@ -23,10 +23,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-// http://www.w3.org/TR/filter-effects/#InterfaceSVGFEMorphologyElement
+// https://drafts.fxtf.org/filters/#InterfaceSVGFEMorphologyElement
 
 [
-    DoNotCheckConstants,
+    DoNotCheckConstants
 ] interface SVGFEMorphologyElement : SVGElement {
     // Morphology Operators
     [MeasureAs=SVG1DOMFilter] const unsigned short SVG_MORPHOLOGY_OPERATOR_UNKNOWN = 0;

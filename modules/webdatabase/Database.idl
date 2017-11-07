@@ -26,8 +26,8 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+// https://www.w3.org/TR/webdatabase/#database
 [
-    GarbageCollected,
     NoInterfaceObject
 ] interface Database {
     readonly attribute DOMString version;
@@ -35,4 +35,3 @@
     void transaction(SQLTransactionCallback callback, optional SQLTransactionErrorCallback errorCallback, optional VoidCallback successCallback);
     void readTransaction(SQLTransactionCallback callback, optional SQLTransactionErrorCallback errorCallback, optional VoidCallback successCallback);
 };
-

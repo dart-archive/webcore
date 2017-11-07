@@ -45,7 +45,9 @@ from utilities import idl_filename_to_component, is_valid_component_dependency, 
 # which changes the semantics and yields different code than the same extended
 # attribute on the main interface.
 DEPENDENCY_EXTENDED_ATTRIBUTES = frozenset([
+    'OriginTrialEnabled',
     'RuntimeEnabled',
+    'SecureContext',
 ])
 
 
@@ -160,10 +162,9 @@ def merge_interface_dependencies(definitions, component, target_interface, depen
         dependency_component = idl_filename_to_component(dependency_idl_filename)
 
         dependency_interface = next(dependency_definitions.interfaces.itervalues())
-        dependency_interface_basename, _ = os.path.splitext(os.path.basename(dependency_idl_filename))
 
         transfer_extended_attributes(dependency_interface,
-                                     dependency_interface_basename)
+                                     dependency_idl_filename)
 
         # We need to use different checkdeps here for partial interface and
         # inheritance.
@@ -201,8 +202,8 @@ def merge_interface_dependencies(definitions, component, target_interface, depen
             # Because partial interface needs the original interface's
             # cpp class to obtain partial interface's cpp class.
             # e.g.. V8WindowPartial.cpp:
-            #   DOMWindow* impl = V8Window::toImpl(holder);
-            #   RawPtr<...> cppValue(DOMWindowQuota::webkitStorageInfo(impl));
+            #   DOMWindow* impl = V8Window::ToImpl(holder);
+            #   DOMWindowQuota* cppValue(DOMWindowQuota::webkitStorageInfo(impl));
             # TODO(tasak): remove ImplementedAs extended attributes
             # from all partial interfaces. Instead, rename all cpp/header
             # files correctly. ImplementedAs should not be allowed in
@@ -245,7 +246,7 @@ def merge_interface_dependencies(definitions, component, target_interface, depen
     return resolved_definitions
 
 
-def transfer_extended_attributes(dependency_interface, dependency_interface_basename):
+def transfer_extended_attributes(dependency_interface, dependency_idl_filename):
     """Transfer extended attributes from dependency interface onto members.
 
     Merging consists of storing certain interface-level data in extended
@@ -253,24 +254,29 @@ def transfer_extended_attributes(dependency_interface, dependency_interface_base
     interface post-merging).
 
     The data storing consists of:
-    * applying certain extended attributes from the dependency interface
-      to its members
+    * moving certain extended attributes from the dependency interface
+      to its members (deleting the extended attribute from the interface)
     * storing the C++ class of the implementation in an internal
       extended attribute of each member, [PartialInterfaceImplementedAs]
 
     No return: modifies dependency_interface in place.
     """
-    merged_extended_attributes = dict(
-        (key, value)
-        for key, value in dependency_interface.extended_attributes.iteritems()
-        if key in DEPENDENCY_EXTENDED_ATTRIBUTES)
+    merged_extended_attributes = {}
+    for key in DEPENDENCY_EXTENDED_ATTRIBUTES:
+        if key not in dependency_interface.extended_attributes:
+            continue
+
+        merged_extended_attributes[key] = dependency_interface.extended_attributes[key]
+        # Remove the merged attributes from the original dependency interface.
+        # This ensures that if other dependency interfaces are merged onto this
+        # one, its extended_attributes do not leak through
+        # (https://crbug.com/603782).
+        del dependency_interface.extended_attributes[key]
 
     # A partial interface's members are implemented as static member functions
     # in a separate C++ class. This class name is stored in
-    # [PartialInterfaceImplementedAs] which defaults to the basename of
-    # dependency IDL file.
-    # This class name can be overridden by [ImplementedAs] on the partial
-    # interface definition.
+    # [PartialInterfaceImplementedAs] which is copied from [ImplementedAs] on
+    # the partial interface definition.
     #
     # Note that implemented interfaces do *not* need [ImplementedAs], since
     # they are implemented on the C++ object |impl| itself, just like members of
@@ -288,11 +294,17 @@ def transfer_extended_attributes(dependency_interface, dependency_interface_base
     # for Blink class name and function name (or constant name), respectively.
     # Thus we do not want to copy this from the interface to the member, but
     # instead extract it and handle it separately.
-    if (dependency_interface.is_partial or
-        'LegacyTreatAsPartialInterface' in dependency_interface.extended_attributes):
+    if dependency_interface.is_partial:
+        if 'ImplementedAs' not in dependency_interface.extended_attributes:
+            raise ValueError('Partial interface in %s must have ImplementedAs.'
+                             % dependency_idl_filename)
+        merged_extended_attributes['PartialInterfaceImplementedAs'] = \
+            dependency_interface.extended_attributes.pop('ImplementedAs')
+    elif 'LegacyTreatAsPartialInterface' in \
+         dependency_interface.extended_attributes:
         merged_extended_attributes['PartialInterfaceImplementedAs'] = (
-            dependency_interface.extended_attributes.get(
-                'ImplementedAs', dependency_interface_basename))
+            dependency_interface.extended_attributes.pop(
+                'ImplementedAs', dependency_interface.name))
 
     def update_attributes(attributes, extras):
         for key, value in extras.items():
@@ -311,9 +323,9 @@ def inherit_unforgeable_attributes(resolved_definitions, interfaces_info):
     """Inherits [Unforgeable] attributes and updates the arguments accordingly.
 
     For each interface in |resolved_definitions|, collects all [Unforgeable]
-    attributes in ancestor interfaces in the same component and adds them to
-    the interface.  'referenced_interfaces' and 'cpp_includes' in
-    |interfaces_info| are updated accordingly.
+    attributes in ancestor interfaces and adds them to the interface.
+    'referenced_interfaces' and 'cpp_includes' in |interfaces_info| are updated
+    accordingly.
     """
     def collect_unforgeable_attributes_in_ancestors(interface_name, component):
         if not interface_name:
@@ -321,7 +333,7 @@ def inherit_unforgeable_attributes(resolved_definitions, interfaces_info):
             return [], [], set()
         interface = interfaces_info[interface_name]
         unforgeable_attributes, referenced_interfaces, cpp_includes = collect_unforgeable_attributes_in_ancestors(interface.get('parent'), component)
-        this_unforgeable = interface.get('unforgeable_attributes', {}).get(component, [])
+        this_unforgeable = interface.get('unforgeable_attributes', [])
         unforgeable_attributes.extend(this_unforgeable)
         this_referenced = [attr.idl_type.base_type for attr in this_unforgeable
                            if attr.idl_type.base_type in

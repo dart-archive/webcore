@@ -28,6 +28,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-partial interface DataTransferItem {
-    [CallWith=ExecutionContext] Entry webkitGetAsEntry();
+// https://wicg.github.io/entries-api/#html-data
+
+[
+    ImplementedAs=DataTransferItemFileSystem
+] partial interface DataTransferItem {
+    [CallWith=ScriptState, Measure] Entry? webkitGetAsEntry();
 };

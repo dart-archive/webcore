@@ -2,16 +2,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+// https://drafts.css-houdini.org/css-typed-om/#the-stylepropertymap
 [
-    RuntimeEnabled=CSSTypedOM,
-    GarbageCollected
-] interface StylePropertyMap {
-    [RaisesException] void append(DOMString property, (StyleValue or sequence<StyleValue> or DOMString) value);
+    Exposed=(Window,PaintWorklet),
+    RuntimeEnabled=CSSTypedOM
+] interface StylePropertyMap : StylePropertyMapReadonly {
+    [RaisesException] void append(DOMString property, (CSSStyleValue or sequence<CSSStyleValue> or DOMString) value);
     [RaisesException, ImplementedAs=remove] void delete(DOMString property);
-    StyleValue? get(DOMString property);
-    sequence<StyleValue> getAll(DOMString property);
-    boolean has(DOMString property);
-    [RaisesException] void set(DOMString property, (StyleValue or sequence<StyleValue> or DOMString) value);
-    iterable<DOMString, (StyleValue or sequence<StyleValue>)>;
-    sequence<DOMString> getProperties();
+    [RaisesException] void set(DOMString property, (CSSStyleValue or sequence<CSSStyleValue> or DOMString) value);
 };

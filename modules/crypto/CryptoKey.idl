@@ -28,12 +28,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+// https://w3c.github.io/webcrypto/Overview.html#cryptokey-interface
+
 [
-    GarbageCollected,
     Exposed=(Window,Worker)
 ] interface CryptoKey {
     readonly attribute DOMString type;
     readonly attribute boolean extractable;
     [CallWith=ScriptState] readonly attribute object algorithm;
-    readonly attribute DOMString[] usages;
+    [CallWith=ScriptState] readonly attribute object usages;
 };

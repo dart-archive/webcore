@@ -5,12 +5,9 @@
 // https://w3c.github.io/uievents/#idl-def-KeyboardEventInit
 
 dictionary KeyboardEventInit : EventModifierInit {
-    [RuntimeEnabled=KeyboardEventKey] DOMString key = "";
-    [RuntimeEnabled=KeyboardEventCode] DOMString code = "";
+    DOMString key = "";
+    DOMString code = "";
     unsigned long location = 0;
     boolean repeat = false;
-    // TODO(philipj): boolean isComposing = false;
-
-    // Non-standard APIs
-    DOMString keyIdentifier = "";
+    boolean isComposing = false;
 };

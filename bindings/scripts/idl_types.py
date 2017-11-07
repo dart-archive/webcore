@@ -8,8 +8,8 @@ IdlTypeBase
  IdlType
  IdlUnionType
  IdlArrayOrSequenceType
-  IdlArrayType
   IdlSequenceType
+  IdlFrozenArrayType
  IdlNullableType
 
 IdlTypes are picklable because we store them in interfaces_info.
@@ -138,17 +138,18 @@ class IdlType(IdlTypeBase):
     # FIXME: incorporate Nullable, etc.
     # to support types like short?[] vs. short[]?, instead of treating these
     # as orthogonal properties (via flags).
-    callback_functions = set(STANDARD_CALLBACK_FUNCTIONS)
+    callback_functions = {}
     callback_interfaces = set()
     dictionaries = set()
     enums = {}  # name -> values
 
-    def __init__(self, base_type, is_unrestricted=False):
+    def __init__(self, base_type, is_unrestricted=False, extended_attributes=None):
         super(IdlType, self).__init__()
         if is_unrestricted:
             self.base_type = 'unrestricted %s' % base_type
         else:
             self.base_type = base_type
+        self.extended_attributes = extended_attributes
 
     def __str__(self):
         return self.base_type
@@ -156,18 +157,34 @@ class IdlType(IdlTypeBase):
     def __getstate__(self):
         return {
             'base_type': self.base_type,
+            'extended_attributes': self.extended_attributes,
         }
 
     def __setstate__(self, state):
         self.base_type = state['base_type']
+        self.extended_attributes = state['extended_attributes']
+
+    def set_extended_attributes(self, extended_attributes):
+        self.extended_attributes = extended_attributes
 
     @property
     def is_basic_type(self):
         return self.base_type in BASIC_TYPES
 
     @property
-    def is_callback_function(self):
-        return self.base_type in IdlType.callback_functions
+    def is_callback_function(self):  # pylint: disable=C0103
+        return self.base_type in IdlType.callback_functions or self.base_type in STANDARD_CALLBACK_FUNCTIONS
+
+    @property
+    def is_custom_callback_function(self):
+        # Treat standard callback functions as custom as they aren't generated.
+        if self.base_type in STANDARD_CALLBACK_FUNCTIONS:
+            return True
+        entry = IdlType.callback_functions.get(self.base_type)
+        callback_function = entry.get('callback_function')
+        if not callback_function:
+            return False
+        return 'Custom' in callback_function.extended_attributes
 
     @property
     def is_callback_interface(self):
@@ -196,6 +213,10 @@ class IdlType(IdlTypeBase):
         return self.base_type in INTEGER_TYPES
 
     @property
+    def is_void(self):
+        return self.base_type == 'void'
+
+    @property
     def is_numeric_type(self):
         return self.base_type in NUMERIC_TYPES
 
@@ -208,7 +229,7 @@ class IdlType(IdlTypeBase):
         # Anything that is not another type is an interface type.
         # http://www.w3.org/TR/WebIDL/#idl-types
         # http://www.w3.org/TR/WebIDL/#idl-interface
-        # In C++ these are RefPtr or PassRefPtr types.
+        # In C++ these are RefPtr types.
         return not(self.is_basic_type or
                    self.is_callback_function or
                    self.is_dictionary or
@@ -282,13 +303,54 @@ class IdlUnionType(IdlTypeBase):
         self.member_types = state['member_types']
 
     @property
+    def flattened_member_types(self):
+        """Returns the set of the union's flattened member types.
+
+        https://heycam.github.io/webidl/#dfn-flattened-union-member-types
+        """
+        # We cannot use a set directly because each member is an IdlTypeBase-derived class, and
+        # comparing two objects of the same type is not the same as comparing their names. In
+        # other words:
+        #   x = IdlType('ByteString')
+        #   y = IdlType('ByteString')
+        #   x == y  # False
+        #   x.name == y.name  # True
+        # |flattened_members|'s keys are type names, the values are type |objects.
+        # We assume we can use two IDL objects of the same type interchangeably.
+        flattened_members = {}
+        for member in self.member_types:
+            if member.is_nullable:
+                member = member.inner_type
+            if member.is_union_type:
+                for inner_member in member.flattened_member_types:
+                    flattened_members[inner_member.name] = inner_member
+            else:
+                flattened_members[member.name] = member
+        return set(flattened_members.values())
+
+    @property
+    def number_of_nullable_member_types(self):
+        """Returns the union's number of nullable types.
+
+        http://heycam.github.io/webidl/#dfn-number-of-nullable-member-types
+        """
+        count = 0
+        for member in self.member_types:
+            if member.is_nullable:
+                count += 1
+                member = member.inner_type
+            if member.is_union_type:
+                count += member.number_of_nullable_member_types
+        return count
+
+    @property
     def is_union_type(self):
         return True
 
     def single_matching_member_type(self, predicate):
-        matching_types = filter(predicate, self.member_types)
+        matching_types = filter(predicate, self.flattened_member_types)
         if len(matching_types) > 1:
-            raise "%s is ambigious." % self.name
+            raise ValueError('%s is ambiguous.' % self.name)
         return matching_types[0] if matching_types else None
 
     @property
@@ -322,7 +384,7 @@ class IdlUnionType(IdlTypeBase):
 
     def resolve_typedefs(self, typedefs):
         self.member_types = [
-            typedefs.get(member_type, member_type)
+            member_type.resolve_typedefs(typedefs)
             for member_type in self.member_types]
         return self
 
@@ -334,11 +396,12 @@ class IdlUnionType(IdlTypeBase):
 
 
 ################################################################################
-# IdlArrayOrSequenceType, IdlArrayType, IdlSequenceType
+# IdlArrayOrSequenceType, IdlSequenceType, IdlFrozenArrayType
 ################################################################################
 
+# TODO(bashi): Rename this like "IdlArrayTypeBase" or something.
 class IdlArrayOrSequenceType(IdlTypeBase):
-    """Base class for IdlArrayType and IdlSequenceType."""
+    """Base class for array-like types."""
 
     def __init__(self, element_type):
         super(IdlArrayOrSequenceType, self).__init__()
@@ -361,6 +424,14 @@ class IdlArrayOrSequenceType(IdlTypeBase):
         return True
 
     @property
+    def is_sequence_type(self):
+        return False
+
+    @property
+    def is_frozen_array(self):
+        return False
+
+    @property
     def enum_values(self):
         return self.element_type.enum_values
 
@@ -374,18 +445,6 @@ class IdlArrayOrSequenceType(IdlTypeBase):
             yield idl_type
 
 
-class IdlArrayType(IdlArrayOrSequenceType):
-    def __init__(self, element_type):
-        super(IdlArrayType, self).__init__(element_type)
-
-    def __str__(self):
-        return '%s[]' % self.element_type
-
-    @property
-    def name(self):
-        return self.element_type.name + 'Array'
-
-
 class IdlSequenceType(IdlArrayOrSequenceType):
     def __init__(self, element_type):
         super(IdlSequenceType, self).__init__(element_type)
@@ -396,6 +455,70 @@ class IdlSequenceType(IdlArrayOrSequenceType):
     @property
     def name(self):
         return self.element_type.name + 'Sequence'
+
+    @property
+    def is_sequence_type(self):
+        return True
+
+
+class IdlFrozenArrayType(IdlArrayOrSequenceType):
+    def __init__(self, element_type):
+        super(IdlFrozenArrayType, self).__init__(element_type)
+
+    def __str__(self):
+        return 'FrozenArray<%s>' % self.element_type
+
+    @property
+    def name(self):
+        return self.element_type.name + 'Array'
+
+    @property
+    def is_frozen_array(self):
+        return True
+
+
+################################################################################
+# IdlRecordType
+################################################################################
+
+class IdlRecordType(IdlTypeBase):
+    def __init__(self, key_type, value_type):
+        super(IdlRecordType, self).__init__()
+        self.key_type = key_type
+        self.value_type = value_type
+
+    def __str__(self):
+        return 'record<%s, %s>' % (self.key_type, self.value_type)
+
+    def __getstate__(self):
+        return {
+            'key_type': self.key_type,
+            'value_type': self.value_type,
+        }
+
+    def __setstate__(self, state):
+        self.key_type = state['key_type']
+        self.value_type = state['value_type']
+
+    def idl_types(self):
+        yield self
+        for idl_type in self.key_type.idl_types():
+            yield idl_type
+        for idl_type in self.value_type.idl_types():
+            yield idl_type
+
+    def resolve_typedefs(self, typedefs):
+        self.key_type = self.key_type.resolve_typedefs(typedefs)
+        self.value_type = self.value_type.resolve_typedefs(typedefs)
+        return self
+
+    @property
+    def is_record_type(self):
+        return True
+
+    @property
+    def name(self):
+        return self.key_type.name + self.value_type.name + 'Record'
 
 
 ################################################################################

@@ -23,10 +23,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-// http://www.w3.org/TR/filter-effects/#InterfaceSVGFEDisplacementMapElement
+// https://drafts.fxtf.org/filters/#InterfaceSVGFEDisplacementMapElement
 
 [
-    DoNotCheckConstants,
+    DoNotCheckConstants
 ] interface SVGFEDisplacementMapElement : SVGElement {
     // Channel Selectors
     [MeasureAs=SVG1DOMFilter] const unsigned short SVG_CHANNEL_UNKNOWN = 0;

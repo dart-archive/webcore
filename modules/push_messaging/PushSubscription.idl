@@ -10,13 +10,14 @@ enum PushEncryptionKeyName {
 };
 
 [
-    Exposed=(Window,ServiceWorker),
-    GarbageCollected,
-    RuntimeEnabled=PushMessaging,
+    Exposed=(Window,Worker),
+    RuntimeEnabled=PushMessaging
 ] interface PushSubscription {
     readonly attribute USVString endpoint;
+    readonly attribute DOMTimeStamp? expirationTime;
+    [SameObject] readonly attribute PushSubscriptionOptions options;
 
-    [RuntimeEnabled=PushMessagingData] ArrayBuffer? getKey(PushEncryptionKeyName name);
+    ArrayBuffer? getKey(PushEncryptionKeyName name);
     [CallWith=ScriptState] Promise<boolean> unsubscribe();
 
     serializer;

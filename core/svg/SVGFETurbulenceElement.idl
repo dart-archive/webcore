@@ -23,10 +23,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-// http://www.w3.org/TR/filter-effects/#InterfaceSVGFETurbulenceElement
+// https://drafts.fxtf.org/filters/#InterfaceSVGFETurbulenceElement
 
 [
-    DoNotCheckConstants,
+    DoNotCheckConstants
 ] interface SVGFETurbulenceElement : SVGElement {
     // Turbulence Types
     [MeasureAs=SVG1DOMFilter] const unsigned short SVG_TURBULENCE_TYPE_UNKNOWN = 0;

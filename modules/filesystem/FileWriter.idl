@@ -29,10 +29,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+// https://www.w3.org/TR/2012/WD-file-writer-api-20120417/#idl-def-FileWriter
 [
-    NoInterfaceObject,
+    ActiveScriptWrappable,
     DependentLifetime,
-    GarbageCollected,
+    NoInterfaceObject
 ] interface FileWriter : EventTarget {
     // ready states
     const unsigned short INIT = 0;
@@ -47,7 +48,7 @@
 
     [RaisesException] void abort();
 
-    readonly attribute FileError error;
+    readonly attribute DOMException? error;
     readonly attribute long long position;
     readonly attribute long long length;
 

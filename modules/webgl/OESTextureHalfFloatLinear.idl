@@ -23,9 +23,10 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+// https://www.khronos.org/registry/webgl/extensions/OES_texture_half_float_linear/
+
 [
-    NoInterfaceObject,
-    GarbageCollected,
-    SetWrapperReferenceFrom=canvas,
+    DependentLifetime,
+    NoInterfaceObject
 ] interface OESTextureHalfFloatLinear {
 };

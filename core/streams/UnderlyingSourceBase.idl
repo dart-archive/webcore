@@ -7,9 +7,16 @@
 // UnderlyingSourceBase, and a JavaScript object can then be generated
 // automatically for use in initializing a ReadableStream.
 
-[NoInterfaceObject, GarbageCollected, DependentLifetime]
+[
+    ActiveScriptWrappable,
+    DependentLifetime,
+    NoInterfaceObject
+]
 interface UnderlyingSourceBase {
     [CallWith=ScriptState, ImplementedAs=startWrapper] Promise<void> start(any stream);
     [CallWith=ScriptState] Promise<void> pull();
     [CallWith=ScriptState, ImplementedAs=cancelWrapper] Promise<void> cancel([Default=Undefined] optional any reason);
+
+    void notifyLockAcquired();
+    void notifyLockReleased();
 };

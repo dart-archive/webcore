@@ -32,25 +32,23 @@
 [
     ImplementedAs=DOMWindowEventHandlers,
     LegacyTreatAsPartialInterface,
-    NoInterfaceObject, // Always used on target of 'implements'
+    NoInterfaceObject // Always used on target of 'implements'
 ] interface WindowEventHandlers {
-    //attribute EventHandler onafterprint;
-    //attribute EventHandler onbeforeprint;
+    attribute EventHandler onafterprint;
+    attribute EventHandler onbeforeprint;
     // FIXME: onbeforeunload should be an OnBeforeUnloadEventHandler.
     attribute EventHandler onbeforeunload;
     attribute EventHandler onhashchange;
     attribute EventHandler onlanguagechange;
     attribute EventHandler onmessage;
+    attribute EventHandler onmessageerror;
     attribute EventHandler onoffline;
     attribute EventHandler ononline;
     attribute EventHandler onpagehide;
     attribute EventHandler onpageshow;
     attribute EventHandler onpopstate;
+    attribute EventHandler onrejectionhandled;
     attribute EventHandler onstorage;
+    attribute EventHandler onunhandledrejection;
     attribute EventHandler onunload;
-
-    // Unhandled Promise Rejection Events
-    // https://github.com/domenic/unhandled-rejections-browser-spec
-    [RuntimeEnabled=PromiseRejectionEvent] attribute EventHandler onrejectionhandled;
-    [RuntimeEnabled=PromiseRejectionEvent] attribute EventHandler onunhandledrejection;
 };

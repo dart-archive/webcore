@@ -3,7 +3,7 @@
 // found in the LICENSE file.
 
 [
-    RuntimeEnabled=ScreenOrientation
+    ImplementedAs=ScreenScreenOrientation
 ] partial interface Screen {
     [CallWith=ScriptState] readonly attribute ScreenOrientation orientation;
 };

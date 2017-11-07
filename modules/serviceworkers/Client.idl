@@ -2,14 +2,16 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// https://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html#service-worker-client-interface
+// https://w3c.github.io/ServiceWorker/#client-interface
 [
     Exposed=ServiceWorker,
-    GarbageCollected,
-    ImplementedAs=ServiceWorkerClient,
+    ImplementedAs=ServiceWorkerClient
 ] interface Client {
-    [RuntimeEnabled=ServiceWorkerClientAttributes] readonly attribute USVString url;
-    [RuntimeEnabled=ServiceWorkerClientAttributes] readonly attribute ContextFrameType frameType;
-    [RuntimeEnabled=ServiceWorkerClientAttributes] readonly attribute DOMString id;
-    [PostMessage, RaisesException, CallWith=ExecutionContext] void postMessage(SerializedScriptValue message, optional sequence<Transferable> transfer);
+    readonly attribute USVString url;
+    readonly attribute DOMString id;
+    readonly attribute ClientType type;
+    [PostMessage, RaisesException, CallWith=ScriptState] void postMessage(any message, optional sequence<object> transfer);
+
+    // FIXME: frameType is non-standard, see https://crbug.com/697110
+    [CallWith=ScriptState] readonly attribute ContextFrameType frameType;
 };

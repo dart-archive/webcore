@@ -2,14 +2,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// http://w3c.github.io/performance-timeline/#the-performance-observer-interface
+// https://w3c.github.io/performance-timeline/#the-performance-observer-interface
 
 [
-    RuntimeEnabled=PerformanceObserver,
-    Exposed=(Window,Worker),
-    GarbageCollected,
+    Exposed=(Window,Worker)
 ] interface PerformanceObserverEntryList {
-    // TODO(philipj): getEntries() should take an optional FilterOptions argument.
+    // TODO(foolip): getEntries() should take an optional FilterOptions argument.
     sequence<PerformanceEntry> getEntries();
     sequence<PerformanceEntry> getEntriesByType(DOMString entryType);
     sequence<PerformanceEntry> getEntriesByName(DOMString name, optional DOMString entryType = null);

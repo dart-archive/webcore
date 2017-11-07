@@ -35,15 +35,15 @@ enum IDBTransactionMode {
 // https://w3c.github.io/IndexedDB/#idl-def-IDBTransaction
 
 [
-    Exposed=(Window,Worker),
+    ActiveScriptWrappable,
     DependentLifetime,
-    GarbageCollected
+    Exposed=(Window,Worker)
 ] interface IDBTransaction : EventTarget {
 
     // Properties
-    [Measure] readonly attribute DOMStringList objectStoreNames;
+    readonly attribute DOMStringList objectStoreNames;
     readonly attribute IDBTransactionMode mode;
-    readonly attribute IDBDatabase db;
+    [SameObject] readonly attribute IDBDatabase db;
     readonly attribute DOMException error;
 
     // Methods

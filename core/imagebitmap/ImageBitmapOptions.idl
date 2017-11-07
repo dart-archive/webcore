@@ -2,9 +2,17 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-[RuntimeEnabled=ExperimentalCanvasFeatures] enum ImageOrientation { "none", "flipY" };
-[RuntimeEnabled=ExperimentalCanvasFeatures] enum PremultiplyAlpha { "none", "default" };
+// https://html.spec.whatwg.org/#imagebitmapoptions
+
+enum ImageOrientation { "none", "flipY" };
+enum PremultiplyAlpha { "none", "premultiply", "default" };
+enum ColorSpaceConversion { "none", "default", "srgb", "linear-rgb", "rec2020", "p3" };
+[RuntimeEnabled=ExperimentalCanvasFeatures] enum ResizeQuality { "pixelated", "low", "medium", "high" };
 dictionary ImageBitmapOptions {
-    [RuntimeEnabled=ExperimentalCanvasFeatures] PremultiplyAlpha premultiplyAlpha = "default";
-    [RuntimeEnabled=ExperimentalCanvasFeatures] ImageOrientation imageOrientation = "none";
+    ImageOrientation imageOrientation = "none";
+    PremultiplyAlpha premultiplyAlpha = "default";
+    ColorSpaceConversion colorSpaceConversion = "default";
+    [RuntimeEnabled=ExperimentalCanvasFeatures, EnforceRange] unsigned long resizeWidth;
+    [RuntimeEnabled=ExperimentalCanvasFeatures, EnforceRange] unsigned long resizeHeight;
+    [RuntimeEnabled=ExperimentalCanvasFeatures] ResizeQuality resizeQuality = "low";
 };

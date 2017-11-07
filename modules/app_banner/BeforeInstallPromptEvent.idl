@@ -3,10 +3,12 @@
 // found in the LICENSE file.
 
 [
+    ActiveScriptWrappable,
+    DependentLifetime,
     Constructor(DOMString type, optional BeforeInstallPromptEventInit eventInitDict),
-    RuntimeEnabled=AppBanner,
+    ConstructorCallWith=ExecutionContext
 ] interface BeforeInstallPromptEvent : Event {
-    readonly attribute sequence<DOMString> platforms;
-    [CallWith=ScriptState] readonly attribute Promise<DOMString> userChoice;
+    readonly attribute FrozenArray<DOMString> platforms;
+    [CallWith=ScriptState] readonly attribute Promise<AppBannerPromptResult> userChoice;
     [CallWith=ScriptState] Promise<void> prompt();
 };

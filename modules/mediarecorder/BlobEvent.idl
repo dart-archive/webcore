@@ -5,9 +5,9 @@
 // https://w3c.github.io/mediacapture-record/MediaRecorder.html#blob-event
 
 [
-    Constructor(DOMString type, BlobEventInit eventInitDict),
-    RuntimeEnabled=MediaRecorder
+    Constructor(DOMString type, BlobEventInit eventInitDict)
 ]
 interface BlobEvent : Event {
-    readonly attribute Blob data;
+    [SameObject] readonly attribute Blob data;
+    readonly attribute DOMHighResTimeStamp timecode;
 };

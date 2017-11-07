@@ -17,8 +17,22 @@
  * Boston, MA 02110-1301, USA.
  */
 
-partial interface Navigator {
-    [RaisesException] void webkitGetUserMedia(MediaStreamConstraints options,
-                                              NavigatorUserMediaSuccessCallback successCallback,
-                                              NavigatorUserMediaErrorCallback errorCallback);
+// https://w3c.github.io/mediacapture-main/#navigatorusermedia-interface-extensions
+
+[
+    ImplementedAs=NavigatorMediaStream
+] partial interface Navigator {
+    [RaisesException,
+     MeasureAs=GetUserMediaLegacy
+    ] void getUserMedia(MediaStreamConstraints constraints,
+                        NavigatorUserMediaSuccessCallback successCallback,
+                        NavigatorUserMediaErrorCallback errorCallback);
+
+    // Non-standard
+    [RaisesException,
+     ImplementedAs=getUserMedia,
+     MeasureAs=GetUserMediaPrefixed
+    ] void webkitGetUserMedia(MediaStreamConstraints constraints,
+                              NavigatorUserMediaSuccessCallback successCallback,
+                              NavigatorUserMediaErrorCallback errorCallback);
 };

@@ -9,8 +9,6 @@ dictionary MessageEventInit : EventInit {
     DOMString origin;
     DOMString lastEventId;
     // TODO(bashi): |source| should be (WindowProxy or MessagePort)?
-    EventTarget source;
-    // Per spec, |ports| isn't nullable, but it seems it should be.
-    // https://www.w3.org/Bugs/Public/show_bug.cgi?id=23176
-    sequence<MessagePort>? ports;
+    EventTarget? source;
+    sequence<MessagePort> ports = [];
 };

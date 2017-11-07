@@ -29,8 +29,7 @@
 // https://html.spec.whatwg.org/#worker-locations
 
 [
-    Exposed=Worker,
-    GarbageCollected,
+    Exposed=Worker
 ] interface WorkerLocation {
 };
 

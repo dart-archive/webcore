@@ -2,11 +2,11 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// https://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html#fetch-event-interface
+// https://w3c.github.io/ServiceWorker/#installevent
+
 [
     Constructor(DOMString type, optional ExtendableEventInit eventInitDict),
-    Exposed=ServiceWorker,
-    RuntimeEnabled=ForeignFetch,
+    Exposed=ServiceWorker
 ] interface InstallEvent : ExtendableEvent {
-  [CallWith=ExecutionContext, RaisesException] void registerForeignFetchScopes(sequence<USVString> subScopes, (USVString or sequence<USVString>) origins);
+  [OriginTrialEnabled=ForeignFetch, CallWith=ScriptState, RaisesException] void registerForeignFetch(ForeignFetchOptions options);
 };

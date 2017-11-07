@@ -2,9 +2,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// http://w3c.github.io/mediacapture-main/#navigatorusermedia
+// https://w3c.github.io/mediacapture-main/#navigatorusermedia
 
-partial interface Navigator {
-    [RuntimeEnabled=MediaDevices] readonly attribute MediaDevices mediaDevices;
+[
+    ImplementedAs=NavigatorUserMedia
+] partial interface Navigator {
+    [SameObject] readonly attribute MediaDevices mediaDevices;
 };
-

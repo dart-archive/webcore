@@ -29,15 +29,8 @@
  */
 
 [
-    WillBeGarbageCollected,
     NoInterfaceObject
 ] interface InspectorOverlayHost {
     void resume();
     void stepOver();
-    void startPropertyChange(DOMString propertyName);
-    void changeProperty(float cssDelta);
-    void endPropertyChange();
-    void clearSelection(boolean commitChanges);
-    void nextSelector();
-    void previousSelector();
 };

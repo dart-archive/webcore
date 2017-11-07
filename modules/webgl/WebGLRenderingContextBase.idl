@@ -23,7 +23,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-// http://www.khronos.org/registry/webgl/specs/latest/1.0/#WebGLRenderingContextBase
+// https://www.khronos.org/registry/webgl/specs/latest/1.0/#WebGLRenderingContextBase
 
 typedef unsigned long  GLenum;
 typedef boolean        GLboolean;
@@ -44,11 +44,10 @@ typedef unrestricted float GLclampf;
     // FIXME: [DoNotCheckConstants] should be applied to members and not need to
     // be put on implementing interface
     // DoNotCheckConstants, // need to put on implementing interface
-    NoInterfaceObject, // Always used on target of 'implements'
-    WillBeGarbageCollected,
+    NoInterfaceObject // Always used on target of 'implements'
 ] interface WebGLRenderingContextBase {
 
-    readonly attribute HTMLCanvasElement canvas;
+    [ImplementedAs=getHTMLOrOffscreenCanvas] readonly attribute (HTMLCanvasElement or OffscreenCanvas) canvas;
 
     /* ClearBufferMask */
     const GLenum DEPTH_BUFFER_BIT               = 0x00000100;
@@ -424,7 +423,6 @@ typedef unrestricted float GLclampf;
     const GLenum RGB5_A1                        = 0x8057;
     const GLenum RGB565                         = 0x8D62;
     const GLenum DEPTH_COMPONENT16              = 0x81A5;
-    const GLenum STENCIL_INDEX                  = 0x1901;
     const GLenum STENCIL_INDEX8                 = 0x8D48;
     const GLenum DEPTH_STENCIL                  = 0x84F9;
 
@@ -473,12 +471,12 @@ typedef unrestricted float GLclampf;
     readonly attribute GLsizei drawingBufferHeight;
 
     void activeTexture(GLenum texture);
-    [CallWith=ScriptState] void attachShader(WebGLProgram? program, WebGLShader? shader);
-    void bindAttribLocation(WebGLProgram? program, GLuint index, DOMString name);
-    [CallWith=ScriptState] void bindBuffer(GLenum target, WebGLBuffer? buffer);
-    [CallWith=ScriptState] void bindFramebuffer(GLenum target, WebGLFramebuffer? framebuffer);
-    [CallWith=ScriptState] void bindRenderbuffer(GLenum target, WebGLRenderbuffer? renderbuffer);
-    [CallWith=ScriptState] void bindTexture(GLenum target, WebGLTexture? texture);
+    void attachShader(WebGLProgram program, WebGLShader shader);
+    void bindAttribLocation(WebGLProgram program, GLuint index, DOMString name);
+    void bindBuffer(GLenum target, WebGLBuffer? buffer);
+    void bindFramebuffer(GLenum target, WebGLFramebuffer? framebuffer);
+    void bindRenderbuffer(GLenum target, WebGLRenderbuffer? renderbuffer);
+    void bindTexture(GLenum target, WebGLTexture? texture);
     void blendColor(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha);
     void blendEquation(GLenum mode);
     void blendEquationSeparate(GLenum modeRGB, GLenum modeAlpha);
@@ -487,10 +485,10 @@ typedef unrestricted float GLclampf;
     // FIXME: should be union type
     // https://www.khronos.org/bugzilla/show_bug.cgi?id=1172
     void bufferData(GLenum target, GLsizeiptr size, GLenum usage);
-    void bufferData(GLenum target, ArrayBufferView data, GLenum usage);
+    void bufferData(GLenum target, [AllowShared] ArrayBufferView data, GLenum usage);
     void bufferData(GLenum target, ArrayBuffer? data, GLenum usage);
     void bufferSubData(GLenum target, GLintptr offset, [FlexibleArrayBufferView] ArrayBufferView data);
-    void bufferSubData(GLenum target, GLintptr offset, ArrayBuffer? data);
+    void bufferSubData(GLenum target, GLintptr offset, ArrayBuffer data);
 
     GLenum checkFramebufferStatus(GLenum target);
     void clear(GLbitfield mask);
@@ -498,12 +496,12 @@ typedef unrestricted float GLclampf;
     void clearDepth(GLclampf depth);
     void clearStencil(GLint s);
     void colorMask(GLboolean red, GLboolean green, GLboolean blue, GLboolean alpha);
-    void compileShader(WebGLShader? shader);
+    void compileShader(WebGLShader shader);
 
     void compressedTexImage2D(GLenum target, GLint level, GLenum internalformat,
-                              GLsizei width, GLsizei height, GLint border, ArrayBufferView data);
+                              GLsizei width, GLsizei height, GLint border, [AllowShared] ArrayBufferView data);
     void compressedTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
-                                 GLsizei width, GLsizei height, GLenum format, ArrayBufferView data);
+                                 GLsizei width, GLsizei height, GLenum format, [AllowShared] ArrayBufferView data);
 
     void copyTexImage2D(GLenum target, GLint level, GLenum internalformat, GLint x, GLint y, GLsizei width, GLsizei height, GLint border);
     void copyTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint x, GLint y, GLsizei width, GLsizei height);
@@ -527,7 +525,7 @@ typedef unrestricted float GLclampf;
     void depthFunc(GLenum func);
     void depthMask(GLboolean flag);
     void depthRange(GLclampf zNear, GLclampf zFar);
-    [CallWith=ScriptState] void detachShader(WebGLProgram? program, WebGLShader? shader);
+    void detachShader(WebGLProgram program, WebGLShader shader);
     void disable(GLenum cap);
     void disableVertexAttribArray(GLuint index);
     void drawArrays(GLenum mode, GLint first, GLsizei count);
@@ -537,17 +535,17 @@ typedef unrestricted float GLclampf;
     void enableVertexAttribArray(GLuint index);
     void finish();
     void flush();
-    [CallWith=ScriptState] void framebufferRenderbuffer(GLenum target, GLenum attachment, GLenum renderbuffertarget, WebGLRenderbuffer? renderbuffer);
-    [CallWith=ScriptState] void framebufferTexture2D(GLenum target, GLenum attachment, GLenum textarget, WebGLTexture? texture, GLint level);
+    void framebufferRenderbuffer(GLenum target, GLenum attachment, GLenum renderbuffertarget, WebGLRenderbuffer? renderbuffer);
+    void framebufferTexture2D(GLenum target, GLenum attachment, GLenum textarget, WebGLTexture? texture, GLint level);
     void frontFace(GLenum mode);
     void generateMipmap(GLenum target);
 
-    WebGLActiveInfo getActiveAttrib(WebGLProgram? program, GLuint index);
-    WebGLActiveInfo getActiveUniform(WebGLProgram? program, GLuint index);
+    WebGLActiveInfo getActiveAttrib(WebGLProgram program, GLuint index);
+    WebGLActiveInfo getActiveUniform(WebGLProgram program, GLuint index);
 
-    sequence<WebGLShader>? getAttachedShaders(WebGLProgram? program);
+    sequence<WebGLShader>? getAttachedShaders(WebGLProgram program);
 
-    GLint getAttribLocation(WebGLProgram? program, DOMString name);
+    GLint getAttribLocation(WebGLProgram program, DOMString name);
 
     [CallWith=ScriptState] any getBufferParameter(GLenum target, GLenum pname);
 
@@ -559,24 +557,24 @@ typedef unrestricted float GLclampf;
 
     [CallWith=ScriptState] any getFramebufferAttachmentParameter(GLenum target, GLenum attachment, GLenum pname);
     [CallWith=ScriptState] any getParameter(GLenum pname);
-    [CallWith=ScriptState] any getProgramParameter(WebGLProgram? program, GLenum pname);
-    DOMString? getProgramInfoLog(WebGLProgram? program);
+    [CallWith=ScriptState] any getProgramParameter(WebGLProgram program, GLenum pname);
+    DOMString? getProgramInfoLog(WebGLProgram program);
     [CallWith=ScriptState] any getRenderbufferParameter(GLenum target, GLenum pname);
-    [CallWith=ScriptState] any getShaderParameter(WebGLShader? shader, GLenum pname);
+    [CallWith=ScriptState] any getShaderParameter(WebGLShader shader, GLenum pname);
 
-    DOMString?   getShaderInfoLog(WebGLShader? shader);
+    DOMString?   getShaderInfoLog(WebGLShader shader);
 
     WebGLShaderPrecisionFormat getShaderPrecisionFormat(GLenum shadertype, GLenum precisiontype);
 
-    DOMString?   getShaderSource(WebGLShader? shader);
+    DOMString?   getShaderSource(WebGLShader shader);
 
     sequence<DOMString>? getSupportedExtensions();
 
     [CallWith=ScriptState] any getTexParameter(GLenum target, GLenum pname);
 
-    [CallWith=ScriptState] any getUniform(WebGLProgram? program, WebGLUniformLocation? location);
+    [CallWith=ScriptState] any getUniform(WebGLProgram program, WebGLUniformLocation location);
 
-    WebGLUniformLocation getUniformLocation(WebGLProgram? program, DOMString name);
+    WebGLUniformLocation getUniformLocation(WebGLProgram program, DOMString name);
 
     [CallWith=ScriptState] any getVertexAttrib(GLuint index, GLenum pname);
 
@@ -592,16 +590,16 @@ typedef unrestricted float GLclampf;
     GLboolean isShader(WebGLShader? shader);
     GLboolean isTexture(WebGLTexture? texture);
     void lineWidth(GLfloat width);
-    void linkProgram(WebGLProgram? program);
+    void linkProgram(WebGLProgram program);
     void pixelStorei(GLenum pname, GLint param);
     void polygonOffset(GLfloat factor, GLfloat units);
 
-    void readPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, ArrayBufferView? pixels);
+    void readPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, [AllowShared] ArrayBufferView? pixels);
 
     void renderbufferStorage(GLenum target, GLenum internalformat, GLsizei width, GLsizei height);
     void sampleCoverage(GLclampf value, GLboolean invert);
     void scissor(GLint x, GLint y, GLsizei width, GLsizei height);
-    void shaderSource(WebGLShader? shader, DOMString string);
+    void shaderSource(WebGLShader shader, DOMString string);
     void stencilFunc(GLenum func, GLint ref, GLuint mask);
     void stencilFuncSeparate(GLenum face, GLenum func, GLint ref, GLuint mask);
     void stencilMask(GLuint mask);
@@ -618,17 +616,17 @@ typedef unrestricted float GLclampf;
     void texImage2D(
         GLenum target, GLint level, GLint internalformat,
         GLsizei width, GLsizei height, GLint border,
-        GLenum format, GLenum type, ArrayBufferView? pixels);
+        GLenum format, GLenum type, [AllowShared] ArrayBufferView? pixels);
     void texImage2D(
         GLenum target, GLint level, GLint internalformat,
-        GLenum format, GLenum type, ImageData? pixels);
-    [RaisesException] void texImage2D(
+        GLenum format, GLenum type, ImageData pixels);
+    [CallWith=ExecutionContext, RaisesException] void texImage2D(
         GLenum target, GLint level, GLint internalformat,
         GLenum format, GLenum type, HTMLImageElement image);
-    [RaisesException] void texImage2D(
+    [CallWith=ExecutionContext, RaisesException] void texImage2D(
         GLenum target, GLint level, GLint internalformat,
         GLenum format, GLenum type, HTMLCanvasElement canvas);
-    [RaisesException] void texImage2D(
+    [CallWith=ExecutionContext, RaisesException] void texImage2D(
         GLenum target, GLint level, GLint internalformat,
         GLenum format, GLenum type, HTMLVideoElement video);
     [RaisesException] void texImage2D(
@@ -638,17 +636,17 @@ typedef unrestricted float GLclampf;
     void texSubImage2D(
         GLenum target, GLint level, GLint xoffset, GLint yoffset,
         GLsizei width, GLsizei height,
-        GLenum format, GLenum type, ArrayBufferView? pixels);
+        GLenum format, GLenum type, [AllowShared] ArrayBufferView? pixels);
     void texSubImage2D(
         GLenum target, GLint level, GLint xoffset, GLint yoffset,
-        GLenum format, GLenum type, ImageData? pixels);
-    [RaisesException] void texSubImage2D(
+        GLenum format, GLenum type, ImageData pixels);
+    [CallWith=ExecutionContext, RaisesException] void texSubImage2D(
         GLenum target, GLint level, GLint xoffset, GLint yoffset,
         GLenum format, GLenum type, HTMLImageElement image);
-    [RaisesException] void texSubImage2D(
+    [CallWith=ExecutionContext, RaisesException] void texSubImage2D(
         GLenum target, GLint level, GLint xoffset, GLint yoffset,
         GLenum format, GLenum type, HTMLCanvasElement canvas);
-    [RaisesException] void texSubImage2D(
+    [CallWith=ExecutionContext, RaisesException] void texSubImage2D(
         GLenum target, GLint level, GLint xoffset, GLint yoffset,
         GLenum format, GLenum type, HTMLVideoElement video);
     [RaisesException] void texSubImage2D(
@@ -680,30 +678,32 @@ typedef unrestricted float GLclampf;
     void uniform4iv(WebGLUniformLocation? location, [FlexibleArrayBufferView] Int32Array v);
     void uniform4iv(WebGLUniformLocation? location, sequence<GLint> v);
 
-    void uniformMatrix2fv(WebGLUniformLocation? location, GLboolean transpose, Float32Array array);
+    void uniformMatrix2fv(WebGLUniformLocation? location, GLboolean transpose, [AllowShared] Float32Array array);
     void uniformMatrix2fv(WebGLUniformLocation? location, GLboolean transpose, sequence<GLfloat> array);
-    void uniformMatrix3fv(WebGLUniformLocation? location, GLboolean transpose, Float32Array array);
+    void uniformMatrix3fv(WebGLUniformLocation? location, GLboolean transpose, [AllowShared] Float32Array array);
     void uniformMatrix3fv(WebGLUniformLocation? location, GLboolean transpose, sequence<GLfloat> array);
-    void uniformMatrix4fv(WebGLUniformLocation? location, GLboolean transpose, Float32Array array);
+    void uniformMatrix4fv(WebGLUniformLocation? location, GLboolean transpose, [AllowShared] Float32Array array);
     void uniformMatrix4fv(WebGLUniformLocation? location, GLboolean transpose, sequence<GLfloat> array);
 
-    [CallWith=ScriptState] void useProgram(WebGLProgram? program);
-    void validateProgram(WebGLProgram? program);
+    void useProgram(WebGLProgram? program);
+    void validateProgram(WebGLProgram program);
 
     void vertexAttrib1f(GLuint indx, GLfloat x);
-    void vertexAttrib1fv(GLuint indx, Float32Array values);
+    void vertexAttrib1fv(GLuint indx, [AllowShared] Float32Array values);
     void vertexAttrib1fv(GLuint indx, sequence<GLfloat> values);
     void vertexAttrib2f(GLuint indx, GLfloat x, GLfloat y);
-    void vertexAttrib2fv(GLuint indx, Float32Array values);
+    void vertexAttrib2fv(GLuint indx, [AllowShared] Float32Array values);
     void vertexAttrib2fv(GLuint indx, sequence<GLfloat> values);
     void vertexAttrib3f(GLuint indx, GLfloat x, GLfloat y, GLfloat z);
-    void vertexAttrib3fv(GLuint indx, Float32Array values);
+    void vertexAttrib3fv(GLuint indx, [AllowShared] Float32Array values);
     void vertexAttrib3fv(GLuint indx, sequence<GLfloat> values);
     void vertexAttrib4f(GLuint indx, GLfloat x, GLfloat y, GLfloat z, GLfloat w);
-    void vertexAttrib4fv(GLuint indx, Float32Array values);
+    void vertexAttrib4fv(GLuint indx, [AllowShared] Float32Array values);
     void vertexAttrib4fv(GLuint indx, sequence<GLfloat> values);
-    [CallWith=ScriptState] void vertexAttribPointer(GLuint indx, GLint size, GLenum type, GLboolean normalized,
+    void vertexAttribPointer(GLuint indx, GLint size, GLenum type, GLboolean normalized,
                                                     GLsizei stride, GLintptr offset);
 
     void viewport(GLint x, GLint y, GLsizei width, GLsizei height);
+
+    [RuntimeEnabled=ExperimentalCanvasFeatures, CallWith=ScriptState, RaisesException] Promise commit();
 };

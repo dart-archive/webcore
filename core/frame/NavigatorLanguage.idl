@@ -6,8 +6,8 @@
 
 [
     NoInterfaceObject,
-    Exposed=(Window,Worker),
+    Exposed=(Window,Worker)
 ] interface NavigatorLanguage {
-    readonly attribute DOMString? language;
-    [CachedAttribute=hasLanguagesChanged] readonly attribute DOMString[] languages;
+    readonly attribute DOMString language;
+    [CachedAttribute=hasLanguagesChanged] readonly attribute FrozenArray<DOMString> languages;
 };

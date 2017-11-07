@@ -28,19 +28,17 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-// http://dev.w3.org/csswg/css-font-loading/#FontFaceSet-interface
+// https://drafts.csswg.org/css-font-loading/#FontFaceSet-interface
 
 enum FontFaceSetLoadStatus { "loading", "loaded" };
 
-// TODO(philipj): This interface should be [Exposed=Window,Worker] and should
+// TODO(foolip): This interface should be [Exposed=Window,Worker] and should
 // have a constructor, and thus not have [NoInterfaceObject].
 [
     DependentLifetime,
-    SetWrapperReferenceFrom=document,
-    NoInterfaceObject,
+    NoInterfaceObject
 ] interface FontFaceSet : EventTarget {
     setlike<FontFace>;
-    readonly attribute unsigned long size;
 
     // events for when loading state changes
     attribute EventHandler onloading;
