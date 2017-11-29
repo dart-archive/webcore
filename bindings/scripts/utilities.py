@@ -15,8 +15,10 @@ import string
 import subprocess
 import sys
 
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', '..', '..', '..',
-                             'third_party', 'blink', 'tools'))
+# FIXMEDART: Changed location of blink/tools to be under WebCore not
+#            third_party/blink/tools
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..',
+                             'blink', 'tools'))
 from blinkpy.common.name_style_converter import NameStyleConverter
 
 
