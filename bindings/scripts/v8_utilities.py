@@ -35,11 +35,11 @@ import os
 import re
 import sys
 
-from idl_types import IdlTypeBase
-import idl_types
-from idl_definitions import Exposure, IdlInterface, IdlAttribute
-from utilities import to_snake_case
-from v8_globals import includes
+from .idl_types import IdlTypeBase
+from . import idl_types
+from .idl_definitions import Exposure, IdlInterface, IdlAttribute
+from .utilities import to_snake_case
+from .v8_globals import includes
 
 ACRONYMS = [
     'CSSOM',  # must come *before* CSS to match full acronym

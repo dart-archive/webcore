@@ -35,17 +35,17 @@ Design doc: http://www.chromium.org/developers/design-documents/idl-compiler
 """
 from operator import or_
 
-from idl_definitions import IdlAttribute, IdlOperation, IdlArgument
-from idl_types import IdlType, inherits_interface
-from overload_set_algorithm import effective_overload_set_by_length
-from overload_set_algorithm import method_overloads_by_name
+from .idl_definitions import IdlAttribute, IdlOperation, IdlArgument
+from .idl_types import IdlType, inherits_interface
+from .overload_set_algorithm import effective_overload_set_by_length
+from .overload_set_algorithm import method_overloads_by_name
 
-import v8_attributes
-from v8_globals import includes
-import v8_methods
-import v8_types
-import v8_utilities
-from v8_utilities import (context_enabled_feature_name, cpp_name_or_partial, cpp_name,
+from . import v8_attributes
+from .v8_globals import includes
+from . import v8_methods
+from . import v8_types
+from . import v8_utilities
+from .v8_utilities import (context_enabled_feature_name, cpp_name_or_partial, cpp_name,
                           has_extended_attribute_value, runtime_enabled_feature_name,
                           is_legacy_interface_type_checking)
 
@@ -1134,9 +1134,9 @@ def resolution_tests_methods(effective_overloads):
 
     # Extract argument and IDL type to simplify accessing these in each loop.
     arguments = [method['arguments'][index] for method in methods]
-    arguments_methods = zip(arguments, methods)
+    arguments_methods = list(zip(arguments, methods))
     idl_types = [argument['idl_type_object'] for argument in arguments]
-    idl_types_methods = zip(idl_types, methods)
+    idl_types_methods = list(zip(idl_types, methods))
 
     # We can’t do a single loop through all methods or simply sort them, because
     # a method may be listed in multiple steps of the resolution algorithm, and

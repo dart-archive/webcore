@@ -37,14 +37,14 @@ from optparse import OptionParser
 import os
 import sys
 
-from code_generator_v8 import CodeGeneratorDictionaryImpl
-from code_generator_v8 import CodeGeneratorV8
-from code_generator_v8 import CodeGeneratorUnionType
-from code_generator_v8 import CodeGeneratorCallbackFunction
-from idl_reader import IdlReader
-from utilities import create_component_info_provider
-from utilities import read_idl_files_list_from_file
-from utilities import write_file
+from .code_generator_v8 import CodeGeneratorDictionaryImpl
+from .code_generator_v8 import CodeGeneratorV8
+from .code_generator_v8 import CodeGeneratorUnionType
+from .code_generator_v8 import CodeGeneratorCallbackFunction
+from .idl_reader import IdlReader
+from .utilities import create_component_info_provider
+from .utilities import read_idl_files_list_from_file
+from .utilities import write_file
 
 
 def parse_options():
@@ -80,11 +80,10 @@ def parse_options():
     return options, idl_filename
 
 
-class IdlCompiler(object):
+class IdlCompiler(object, metaclass=abc.ABCMeta):
     """The IDL Compiler.
 
     """
-    __metaclass__ = abc.ABCMeta
 
     def __init__(self, output_directory, cache_directory=None,
                  code_generator_class=None, snake_case_generated_files=False,

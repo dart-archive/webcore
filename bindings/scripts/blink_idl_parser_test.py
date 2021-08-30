@@ -8,7 +8,7 @@
 
 import unittest
 
-from blink_idl_parser import BlinkIDLParser
+from .blink_idl_parser import BlinkIDLParser
 
 
 class BlinkIDLParserTest(unittest.TestCase):

@@ -18,12 +18,12 @@ import optparse
 import os
 import sys
 
-from utilities import get_file_contents
-from utilities import get_interface_extended_attributes_from_idl
-from utilities import get_first_interface_name_from_idl
-from utilities import read_file_to_list
-from utilities import read_pickle_files
-from utilities import write_pickle_file
+from .utilities import get_file_contents
+from .utilities import get_interface_extended_attributes_from_idl
+from .utilities import get_first_interface_name_from_idl
+from .utilities import read_file_to_list
+from .utilities import read_pickle_files
+from .utilities import write_pickle_file
 
 GLOBAL_EXTENDED_ATTRIBUTES = frozenset([
     'Global',
@@ -51,7 +51,7 @@ def parse_options():
 
 
 def dict_union(dicts):
-    return dict((k, v) for d in dicts for k, v in d.iteritems())
+    return dict((k, v) for d in dicts for k, v in d.items())
 
 
 def idl_file_to_global_names(idl_filename):
@@ -68,7 +68,7 @@ def idl_file_to_global_names(idl_filename):
     interface_name = get_first_interface_name_from_idl(idl_file_contents)
 
     global_keys = GLOBAL_EXTENDED_ATTRIBUTES.intersection(
-        extended_attributes.iterkeys())
+        iter(extended_attributes.keys()))
     if not global_keys:
         return
     if len(global_keys) > 1:

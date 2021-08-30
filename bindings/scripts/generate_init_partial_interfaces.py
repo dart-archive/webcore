@@ -12,12 +12,12 @@ import os
 import posixpath
 import sys
 
-from utilities import get_file_contents
-from utilities import get_first_interface_name_from_idl
-from utilities import read_idl_files_list_from_file
-from utilities import should_generate_impl_file_from_idl
-from utilities import write_file
-from v8_utilities import build_basename
+from .utilities import get_file_contents
+from .utilities import get_first_interface_name_from_idl
+from .utilities import read_idl_files_list_from_file
+from .utilities import should_generate_impl_file_from_idl
+from .utilities import write_file
+from .v8_utilities import build_basename
 
 
 _COPYRIGHT = """// Copyright 2014 The Chromium Authors. All rights reserved.
@@ -65,10 +65,10 @@ def extract_meta_data(file_paths):
 
     for file_path in file_paths:
         if not file_path.endswith('.idl'):
-            print 'WARNING: non-IDL file passed: "%s"' % file_path
+            print('WARNING: non-IDL file passed: "%s"' % file_path)
             continue
         if not os.path.exists(file_path):
-            print 'WARNING: file not found: "%s"' % file_path
+            print('WARNING: file not found: "%s"' % file_path)
             continue
 
         idl_file_contents = get_file_contents(file_path)

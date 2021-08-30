@@ -41,16 +41,16 @@ Design doc: http://www.chromium.org/developers/design-documents/idl-compiler
 
 import posixpath
 
-from idl_types import IdlArrayOrSequenceType
-from idl_types import IdlNullableType
-from idl_types import IdlRecordType
-from idl_types import IdlType
-from idl_types import IdlTypeBase
-from idl_types import IdlUnionType
-from utilities import to_snake_case
-import v8_attributes  # for IdlType.constructor_type_name
-from v8_globals import includes
-from v8_utilities import extended_attribute_value_contains
+from .idl_types import IdlArrayOrSequenceType
+from .idl_types import IdlNullableType
+from .idl_types import IdlRecordType
+from .idl_types import IdlType
+from .idl_types import IdlTypeBase
+from .idl_types import IdlUnionType
+from .utilities import to_snake_case
+from . import v8_attributes  # for IdlType.constructor_type_name
+from .v8_globals import includes
+from .v8_utilities import extended_attribute_value_contains
 
 
 ################################################################################

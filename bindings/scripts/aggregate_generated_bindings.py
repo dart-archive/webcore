@@ -52,9 +52,9 @@ import optparse
 import os
 import re
 import sys
-from utilities import idl_filename_to_basename
-from utilities import read_idl_files_list_from_file
-from utilities import to_snake_case
+from .utilities import idl_filename_to_basename
+from .utilities import read_idl_files_list_from_file
+from .utilities import to_snake_case
 
 COPYRIGHT_TEMPLATE = """/*
  * THIS FILE WAS AUTOMATICALLY GENERATED, DO NOT EDIT.
@@ -119,7 +119,7 @@ def generate_content(component, basenames, snake_case_generated_files):
 def write_content(content, output_file_name):
     parent_path, file_name = os.path.split(output_file_name)
     if not os.path.exists(parent_path):
-        print 'Creating directory: %s' % parent_path
+        print('Creating directory: %s' % parent_path)
         os.makedirs(parent_path)
     with open(output_file_name, 'w') as f:
         f.write(content)

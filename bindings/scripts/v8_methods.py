@@ -34,12 +34,12 @@ Extends IdlTypeBase and IdlUnionType with property |union_arguments|.
 Design doc: http://www.chromium.org/developers/design-documents/idl-compiler
 """
 
-from idl_definitions import IdlArgument, IdlOperation
-from idl_types import IdlTypeBase, IdlUnionType, inherits_interface
-from v8_globals import includes
-import v8_types
-import v8_utilities
-from v8_utilities import (has_extended_attribute_value, is_unforgeable,
+from .idl_definitions import IdlArgument, IdlOperation
+from .idl_types import IdlTypeBase, IdlUnionType, inherits_interface
+from .v8_globals import includes
+from . import v8_types
+from . import v8_utilities
+from .v8_utilities import (has_extended_attribute_value, is_unforgeable,
                           is_legacy_interface_type_checking)
 
 
@@ -477,7 +477,7 @@ def argument_set_default_value(argument):
                                 % idl_type.name)
             # Union container objects are "null" initially.
             return '/* null default value */'
-        if isinstance(default_value.value, basestring):
+        if isinstance(default_value.value, str):
             member_type = idl_type.string_member_type
         elif isinstance(default_value.value, (int, float)):
             member_type = idl_type.numeric_member_type

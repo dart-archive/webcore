@@ -8,7 +8,7 @@
 
 import unittest
 
-from idl_definitions import IdlAttribute
+from .idl_definitions import IdlAttribute
 
 
 class IdlAttributeTest(unittest.TestCase):

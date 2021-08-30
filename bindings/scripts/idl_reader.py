@@ -34,13 +34,13 @@ http://www.chromium.org/developers/design-documents/idl-compiler#TOC-Front-end
 
 import os
 
-import blink_idl_parser
-from blink_idl_parser import BlinkIDLParser
-from idl_definitions import IdlDefinitions
-from idl_validator import EXTENDED_ATTRIBUTES_RELATIVE_PATH, IDLInvalidExtendedAttributeError, IDLExtendedAttributeValidator
-from interface_dependency_resolver import InterfaceDependencyResolver
-from utilities import idl_filename_to_component
-from utilities import to_snake_case
+from . import blink_idl_parser
+from .blink_idl_parser import BlinkIDLParser
+from .idl_definitions import IdlDefinitions
+from .idl_validator import EXTENDED_ATTRIBUTES_RELATIVE_PATH, IDLInvalidExtendedAttributeError, IDLExtendedAttributeValidator
+from .interface_dependency_resolver import InterfaceDependencyResolver
+from .utilities import idl_filename_to_component
+from .utilities import to_snake_case
 
 
 def validate_blink_idl_definitions(idl_filename, idl_file_basename,
@@ -56,8 +56,8 @@ def validate_blink_idl_definitions(idl_filename, idl_file_basename,
          definitions. There is no filename convention in this case.
        - Otherwise, an IDL file is invalid.
     """
-    targets = (definitions.interfaces.values() +
-               definitions.dictionaries.values())
+    targets = (list(definitions.interfaces.values()) +
+               list(definitions.dictionaries.values()))
     number_of_targets = len(targets)
     if number_of_targets > 1:
         raise Exception(
@@ -127,7 +127,7 @@ class IdlReader(object):
             validate_blink_idl_definitions(idl_filename, idl_file_basename, definitions)
         else:
             if len(definitions.interfaces) > 1:
-                print '----- Supplemental interfaces %s' % len(definitions.interfaces)
+                print('----- Supplemental interfaces %s' % len(definitions.interfaces))
 
         # Validate extended attributes
         if not self.extended_attribute_validator:

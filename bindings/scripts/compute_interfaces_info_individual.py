@@ -47,15 +47,15 @@ import os
 import posixpath
 import sys
 
-from idl_definitions import Visitor
-from idl_reader import IdlReader
-from utilities import idl_filename_to_component
-from utilities import idl_filename_to_basename
-from utilities import merge_dict_recursively
-from utilities import read_idl_files_list_from_file
-from utilities import shorten_union_name
-from utilities import to_snake_case
-from utilities import write_pickle_file
+from .idl_definitions import Visitor
+from .idl_reader import IdlReader
+from .utilities import idl_filename_to_component
+from .utilities import idl_filename_to_basename
+from .utilities import merge_dict_recursively
+from .utilities import read_idl_files_list_from_file
+from .utilities import shorten_union_name
+from .utilities import to_snake_case
+from .utilities import write_pickle_file
 
 
 module_path = os.path.dirname(__file__)
@@ -227,7 +227,7 @@ class InterfaceInfoCollector(object):
         this_union_types = collect_union_types_from_definitions(definitions)
         self.union_types.update(this_union_types)
         self.typedefs.update(definitions.typedefs)
-        for callback_function_name, callback_function in definitions.callback_functions.iteritems():
+        for callback_function_name, callback_function in definitions.callback_functions.items():
             # Set 'component_dir' to specify a directory that callback function files belong to
             self.callback_functions[callback_function_name] = {
                 'callback_function': callback_function,
@@ -235,14 +235,14 @@ class InterfaceInfoCollector(object):
                 'full_path': os.path.realpath(idl_filename),
             }
         # Check enum duplication.
-        for enum in definitions.enumerations.values():
+        for enum in list(definitions.enumerations.values()):
             if not self.check_enum_consistency(enum):
                 raise Exception('Enumeration "%s" is defined more than once '
                                 'with different valid values' % enum.name)
         self.enumerations.update(definitions.enumerations)
 
         if definitions.interfaces:
-            definition = next(definitions.interfaces.itervalues())
+            definition = next(iter(definitions.interfaces.values()))
             interface_info = {
                 'is_callback_interface': definition.is_callback,
                 'is_dictionary': False,
@@ -256,7 +256,7 @@ class InterfaceInfoCollector(object):
                 'referenced_interfaces': get_put_forward_interfaces_from_definition(definition),
             }
         elif definitions.dictionaries:
-            definition = next(definitions.dictionaries.itervalues())
+            definition = next(iter(definitions.dictionaries.values()))
             interface_info = {
                 'is_callback_interface': False,
                 'is_dictionary': True,
@@ -337,7 +337,7 @@ class InterfaceInfoCollector(object):
         return {
             'callback_functions': self.callback_functions,
             'enumerations': dict((enum.name, enum.values)
-                                 for enum in self.enumerations.values()),
+                                 for enum in list(self.enumerations.values())),
             'typedefs': self.typedefs,
             'union_types': self.union_types,
         }

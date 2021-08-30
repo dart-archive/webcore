@@ -8,18 +8,18 @@
 
 import unittest
 
-from code_generator_web_agent_api import InterfaceContextBuilder
-from code_generator_web_agent_api import MethodOverloadSplitter
-from code_generator_web_agent_api import STRING_INCLUDE_PATH
-from code_generator_web_agent_api import TypeResolver
-from idl_definitions import IdlArgument
-from idl_definitions import IdlAttribute
-from idl_definitions import IdlOperation
-from idl_types import IdlType
-from idl_types import IdlNullableType
-from idl_types import IdlUnionType
-from idl_types import PRIMITIVE_TYPES
-from idl_types import STRING_TYPES
+from .code_generator_web_agent_api import InterfaceContextBuilder
+from .code_generator_web_agent_api import MethodOverloadSplitter
+from .code_generator_web_agent_api import STRING_INCLUDE_PATH
+from .code_generator_web_agent_api import TypeResolver
+from .idl_definitions import IdlArgument
+from .idl_definitions import IdlAttribute
+from .idl_definitions import IdlOperation
+from .idl_types import IdlType
+from .idl_types import IdlNullableType
+from .idl_types import IdlUnionType
+from .idl_types import PRIMITIVE_TYPES
+from .idl_types import STRING_TYPES
 
 
 # TODO(dglazkov): Convert to use actual objects, not stubs.
@@ -52,7 +52,7 @@ class IdlTestingHelper(object):
 
     def make_stub_interfaces_info(self, classes_to_paths):
         result = {}
-        for class_name, path in classes_to_paths.iteritems():
+        for class_name, path in classes_to_paths.items():
             result[class_name] = {'include_path': path}
         return result
 

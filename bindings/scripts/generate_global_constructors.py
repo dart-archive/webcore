@@ -26,16 +26,16 @@ import re
 import sys
 
 from collections import defaultdict
-from utilities import get_file_contents
-from utilities import get_first_interface_name_from_idl
-from utilities import get_interface_exposed_arguments
-from utilities import get_interface_extended_attributes_from_idl
-from utilities import is_non_legacy_callback_interface_from_idl
-from utilities import read_file_to_list
-from utilities import read_pickle_file
-from utilities import should_generate_impl_file_from_idl
-from utilities import write_file
-from v8_utilities import EXPOSED_EXECUTION_CONTEXT_METHOD
+from .utilities import get_file_contents
+from .utilities import get_first_interface_name_from_idl
+from .utilities import get_interface_exposed_arguments
+from .utilities import get_interface_extended_attributes_from_idl
+from .utilities import is_non_legacy_callback_interface_from_idl
+from .utilities import read_file_to_list
+from .utilities import read_pickle_file
+from .utilities import should_generate_impl_file_from_idl
+from .utilities import write_file
+from .v8_utilities import EXPOSED_EXECUTION_CONTEXT_METHOD
 
 interface_name_to_global_names = {}
 global_name_to_constructors = defaultdict(list)
@@ -106,7 +106,7 @@ def record_global_constructors(idl_filename):
 def generate_global_constructors_list(interface_name, extended_attributes):
     extended_attributes_list = [
         name + (('=' + extended_attributes[name]) if extended_attributes[name] else '')
-        for name in 'RuntimeEnabled', 'OriginTrialEnabled', 'ContextEnabled', 'SecureContext'
+        for name in ('RuntimeEnabled', 'OriginTrialEnabled', 'ContextEnabled', 'SecureContext')
         if name in extended_attributes]
     if extended_attributes_list:
         extended_string = '[%s] ' % ', '.join(extended_attributes_list)
@@ -170,7 +170,7 @@ def main():
         record_global_constructors(idl_filename)
 
     # Check for [Exposed] / [Global] mismatch.
-    known_global_names = EXPOSED_EXECUTION_CONTEXT_METHOD.keys()
+    known_global_names = list(EXPOSED_EXECUTION_CONTEXT_METHOD.keys())
     exposed_global_names = frozenset(global_name_to_constructors)
     if not exposed_global_names.issubset(known_global_names):
         unknown_global_names = exposed_global_names.difference(known_global_names)

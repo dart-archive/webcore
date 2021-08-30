@@ -45,7 +45,7 @@ import os
 import posixpath
 import sys
 
-from utilities import (get_file_contents, get_first_interface_name_from_idl,
+from .utilities import (get_file_contents, get_first_interface_name_from_idl,
                        read_file_to_list, write_file,
                        get_interface_extended_attributes_from_idl)
 

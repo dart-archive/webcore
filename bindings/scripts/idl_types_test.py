@@ -8,11 +8,11 @@
 
 import unittest
 
-from idl_types import IdlNullableType
-from idl_types import IdlRecordType
-from idl_types import IdlSequenceType
-from idl_types import IdlType
-from idl_types import IdlUnionType
+from .idl_types import IdlNullableType
+from .idl_types import IdlRecordType
+from .idl_types import IdlSequenceType
+from .idl_types import IdlType
+from .idl_types import IdlUnionType
 
 
 class IdlTypeTest(unittest.TestCase):

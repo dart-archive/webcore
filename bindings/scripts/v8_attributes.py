@@ -35,12 +35,12 @@ Extends IdlType with property |constructor_type_name|.
 Design doc: http://www.chromium.org/developers/design-documents/idl-compiler
 """
 
-import idl_types
-from idl_types import inherits_interface
-from v8_globals import includes
-import v8_types
-import v8_utilities
-from v8_utilities import (cpp_name_or_partial, capitalize, cpp_name, has_extended_attribute,
+from . import idl_types
+from .idl_types import inherits_interface
+from .v8_globals import includes
+from . import v8_types
+from . import v8_utilities
+from .v8_utilities import (cpp_name_or_partial, capitalize, cpp_name, has_extended_attribute,
                           has_extended_attribute_value, scoped_name, strip_suffix,
                           uncapitalize, extended_attribute_value_as_list, is_unforgeable,
                           is_legacy_interface_type_checking)
