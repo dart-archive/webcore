@@ -78,13 +78,12 @@ SPECIAL_KEYWORD_LIST = ['LEGACYCALLER', 'GETTER', 'SETTER', 'DELETER']
 # TypedObject
 ################################################################################
 
-class TypedObject(object):
+class TypedObject(object, metaclass=abc.ABCMeta):
     """Object with a type, such as an Attribute or Operation (return value).
 
     The type can be an actual type, or can be a typedef, which must be resolved
     by the TypedefResolver before passing data to the code generator.
     """
-    __metaclass__ = abc.ABCMeta
     idl_type_attributes = ('idl_type',)
 
 
@@ -136,22 +135,22 @@ class IdlDefinitions(object):
 
     def accept(self, visitor):
         visitor.visit_definitions(self)
-        for interface in self.interfaces.itervalues():
+        for interface in self.interfaces.values():
             interface.accept(visitor)
-        for callback_function in self.callback_functions.itervalues():
+        for callback_function in self.callback_functions.values():
             callback_function.accept(visitor)
-        for dictionary in self.dictionaries.itervalues():
+        for dictionary in self.dictionaries.values():
             dictionary.accept(visitor)
-        for enumeration in self.enumerations.itervalues():
+        for enumeration in self.enumerations.values():
             enumeration.accept(visitor)
         for implement in self.implements:
             implement.accept(visitor)
-        for typedef in self.typedefs.itervalues():
+        for typedef in self.typedefs.values():
             typedef.accept(visitor)
 
     def update(self, other):
         """Update with additional IdlDefinitions."""
-        for interface_name, new_interface in other.interfaces.iteritems():
+        for interface_name, new_interface in other.interfaces.items():
             if not new_interface.is_partial:
                 # Add as new interface
                 self.interfaces[interface_name] = new_interface
@@ -364,7 +363,7 @@ class IdlInterface(object):
             else:
                 raise ValueError('Unrecognized node class: %s' % child_class)
 
-        if len(filter(None, [self.iterable, self.maplike, self.setlike])) > 1:
+        if len([_f for _f in [self.iterable, self.maplike, self.setlike] if _f]) > 1:
             raise ValueError('Interface can only have one of iterable<>, maplike<> and setlike<>.')
 
         # TODO(rakuco): This validation logic should be in v8_interface according to bashi@.

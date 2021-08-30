@@ -160,7 +160,7 @@ class ExternalReferenceTableGenerator(object):
             target_definitions = definitions[component]
             interfaces = target_definitions.interfaces
             first_name = target_definitions.first_name
-            if first_name in interfaces.keys():
+            if first_name in list(interfaces.keys()):
                 interface = interfaces[first_name]
                 self._process_interface(interface, component, interfaces)
 

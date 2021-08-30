@@ -52,7 +52,7 @@ class IDLExtendedAttributeValidator(object):
 
     def validate_extended_attributes(self, definitions):
         # FIXME: this should be done when parsing the file, rather than after.
-        for interface in definitions.interfaces.itervalues():
+        for interface in definitions.interfaces.values():
             self.validate_extended_attributes_node(interface)
             for attribute in interface.attributes:
                 self.validate_extended_attributes_node(attribute)
@@ -62,7 +62,7 @@ class IDLExtendedAttributeValidator(object):
                     self.validate_extended_attributes_node(argument)
 
     def validate_extended_attributes_node(self, node):
-        for name, values_string in node.extended_attributes.iteritems():
+        for name, values_string in node.extended_attributes.items():
             self.validate_name_values_string(name, values_string)
 
     def validate_name_values_string(self, name, values_string):
@@ -96,7 +96,7 @@ def read_extended_attributes_file():
                 line = line.strip()
                 if not line or line.startswith('#'):
                     continue
-                name, _, values_string = map(str.strip, line.partition('='))
+                name, _, values_string = list(map(str.strip, line.partition('=')))
                 value_list = [value.strip() for value in values_string.split('|')]
                 yield name, value_list
 

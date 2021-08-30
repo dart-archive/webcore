@@ -80,11 +80,10 @@ def parse_options():
     return options, idl_filename
 
 
-class IdlCompiler(object):
+class IdlCompiler(object, metaclass=abc.ABCMeta):
     """The IDL Compiler.
 
     """
-    __metaclass__ = abc.ABCMeta
 
     def __init__(self, output_directory, cache_directory=None,
                  code_generator_class=None, snake_case_generated_files=False,

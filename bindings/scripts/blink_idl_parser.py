@@ -72,8 +72,6 @@ from idl_parser.idl_parser import IDLParser  # pylint: disable=import-error
 from idl_parser.idl_parser import ParseFile as parse_file
 
 from blink_idl_lexer import BlinkIDLLexer
-import blink_idl_lexer
-
 
 class BlinkIDLParser(IDLParser):
     def __init__(self,
@@ -137,7 +135,7 @@ def main(argv):
     try:
         outputdir = argv[1]
     except IndexError as err:
-        print 'Usage: %s OUTPUT_DIR' % argv[0]
+        print('Usage: %s OUTPUT_DIR' % argv[0])
         return 1
     blink_idl_lexer.main(argv)
     # Important: rewrite_tables=True causes the cache file to be deleted if it

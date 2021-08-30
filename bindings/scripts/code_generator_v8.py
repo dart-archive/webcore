@@ -94,7 +94,7 @@ class TypedefResolver(Visitor):
     def resolve(self, definitions, definition_name):
         """Traverse definitions and resolves typedefs with the actual types."""
         self.typedefs = {}
-        for name, typedef in self.info_provider.typedefs.iteritems():
+        for name, typedef in self.info_provider.typedefs.items():
             self.typedefs[name] = typedef.idl_type
         self.additional_header_includes = set()
         definitions.accept(self)
@@ -312,7 +312,7 @@ class CodeGeneratorUnionType(CodeGeneratorBase):
         # idl_definitions.py. What we do instead is to resolve typedefs in
         # _generate_container_code() whenever a new union file is generated.
         self.typedefs = {}
-        for name, typedef in self.info_provider.typedefs.iteritems():
+        for name, typedef in self.info_provider.typedefs.items():
             self.typedefs[name] = typedef.idl_type
 
     def _generate_container_code(self, union_type):
@@ -404,7 +404,7 @@ class CodeGeneratorCallbackFunction(CodeGeneratorBase):
         if not callback_functions:
             return ()
         outputs = set()
-        for callback_function_dict in callback_functions.itervalues():
+        for callback_function_dict in callback_functions.values():
             if callback_function_dict['component_dir'] != self.target_component:
                 continue
             callback_function = callback_function_dict['callback_function']

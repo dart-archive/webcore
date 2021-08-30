@@ -167,7 +167,7 @@ def dictionary_impl_context(dictionary, interfaces_info):
             if duplicated_member and duplicated_member != member:
                 raise Exception('Member name conflict: %s' % cpp_name)
             members_dict[cpp_name] = member
-        return sorted(members_dict.values(), key=lambda member: member['cpp_name'])
+        return sorted(list(members_dict.values()), key=lambda member: member['cpp_name'])
 
     includes.clear()
     header_forward_decls = set()

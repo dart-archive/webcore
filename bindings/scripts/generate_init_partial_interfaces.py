@@ -65,10 +65,10 @@ def extract_meta_data(file_paths):
 
     for file_path in file_paths:
         if not file_path.endswith('.idl'):
-            print 'WARNING: non-IDL file passed: "%s"' % file_path
+            print('WARNING: non-IDL file passed: "%s"' % file_path)
             continue
         if not os.path.exists(file_path):
-            print 'WARNING: file not found: "%s"' % file_path
+            print('WARNING: file not found: "%s"' % file_path)
             continue
 
         idl_file_contents = get_file_contents(file_path)

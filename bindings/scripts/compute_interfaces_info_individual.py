@@ -140,10 +140,21 @@ def get_put_forward_interfaces_from_definition(definition):
 
 
 def get_unforgeable_attributes_from_definition(definition):
+    # Legacy Python 2 way to sort lists. Group by type, and then sort by value.
+    class MultitypeSortKey:
+        def __init__(self, value):
+            self.value = value
+
+        def __lt__(self, other):
+            try:
+                return self.value < other.value
+            except TypeError:
+                return str(type(self)) < str(type(other))
     if 'Unforgeable' in definition.extended_attributes:
-        return sorted(definition.attributes)
-    return sorted(attribute for attribute in definition.attributes
-                  if 'Unforgeable' in attribute.extended_attributes)
+        return sorted(definition.attributes, key=MultitypeSortKey)
+    return sorted([attribute for attribute in definition.attributes
+                  if 'Unforgeable' in attribute.extended_attributes],
+                  key=MultitypeSortKey)
 
 
 def collect_union_types_from_definitions(definitions):
@@ -227,7 +238,7 @@ class InterfaceInfoCollector(object):
         this_union_types = collect_union_types_from_definitions(definitions)
         self.union_types.update(this_union_types)
         self.typedefs.update(definitions.typedefs)
-        for callback_function_name, callback_function in definitions.callback_functions.iteritems():
+        for callback_function_name, callback_function in definitions.callback_functions.items():
             # Set 'component_dir' to specify a directory that callback function files belong to
             self.callback_functions[callback_function_name] = {
                 'callback_function': callback_function,
@@ -235,14 +246,14 @@ class InterfaceInfoCollector(object):
                 'full_path': os.path.realpath(idl_filename),
             }
         # Check enum duplication.
-        for enum in definitions.enumerations.values():
+        for enum in list(definitions.enumerations.values()):
             if not self.check_enum_consistency(enum):
                 raise Exception('Enumeration "%s" is defined more than once '
                                 'with different valid values' % enum.name)
         self.enumerations.update(definitions.enumerations)
 
         if definitions.interfaces:
-            definition = next(definitions.interfaces.itervalues())
+            definition = next(iter(definitions.interfaces.values()))
             interface_info = {
                 'is_callback_interface': definition.is_callback,
                 'is_dictionary': False,
@@ -256,7 +267,7 @@ class InterfaceInfoCollector(object):
                 'referenced_interfaces': get_put_forward_interfaces_from_definition(definition),
             }
         elif definitions.dictionaries:
-            definition = next(definitions.dictionaries.itervalues())
+            definition = next(iter(definitions.dictionaries.values()))
             interface_info = {
                 'is_callback_interface': False,
                 'is_dictionary': True,
@@ -337,7 +348,7 @@ class InterfaceInfoCollector(object):
         return {
             'callback_functions': self.callback_functions,
             'enumerations': dict((enum.name, enum.values)
-                                 for enum in self.enumerations.values()),
+                                 for enum in list(self.enumerations.values())),
             'typedefs': self.typedefs,
             'union_types': self.union_types,
         }

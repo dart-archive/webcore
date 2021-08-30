@@ -106,7 +106,7 @@ def record_global_constructors(idl_filename):
 def generate_global_constructors_list(interface_name, extended_attributes):
     extended_attributes_list = [
         name + (('=' + extended_attributes[name]) if extended_attributes[name] else '')
-        for name in 'RuntimeEnabled', 'OriginTrialEnabled', 'ContextEnabled', 'SecureContext'
+        for name in ('RuntimeEnabled', 'OriginTrialEnabled', 'ContextEnabled', 'SecureContext')
         if name in extended_attributes]
     if extended_attributes_list:
         extended_string = '[%s] ' % ', '.join(extended_attributes_list)
@@ -170,7 +170,7 @@ def main():
         record_global_constructors(idl_filename)
 
     # Check for [Exposed] / [Global] mismatch.
-    known_global_names = EXPOSED_EXECUTION_CONTEXT_METHOD.keys()
+    known_global_names = list(EXPOSED_EXECUTION_CONTEXT_METHOD.keys())
     exposed_global_names = frozenset(global_name_to_constructors)
     if not exposed_global_names.issubset(known_global_names):
         unknown_global_names = exposed_global_names.difference(known_global_names)

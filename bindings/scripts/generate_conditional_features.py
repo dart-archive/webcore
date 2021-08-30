@@ -71,7 +71,7 @@ def read_idl_file(reader, idl_filename):
     implements = definitions.implements
     # There should only be a single interface defined in an IDL file. Return it.
     assert len(interfaces) == 1
-    return (interfaces.values()[0], implements)
+    return (list(interfaces.values())[0], implements)
 
 
 def interface_is_global(interface):
@@ -169,7 +169,7 @@ def conditional_features_context(generator_name, feature_info, snake_case):
          'is_global': interface_info.is_global,
          'v8_class': interface_info.v8_class,
          'installers': get_install_functions([interface_info], feature_names)}
-        for interface_info, feature_names in features_for_type.items()]
+        for interface_info, feature_names in list(features_for_type.items())]
     context['installers_by_interface'].sort(key=lambda x: x['name'])
 
     # For each conditional feature, collect a list of bindings installation
@@ -178,7 +178,7 @@ def conditional_features_context(generator_name, feature_info, snake_case):
         {'name': feature_name,
          'name_constant': 'OriginTrials::k%sTrialName' % feature_name,
          'installers': get_install_functions(interfaces, [feature_name])}
-        for feature_name, interfaces in types_for_feature.items()]
+        for feature_name, interfaces in list(types_for_feature.items())]
     context['installers_by_feature'].sort(key=lambda x: x['name'])
 
     return context
@@ -240,7 +240,7 @@ def main():
 
     info_provider = create_component_info_provider(
         os.path.normpath(options.info_dir), options.target_component.lower())
-    idl_filenames = map(str.strip, open(options.idl_files_list))
+    idl_filenames = list(map(str.strip, open(options.idl_files_list)))
 
     generate_conditional_features(info_provider, options, idl_filenames)
     return 0

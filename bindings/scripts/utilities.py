@@ -8,7 +8,7 @@ Design doc: http://www.chromium.org/developers/design-documents/idl-build
 """
 
 import os
-import cPickle as pickle
+import pickle as pickle
 import re
 import shlex
 import string
@@ -190,8 +190,8 @@ class ComponentInfoProviderModules(ComponentInfoProvider):
 
     @property
     def callback_functions(self):
-        return dict(self._component_info_core['callback_functions'].items() +
-                    self._component_info_modules['callback_functions'].items())
+        return dict(list(self._component_info_core['callback_functions'].items()) +
+                    list(self._component_info_modules['callback_functions'].items()))
 
     @property
     def specifier_for_export(self):
@@ -212,7 +212,7 @@ def merge_dict_recursively(target, diff):
     |target| will be updated with |diff|.  Part of |diff| may be re-used in
     |target|.
     """
-    for key, value in diff.iteritems():
+    for key, value in diff.items():
         if key not in target:
             target[key] = value
         elif type(value) == dict:
@@ -398,7 +398,7 @@ def get_interface_extended_attributes_from_idl(file_contents):
              # Discard empty parts, which may exist due to trailing comma
              if extended_attribute.strip()]
     for part in parts:
-        name, _, value = map(string.strip, part.partition('='))
+        name, _, value = list(map(string.strip, part.partition('=')))
         extended_attributes[name] = value
     return extended_attributes
 

@@ -103,7 +103,7 @@ class InterfaceDependencyResolver(object):
                             'this definition: %s, because this should '
                             'have a dictionary.' % definitions.idl_name)
 
-        target_interface = next(definitions.interfaces.itervalues())
+        target_interface = next(iter(definitions.interfaces.values()))
         interface_name = target_interface.name
         interface_info = self.interfaces_info[interface_name]
 
@@ -161,7 +161,7 @@ def merge_interface_dependencies(definitions, component, target_interface, depen
         dependency_definitions = reader.read_idl_file(dependency_idl_filename)
         dependency_component = idl_filename_to_component(dependency_idl_filename)
 
-        dependency_interface = next(dependency_definitions.interfaces.itervalues())
+        dependency_interface = next(iter(dependency_definitions.interfaces.values()))
 
         transfer_extended_attributes(dependency_interface,
                                      dependency_idl_filename)
@@ -307,7 +307,7 @@ def transfer_extended_attributes(dependency_interface, dependency_idl_filename):
                 'ImplementedAs', dependency_interface.name))
 
     def update_attributes(attributes, extras):
-        for key, value in extras.items():
+        for key, value in list(extras.items()):
             if key not in attributes:
                 attributes[key] = value
 
@@ -342,8 +342,8 @@ def inherit_unforgeable_attributes(resolved_definitions, interfaces_info):
         cpp_includes.update(interface.get('cpp_includes', {}).get(component, {}))
         return unforgeable_attributes, referenced_interfaces, cpp_includes
 
-    for component, definitions in resolved_definitions.iteritems():
-        for interface_name, interface in definitions.interfaces.iteritems():
+    for component, definitions in resolved_definitions.items():
+        for interface_name, interface in definitions.interfaces.items():
             interface_info = interfaces_info[interface_name]
             inherited_unforgeable_attributes, referenced_interfaces, cpp_includes = collect_unforgeable_attributes_in_ancestors(interface_info.get('parent'), component)
             # This loop may process the same interface many times, so it's

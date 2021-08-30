@@ -52,7 +52,7 @@ class IdlTestingHelper(object):
 
     def make_stub_interfaces_info(self, classes_to_paths):
         result = {}
-        for class_name, path in classes_to_paths.iteritems():
+        for class_name, path in classes_to_paths.items():
             result[class_name] = {'include_path': path}
         return result
 
