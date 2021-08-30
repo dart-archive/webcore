@@ -33,11 +33,11 @@ Extends IdlTypeBase with property |callback_cpp_type|.
 Design doc: http://www.chromium.org/developers/design-documents/idl-compiler
 """
 
-from .idl_types import IdlTypeBase
-from .v8_globals import includes
-from .v8_interface import constant_context
-from . import v8_types
-from . import v8_utilities
+from idl_types import IdlTypeBase
+from v8_globals import includes
+from v8_interface import constant_context
+import v8_types
+import v8_utilities
 
 CALLBACK_INTERFACE_H_INCLUDES = frozenset([
     'platform/bindings/DOMWrapperWorld.h',

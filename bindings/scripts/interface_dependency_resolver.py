@@ -37,7 +37,7 @@ Design doc: http://www.chromium.org/developers/design-documents/idl-compiler#TOC
 """
 
 import os.path
-from .utilities import idl_filename_to_component, is_valid_component_dependency, merge_dict_recursively
+from utilities import idl_filename_to_component, is_valid_component_dependency, merge_dict_recursively
 
 # The following extended attributes can be applied to a dependency interface,
 # and are then applied to the individual members when merging.

@@ -47,15 +47,15 @@ import os
 import posixpath
 import sys
 
-from .idl_definitions import Visitor
-from .idl_reader import IdlReader
-from .utilities import idl_filename_to_component
-from .utilities import idl_filename_to_basename
-from .utilities import merge_dict_recursively
-from .utilities import read_idl_files_list_from_file
-from .utilities import shorten_union_name
-from .utilities import to_snake_case
-from .utilities import write_pickle_file
+from idl_definitions import Visitor
+from idl_reader import IdlReader
+from utilities import idl_filename_to_component
+from utilities import idl_filename_to_basename
+from utilities import merge_dict_recursively
+from utilities import read_idl_files_list_from_file
+from utilities import shorten_union_name
+from utilities import to_snake_case
+from utilities import write_pickle_file
 
 
 module_path = os.path.dirname(__file__)
@@ -140,10 +140,21 @@ def get_put_forward_interfaces_from_definition(definition):
 
 
 def get_unforgeable_attributes_from_definition(definition):
+    # Legacy Python 2 way to sort lists. Group by type, and then sort by value.
+    class MultitypeSortKey:
+        def __init__(self, value):
+            self.value = value
+
+        def __lt__(self, other):
+            try:
+                return self.value < other.value
+            except TypeError:
+                return str(type(self)) < str(type(other))
     if 'Unforgeable' in definition.extended_attributes:
-        return sorted(definition.attributes)
-    return sorted(attribute for attribute in definition.attributes
-                  if 'Unforgeable' in attribute.extended_attributes)
+        return sorted(definition.attributes, key=MultitypeSortKey)
+    return sorted([attribute for attribute in definition.attributes
+                  if 'Unforgeable' in attribute.extended_attributes],
+                  key=MultitypeSortKey)
 
 
 def collect_union_types_from_definitions(definitions):

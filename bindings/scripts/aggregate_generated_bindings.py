@@ -52,9 +52,9 @@ import optparse
 import os
 import re
 import sys
-from .utilities import idl_filename_to_basename
-from .utilities import read_idl_files_list_from_file
-from .utilities import to_snake_case
+from utilities import idl_filename_to_basename
+from utilities import read_idl_files_list_from_file
+from utilities import to_snake_case
 
 COPYRIGHT_TEMPLATE = """/*
  * THIS FILE WAS AUTOMATICALLY GENERATED, DO NOT EDIT.

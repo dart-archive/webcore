@@ -2,9 +2,9 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-from .utilities import to_snake_case
-from . import v8_types
-from . import v8_utilities
+from utilities import to_snake_case
+import v8_types
+import v8_utilities
 
 
 UNION_CPP_INCLUDES = frozenset([

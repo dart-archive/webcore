@@ -48,18 +48,18 @@ Design doc: http://www.chromium.org/developers/design-documents/idl-compiler
 import os
 import posixpath
 
-from .code_generator import CodeGeneratorBase, render_template, normalize_and_sort_includes
-from .idl_definitions import Visitor
-from .idl_types import IdlType
-from . import v8_callback_function
-from . import v8_callback_interface
-from . import v8_dictionary
-from .v8_globals import includes
-from . import v8_interface
-from . import v8_types
-from . import v8_union
-from .v8_utilities import build_basename, cpp_name
-from .utilities import idl_filename_to_component, is_testing_target, shorten_union_name, to_snake_case
+from code_generator import CodeGeneratorBase, render_template, normalize_and_sort_includes
+from idl_definitions import Visitor
+from idl_types import IdlType
+import v8_callback_function
+import v8_callback_interface
+import v8_dictionary
+from v8_globals import includes
+import v8_interface
+import v8_types
+import v8_union
+from v8_utilities import build_basename, cpp_name
+from utilities import idl_filename_to_component, is_testing_target, shorten_union_name, to_snake_case
 
 
 # Make sure extension is .py, not .pyc or .pyo, so doesn't depend on caching

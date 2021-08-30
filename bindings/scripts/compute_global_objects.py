@@ -18,12 +18,12 @@ import optparse
 import os
 import sys
 
-from .utilities import get_file_contents
-from .utilities import get_interface_extended_attributes_from_idl
-from .utilities import get_first_interface_name_from_idl
-from .utilities import read_file_to_list
-from .utilities import read_pickle_files
-from .utilities import write_pickle_file
+from utilities import get_file_contents
+from utilities import get_interface_extended_attributes_from_idl
+from utilities import get_first_interface_name_from_idl
+from utilities import read_file_to_list
+from utilities import read_pickle_files
+from utilities import write_pickle_file
 
 GLOBAL_EXTENDED_ATTRIBUTES = frozenset([
     'Global',

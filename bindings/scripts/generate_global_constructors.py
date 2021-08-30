@@ -26,16 +26,16 @@ import re
 import sys
 
 from collections import defaultdict
-from .utilities import get_file_contents
-from .utilities import get_first_interface_name_from_idl
-from .utilities import get_interface_exposed_arguments
-from .utilities import get_interface_extended_attributes_from_idl
-from .utilities import is_non_legacy_callback_interface_from_idl
-from .utilities import read_file_to_list
-from .utilities import read_pickle_file
-from .utilities import should_generate_impl_file_from_idl
-from .utilities import write_file
-from .v8_utilities import EXPOSED_EXECUTION_CONTEXT_METHOD
+from utilities import get_file_contents
+from utilities import get_first_interface_name_from_idl
+from utilities import get_interface_exposed_arguments
+from utilities import get_interface_extended_attributes_from_idl
+from utilities import is_non_legacy_callback_interface_from_idl
+from utilities import read_file_to_list
+from utilities import read_pickle_file
+from utilities import should_generate_impl_file_from_idl
+from utilities import write_file
+from v8_utilities import EXPOSED_EXECUTION_CONTEXT_METHOD
 
 interface_name_to_global_names = {}
 global_name_to_constructors = defaultdict(list)

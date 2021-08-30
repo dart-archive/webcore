@@ -7,12 +7,12 @@ implementation classes that are used by blink's core/modules.
 """
 
 import operator
-from .idl_types import IdlType
-from .utilities import to_snake_case
-from .v8_globals import includes
-from . import v8_types
-from . import v8_utilities
-from .v8_utilities import has_extended_attribute_value
+from idl_types import IdlType
+from utilities import to_snake_case
+from v8_globals import includes
+import v8_types
+import v8_utilities
+from v8_utilities import has_extended_attribute_value
 
 
 DICTIONARY_H_INCLUDES = frozenset([

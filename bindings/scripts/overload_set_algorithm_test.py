@@ -7,7 +7,7 @@
 """Unit tests for overload_set_algorithm.py."""
 
 import unittest
-from .overload_set_algorithm import effective_overload_set
+from overload_set_algorithm import effective_overload_set
 
 
 class EffectiveOverloadSetTest(unittest.TestCase):

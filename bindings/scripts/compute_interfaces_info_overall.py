@@ -87,11 +87,11 @@ import optparse
 import sys
 
 from collections import defaultdict
-from .utilities import idl_filename_to_component
-from .utilities import merge_dict_recursively
-from .utilities import read_pickle_files
-from .utilities import shorten_union_name
-from .utilities import write_pickle_file
+from utilities import idl_filename_to_component
+from utilities import merge_dict_recursively
+from utilities import read_pickle_files
+from utilities import shorten_union_name
+from utilities import write_pickle_file
 
 INHERITED_EXTENDED_ATTRIBUTES = set([
     'ActiveScriptWrappable',

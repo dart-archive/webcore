@@ -14,12 +14,12 @@ import posixpath
 import sys
 from collections import defaultdict, namedtuple
 
-from .code_generator import (initialize_jinja_env, normalize_and_sort_includes,
+from code_generator import (initialize_jinja_env, normalize_and_sort_includes,
                             render_template)
-from .idl_reader import IdlReader
-from .utilities import (create_component_info_provider, write_file,
+from idl_reader import IdlReader
+from utilities import (create_component_info_provider, write_file,
                        idl_filename_to_component)
-from .v8_utilities import (binding_header_basename, v8_class_name,
+from v8_utilities import (binding_header_basename, v8_class_name,
                           v8_class_name_or_partial, uncapitalize)
 
 # Make sure extension is .py, not .pyc or .pyo, so doesn't depend on caching

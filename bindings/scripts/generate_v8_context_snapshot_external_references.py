@@ -8,14 +8,14 @@ import argparse
 import os
 import posixpath
 
-from .code_generator import initialize_jinja_env
-from .idl_reader import IdlReader
-from .utilities import create_component_info_provider, write_file
-from . import utilities
-from . import v8_attributes
-from . import v8_interface
-from . import v8_types
-from . import v8_utilities
+from code_generator import initialize_jinja_env
+from idl_reader import IdlReader
+from utilities import create_component_info_provider, write_file
+import utilities
+import v8_attributes
+import v8_interface
+import v8_types
+import v8_utilities
 
 
 INCLUDES = frozenset([

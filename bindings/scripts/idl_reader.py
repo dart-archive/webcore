@@ -34,13 +34,13 @@ http://www.chromium.org/developers/design-documents/idl-compiler#TOC-Front-end
 
 import os
 
-from . import blink_idl_parser
-from .blink_idl_parser import BlinkIDLParser
-from .idl_definitions import IdlDefinitions
-from .idl_validator import EXTENDED_ATTRIBUTES_RELATIVE_PATH, IDLInvalidExtendedAttributeError, IDLExtendedAttributeValidator
-from .interface_dependency_resolver import InterfaceDependencyResolver
-from .utilities import idl_filename_to_component
-from .utilities import to_snake_case
+import blink_idl_parser
+from blink_idl_parser import BlinkIDLParser
+from idl_definitions import IdlDefinitions
+from idl_validator import EXTENDED_ATTRIBUTES_RELATIVE_PATH, IDLInvalidExtendedAttributeError, IDLExtendedAttributeValidator
+from interface_dependency_resolver import InterfaceDependencyResolver
+from utilities import idl_filename_to_component
+from utilities import to_snake_case
 
 
 def validate_blink_idl_definitions(idl_filename, idl_file_basename,

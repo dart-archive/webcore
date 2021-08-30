@@ -71,9 +71,7 @@ sys.path.append(tools_dir)
 from idl_parser.idl_parser import IDLParser  # pylint: disable=import-error
 from idl_parser.idl_parser import ParseFile as parse_file
 
-from .blink_idl_lexer import BlinkIDLLexer
-from . import blink_idl_lexer
-
+from blink_idl_lexer import BlinkIDLLexer
 
 class BlinkIDLParser(IDLParser):
     def __init__(self,

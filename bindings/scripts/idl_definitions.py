@@ -64,12 +64,12 @@ Design doc: http://www.chromium.org/developers/design-documents/idl-compiler
 
 import abc
 
-from .idl_types import IdlFrozenArrayType
-from .idl_types import IdlNullableType
-from .idl_types import IdlRecordType
-from .idl_types import IdlSequenceType
-from .idl_types import IdlType
-from .idl_types import IdlUnionType
+from idl_types import IdlFrozenArrayType
+from idl_types import IdlNullableType
+from idl_types import IdlRecordType
+from idl_types import IdlSequenceType
+from idl_types import IdlType
+from idl_types import IdlUnionType
 
 SPECIAL_KEYWORD_LIST = ['LEGACYCALLER', 'GETTER', 'SETTER', 'DELETER']
 

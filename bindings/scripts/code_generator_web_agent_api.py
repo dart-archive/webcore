@@ -23,9 +23,9 @@ import os
 import posixpath
 import sys
 
-from .code_generator import CodeGeneratorBase, render_template
+from code_generator import CodeGeneratorBase, render_template
 # TODO(dglazkov): Move TypedefResolver to code_generator.py
-from .code_generator_v8 import TypedefResolver
+from code_generator_v8 import TypedefResolver
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', '..', '..', '..',
                              'third_party', 'blink', 'tools'))
