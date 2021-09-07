@@ -33,9 +33,9 @@ import os.path
 import sys
 import time
 
-from idl_lexer import IDLLexer
-from idl_node import IDLAttribute
-from idl_node import IDLNode
+from .idl_lexer import IDLLexer
+from .idl_node import IDLAttribute
+from .idl_node import IDLNode
 
 SRC_DIR = os.path.join(os.path.dirname(__file__), os.pardir, os.pardir)
 sys.path.insert(0, os.path.join(SRC_DIR, 'third_party'))
@@ -1190,11 +1190,11 @@ class IDLParser(object):
       out = IDLNode(cls, filename, lineno, pos, childlist)
       return out
     except:
-      print 'Exception while parsing:'
+      print('Exception while parsing:')
       for num, item in enumerate(p):
-        print '  [%d] %s' % (num, ExpandProduction(item))
+        print('  [%d] %s' % (num, ExpandProduction(item)))
       if self.LastToken():
-        print 'Last token: %s' % str(self.LastToken())
+        print('Last token: %s' % str(self.LastToken()))
       raise
 
   def BuildNamed(self, cls, p, index, childlist=None):
@@ -1299,9 +1299,9 @@ def main(argv):
 
   ast = IDLNode('AST', '__AST__', 0, 0, nodes)
 
-  print '\n'.join(ast.Tree())
+  print('\n'.join(ast.Tree()))
   if errors:
-    print '\nFound %d errors.\n' % errors
+    print('\nFound %d errors.\n' % errors)
 
   return errors
 
